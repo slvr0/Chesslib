@@ -10,6 +10,9 @@ add_library(chesslib
     core2/chess_board.cpp
     core2/attack_tables_handler.h
     core2/attack_tables_handler.cpp
+    core2/move_generator.h
+    core2/move_generator.cpp
+
     core2/global_utils.cpp
     
 )

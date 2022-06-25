@@ -93,7 +93,7 @@ inline bool contains(T v, std::vector<T> indexed_vector)
     return std::find(indexed_vector.begin(), indexed_vector.end(), v) != indexed_vector.end();
 }
 
-inline void bit_iter_fast(const uint64_t &v )
+/* inline void bit_iter_fast(const uint64_t &v )
 {
      uint64_t it_t = v;
      int idx_count = pop_count(it_t);
@@ -109,7 +109,7 @@ inline void bit_iter_fast(const uint64_t &v )
 
          if(it_t == 0) break;
      }
-}
+} */
 
 //slow! dont use in move gen
 inline std::vector<unsigned long> bit_iter(const uint64_t & v)

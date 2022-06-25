@@ -28,27 +28,35 @@ PieceType Board::translatePieceType(char c) {
 
 bool Board::setFromFen(std::string fen) {
     int spos = 0;
-    for(int i = 63; i>=0;) {
-        char c =  fen.at(spos++);       
+    for(int i = 56; i>=0;) {
+        char c =  fen.at(spos++);  
+
+        if(c == ' ') break;
  
         if(isdigit(c)) { 
             int stepcount = static_cast<int> (c - 48);
-            i -= stepcount;
+            i += stepcount;
         }
         else if(c == '/') {
+            i -= 16;
             continue; // we literally dont care
-        }
+        }        
         else {
             PieceType type = translatePieceType(c);
-            insertPiece(i--, type, isupper(c));
+            insertPiece(i++, type, isupper(c));
         }        
     }
 
+    
     //read space, then who is acting 
-    ++spos;
+
+   /*  print(fen.substr(spos, fen.size())); */
+  
     char to_act = fen.at(spos++);
     /* std::cout << to_act; */
     state_.white_acts = to_act == 'w' ? true : false;
+  
+    
 
     //read space, then castling status
     ++spos;    
@@ -122,6 +130,8 @@ void Board::insertPiece(const int & idx, Chesslib::PieceType type, bool white) {
    
     if(white) white_pieces_ |= 1ULL << idx;
     else black_pieces_ |= 1ULL << idx;
+
+    all_pieces_ |= 1ULL << idx;
 }
 
 void Board::removePiece(const int & idx, Chesslib::PieceType type, bool white) {
@@ -136,8 +146,31 @@ void Board::removePiece(const int & idx, Chesslib::PieceType type, bool white) {
     
     if(white) white_pieces_ &~ 1ULL << idx;
     else black_pieces_ &~ 1ULL << idx;
+
+    all_pieces_ &~ 1ULL << idx;
 }
 
 void Board::updateCastleStatus(const int & new_castle_status) {
 
 }
+
+SpecificPiece Board::pieceAt(const int & idx) const {
+    U64 idx_64 = 1ULL << idx; 
+
+    auto locateType  = [&]() {
+        
+
+        if(!all_pieces_ & idx_64) return Chesslib::PieceType::INVALID;
+        else if(pieces_.pawns &  idx_64) return Chesslib::PieceType::PAWN;
+        else if((pieces_.bishops_queens & ~pieces_.rooks_queens) & idx_64) return Chesslib::PieceType::BISHOP;
+        else if(pieces_.knights & idx_64) return Chesslib::PieceType::KNIGHT;
+        else if((pieces_.rooks_queens & ~pieces_.bishops_queens) & idx_64) return Chesslib::PieceType::ROOK;
+        else if((pieces_.rooks_queens & pieces_.bishops_queens) & idx_64) return Chesslib::PieceType::QUEEN;
+        else if(pieces_.kings & idx_64) return Chesslib::PieceType::KING;
+    };
+
+    Chesslib::PieceType type  = locateType();
+    return white_pieces_ & idx_64 ? SpecificPiece(true, type) : SpecificPiece(false, type); 
+}
+
+

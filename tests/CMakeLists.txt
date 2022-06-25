@@ -10,6 +10,8 @@ add_library(chesslib_test
     test_board.cpp   
     test_attack_tables.h
     test_attack_tables.cpp
+    test_move_generator.h
+    test_move_generator.cpp
     utils.h
 )
 

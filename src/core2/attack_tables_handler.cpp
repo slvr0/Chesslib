@@ -2,8 +2,6 @@
 
 using namespace Chesslib;
 
-
-
 void AttackTablesHandler::_init_tables(const std::vector<Direction> &directions, bool rooks)
 {
         int nr_filled = 0;
@@ -58,13 +56,16 @@ void AttackTablesHandler::_init_tables(const std::vector<Direction> &directions,
 
                 if(rooks)
                 {
-                    occupation_mask *= rook_magic_numbers[idx];
-                    occupation_mask >>= 64 - rook_shifts[idx];
+
+                    occupation_mask= u64_pext(occupation_mask, rook_mask[idx]);
+                   /*  occupation_mask *= rook_magic_numbers[idx];
+                    occupation_mask >>= 64 - rook_shifts[idx]; */
                 }
                 else
                 {
-                    occupation_mask *= bishop_magic_numbers[idx];
-                    occupation_mask >>= 64 - bishop_shifts[idx];
+                    occupation_mask = u64_pext(occupation_mask, bishop_mask[idx]);
+                    /* occupation_mask *= bishop_magic_numbers[idx];
+                    occupation_mask >>= 64 - bishop_shifts[idx]; */
 
                 }
 
@@ -88,27 +89,48 @@ void AttackTablesHandler::_init_tables(const std::vector<Direction> &directions,
         std::cout << type << " attacks init. " << nr_filled << " sequences inserted \n";      
 }
 
-uint64_t AttackTablesHandler::get_rook_attacks(const uint64_t & occ, const unsigned long idx)
-{
+void AttackTablesHandler::_init_kingmoves() {
+    
+    std::vector<Direction> kd {Direction(1, 1), Direction(1, -1), Direction(-1, 1), Direction(-1, -1), Direction(1, 0), Direction(-1,0), Direction(0,1), Direction(0, -1)};
 
-    uint64_t occ_c = occ & rook_mask[idx];
+    for(int i = 0; i < 64 ; ++i)
+    {
+    uint64_t kmoves {0x0};
 
-    //uint64_t occ_c = extract_bits(occ, rook_mask[idx]);
+    for(const auto & dir : kd)
+    {
+        int row =int(i / 8) ;
+        int col = (i % 8) ;
 
-    occ_c *= rook_magic_numbers[idx];
-    occ_c >>= 64 - rook_shifts[idx];
+        row += dir.second;
+        col += dir.first;
 
-    return rook_lookup_[idx][occ_c];
+        if(on_board(row,col)) kmoves |= 1ULL << (row*8 +col);
+    }
+
+    king_moves_[i] = kmoves;
+    }
 }
 
-uint64_t AttackTablesHandler::get_bishop_attacks(const uint64_t & occ, const unsigned long idx)
-{
-    uint64_t occ_c = occ & bishop_mask[idx];
+U64 AttackTablesHandler::getRookAttackPattern(const U64 & occ, const unsigned long idx) const {
 
-    occ_c *= bishop_magic_numbers[idx];
-    occ_c >>= 64 - bishop_shifts[idx];
-
-    //uint64_t occ_c = extract_bits(occ, rook_mask[idx]);
-
-    return bishop_lookup_[idx][occ];
+    return rook_lookup_[idx][u64_pext(occ, rook_mask[idx])];
 }
+
+U64 AttackTablesHandler::getBishopAttackPattern(const U64 & occ, const unsigned long idx) const { 
+   
+    return bishop_lookup_[idx][u64_pext(occ, bishop_mask[idx])];
+}
+
+U64 AttackTablesHandler::getKnightAttackPattern(const unsigned long idx) const {
+    return knight_attacks[idx];
+}
+
+U64 AttackTablesHandler::getKingMoves(const unsigned long idx) const {
+    return king_moves_[idx];    
+}
+
+U64 AttackTablesHandler::getPawnAttackPattern(const unsigned long idx, bool white_acts) const {
+    return white_acts ? pawn_attacks[idx] : pawn_attacks_rev[idx];
+}
+

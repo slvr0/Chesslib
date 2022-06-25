@@ -22,7 +22,8 @@ add_executable(main main.cpp)
 target_include_directories(main PUBLIC)
 
 #after PRIVATE, add libraries you define in your src folder to link them to the main CMake.
-target_link_libraries(main PUBLIC -lgtest chesslib chesslib_test -O3 -m64 -mfma -mavx2 -msse2 -msse3 -march=skylake -mpopcnt -funsafe-math-optimizations -fno-math-errno -std=c++2a -g -pthread)
+#flags  -m64 -mfma -mavx2 -msse2 -msse3 -march=skylake  -funsafe-math-optimizations -fno-math-errno 
+target_link_libraries(main PUBLIC -lgtest chesslib chesslib_test -O3 -mpopcnt -std=c++2a -g -pthread)
 
 include(CTest)
 

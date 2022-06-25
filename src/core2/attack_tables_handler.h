@@ -5,20 +5,20 @@
 #include "attack_tables.h"
 #include "global_utils.cpp"
 
-typedef uint64_t U64;
+
 
 namespace Chesslib{
+typedef uint64_t U64;
 
 static uint64_t bishop_attacks_ [5248];
 static uint64_t rook_attacks_ [102400];
-
-static uint64_t king_moves_[64];
-
 static uint64_t* rook_lookup_[64];
 static uint64_t* bishop_lookup_[64];
+static uint64_t king_moves_[64];
+
 
 //the manual way of implementing intels BMI2 paralell bit extract method for fast hashing.
-constexpr uint64_t u64_pextx(U64 val, U64 mask) {
+constexpr U64 u64_pext(U64 val, U64 mask) {
     U64 res = 0;
     for (U64 bb = 1; mask; bb += bb) {
     if ( val & mask & -mask )
@@ -40,16 +40,24 @@ public :
 
             _init_tables(bd, false);
             _init_tables(rd, true);
+            _init_kingmoves();
+            
             AttackTablesHandler::initialized = true;
         }
     }
 
-    
+    //given a board structure and a rook/bishop on certain idx, returns all the squares the piece can attack.
+    U64 getRookAttackPattern(const U64 & occ, const unsigned long idx) const;
+    U64 getBishopAttackPattern(const U64 & occ, const unsigned long idx) const;
+    U64 getKnightAttackPattern(const unsigned long idx) const;
+    U64 getKingMoves(const unsigned long idx) const;
+    U64 getPawnAttackPattern(const unsigned long idx, bool white_acts = true) const;
 
 private:
     void _init_tables(const std::vector<Direction> &directions, bool rooks);
-    uint64_t get_rook_attacks(const uint64_t & occ, const unsigned long idx);
-    uint64_t get_bishop_attacks(const uint64_t & occ, const unsigned long idx);
+    void _init_kingmoves();
+
+private:
 
     static bool initialized;    
 };
