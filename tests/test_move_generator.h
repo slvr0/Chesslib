@@ -1,20 +1,25 @@
 #pragma once 
+#include "gtest/gtest.h"
 
-/* MoveGenerator gen;
-int traverse_tree(ChessBoard& position, int & depth, const int & maxdepth, int & count, double & processboard_time) {   
+#include "../src/core2/move_generator.h"
+
+
+Chesslib::BinaryMoveGenerator gen;
+
+int traverse_tree(Chesslib::Board& position, int & depth, const int & maxdepth, int & count, double & processboard_time) {   
       
 
     if(depth == maxdepth) return ++count;
 
-    auto nmoves = gen.get_legal_moves(position).first;           
+    auto nmoves = gen.getMoves(position);         
 
-    for(auto & move : nmoves.get_moves()) {
+    for(auto & move : nmoves) {
                     
-        ChessBoard cp_board = position;
+        Chesslib::Board cp_board = position;
 
         Timer t0;
-        cp_board.update_from_move(move);
-        cp_board.mirror();
+        cp_board.applyMove(move);
+   
         processboard_time += t0.elapsed();
 
         int new_depth = depth + 1;
@@ -23,18 +28,18 @@ int traverse_tree(ChessBoard& position, int & depth, const int & maxdepth, int &
     
     return count;
 }
-void test_correctply() {
-    init_tables();
+void Perfqt(const int & depth) {
+    
+    std::string startpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-    ChessBoard starting_board(startpos);
+    Chesslib::Board starting_board(startpos);
 
-    int maxply = 4;
     int ply_start = 0;
     int count = 0 ;
     double processboard_time = 0.0;
 
     Timer tot;
-    int res = traverse_tree(starting_board, ply_start, maxply, count, processboard_time);
+    int res = traverse_tree(starting_board, ply_start, depth, count, processboard_time);
 
     double tot_elapsed = tot.elapsed();
 
@@ -43,4 +48,7 @@ void test_correctply() {
     print(tot_elapsed);
 }
 
- */
+TEST(ChessBinaryMoveGenerator, BinaryMoveGenCorrectPerfQt) {
+    Perfqt(1);
+}
+    

@@ -7,6 +7,7 @@
 
 
 
+
 namespace Chesslib{
 typedef uint64_t U64;
 
@@ -18,14 +19,18 @@ static uint64_t king_moves_[64];
 
 
 //the manual way of implementing intels BMI2 paralell bit extract method for fast hashing.
-constexpr U64 u64_pext(U64 val, U64 mask) {
+inline U64 u64_pext(U64 val, U64 mask) {
     U64 res = 0;
     for (U64 bb = 1; mask; bb += bb) {
     if ( val & mask & -mask )
         res |= bb;
     mask &= mask - 1;
     }
+
+    
     return res;
+
+    
 } 
 
 typedef std::pair<int,int> Direction;

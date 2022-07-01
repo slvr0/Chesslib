@@ -3,16 +3,39 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <algorithm>
 
 #include "global_utils.cpp"
+
 
 namespace  Chesslib { 
 
 typedef uint64_t U64;
 typedef int64_t S64;
-typedef std::pair<int,int> Transition;
-typedef std::vector<Transition> Transitions;
+/* typedef std::pair<int,int> Transition;
+typedef std::vector<Transition> Transitions; */
 
+
+static const std::string board_notations[] =
+{"A1","B1","C1","D1","E1","F1","G1","H1",
+  "A2","B2","C2","D2","E2","F2","G2","H2",
+  "A3","B3","C3","D3","E3","F3","G3","H3",
+  "A4","B4","C4","D4","E4","F4","G4","H4",
+  "A5","B5","C5","D5","E5","F5","G5","H5",
+  "A6","B6","C6","D6","E6","F6","G6","H6",
+  "A7","B7","C7","D7","E7","F7","G7","H7",
+  "A8","B8","C8","D8","E8","F8","G8","H8"
+};
+
+static int get_idx_from_notation(std::string notation)
+{
+    std::transform(notation.begin(), notation.end(),notation.begin(), toupper);
+
+    auto element = std::find(std::begin(board_notations), std::end(board_notations), notation);
+
+    if (element != std::end(board_notations))  return std::distance(board_notations, element);
+    else return -1;
+}
 
 struct Pieces{
     U64 pawns{};
@@ -27,7 +50,13 @@ struct BoardState {
     uint32_t    move_nr = 0;
     std::string fen{};
     uint8_t     castle{0x00};
-    std::string enp{"-"};
+
+    bool white_oo = false;
+    bool white_ooo = false;
+    bool black_oo = false;
+    bool black_ooo = false;
+
+    int         enp = -1;
     short       rule50{0};
     short       total_moves{0};
 };
@@ -42,11 +71,33 @@ enum PieceType {
     INVALID = 0
 };
 
+//duplicate idiot!
+inline PieceType charToPieceType(const char & c) {
+    switch(c) {
+        case 'p' : 
+        case 'P' : return PieceType::PAWN;
+        case 'n' : 
+        case 'N' : return PieceType::KNIGHT;
+        case 'b' : 
+        case 'B' : return PieceType::BISHOP;
+        case 'r' : 
+        case 'R' : return PieceType::ROOK;
+        case 'q' : 
+        case 'Q' : return PieceType::QUEEN;
+        case 'k' : 
+        case 'K' : return PieceType::KING;
+        default : return PieceType::INVALID;
+    }
+}
+
+struct Transition;
+typedef std::vector<Transition> Transitions;
 
 
 //additional info on which side owns the piece. Used for locating piece info on certain square.
 typedef std::pair<bool, Chesslib::PieceType> SpecificPiece; 
 
+//what is the first entry ? i dont even remember, such garbage type
 const std::map<SpecificPiece, char> chesspieceNotationMap {
     {SpecificPiece(true, Chesslib::PieceType::INVALID) , ' '}, 
     {SpecificPiece(true, Chesslib::PieceType::PAWN) , 'P'}, 
@@ -77,8 +128,12 @@ const std::vector<std::string> boardIndexNotation {
 };
 
 
+
 class Board { 
 public : 
+
+    
+
     Board() = default;
     Board(std::string fen) {
         setFromFen(fen);
@@ -90,8 +145,8 @@ public :
         pieces_.pawns |= v;
     }
 
-    Board(const Board &) = delete; // gotta think about this
-    Board& operator =(Board & rhv) = delete; 
+/*     Board(const Board &) = delete; // gotta think about this
+    Board& operator =(Board & rhv) = delete;  */
 
     inline U64 get(const PieceType type) const {
         switch(type) {
@@ -109,11 +164,10 @@ public :
     void setHashValue();
 
     //delete old piece sq, adds in new square, updates ev. castle
-    void applyMove(const std::string uci_move);
-    void applyMove(const int nn_move_index);
+    void applyMove(const Transition& transitions);
 
-    void insertPiece(const int & idx, Chesslib::PieceType type, bool ours = true);
-    void removePiece(const int & idx, Chesslib::PieceType type, bool ours = true);
+    void insertPiece(const int & idx, Chesslib::PieceType type, bool white = true);
+    void removePiece(const int & idx, Chesslib::PieceType type, bool white = true);
 
     PieceType translatePieceType(char c);
 
@@ -128,10 +182,14 @@ public :
 
     //mostly for debugging right now
     SpecificPiece pieceAt(const int & idx) const;
+
+    inline U64 white() const { return white_pieces_;}
+    inline U64 black() const { return black_pieces_;}
+    
     
 private:
     
-    void updateCastleStatus(const int & new_castle_status);
+    void updateCastleStatus(const int & src, const int & dst, char instr);
 
 private:
     Pieces pieces_; //specific piece information
@@ -143,6 +201,8 @@ private:
     BoardState state_;       
 
 };
+
+
 
 
 //helps to visualize the board graphically in console
@@ -188,15 +248,8 @@ public :
         return printer;
     }
 
-    static void translateTransitions(const Chesslib::Board & board, Transitions & transitions) {
-
-        
-        for(const auto & transition : transitions) {
-            std::cout <<  chesspieceNotationMap.at(board.pieceAt(transition.first)) << 
-            boardIndexNotation.at(transition.first) << " to " << boardIndexNotation.at(transition.second) << std::endl;
-        }
-
-    }
+    static void translateTransitions(const Chesslib::Board & board, const Transitions & transitions); 
+    static std::string translateTransition(const Chesslib::Board & board, const Transition & transition);
 };
 
 

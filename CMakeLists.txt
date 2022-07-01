@@ -23,7 +23,9 @@ target_include_directories(main PUBLIC)
 
 #after PRIVATE, add libraries you define in your src folder to link them to the main CMake.
 #flags  -m64 -mfma -mavx2 -msse2 -msse3 -march=skylake  -funsafe-math-optimizations -fno-math-errno 
-target_link_libraries(main PUBLIC -lgtest chesslib chesslib_test -O3 -mpopcnt -std=c++2a -g -pthread)
+#-avx2 -mbmi2 
+#-O3 -mpopcnt -mssse3 -march=native -mtune=generic -DPEXT -funsafe-math-optimizations -std=c++2a -g -pthread
+target_link_libraries(main PUBLIC -lgtest chesslib chesslib_test -O3 -mpopcnt -mssse3 -march=native -mtune=generic -DPEXT -funsafe-math-optimizations -std=c++2a -g -pthread)
 
 include(CTest)
 

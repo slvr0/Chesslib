@@ -1,7 +1,8 @@
 #include "gtest/gtest.h"
 
 //#include "test_board.h"
-#include "test_attack_tables.h"
+//#include "test_attack_tables.h"
+#include "test_move_generator.h"
 
 bool Chesslib::AttackTablesHandler::initialized = false;
 
