@@ -4,6 +4,8 @@ project(CMAKE_GENERIC)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 
 include(FetchContent)
 
@@ -25,17 +27,17 @@ target_include_directories(main PUBLIC)
 #flags  -m64 -mfma -mavx2 -msse2 -msse3 -march=skylake  -funsafe-math-optimizations -fno-math-errno 
 #-avx2 -mbmi2 
 #-O3 -mpopcnt -mssse3 -march=native -mtune=generic -DPEXT -funsafe-math-optimizations -std=c++2a -g -pthread
-target_link_libraries(main PUBLIC -lgtest chesslib chesslib_test -O3 -mpopcnt -mssse3 -march=native -mtune=generic -DPEXT -funsafe-math-optimizations -std=c++2a -g -pthread)
+target_link_libraries(main PUBLIC -lgtest blowfish_engine -std=c++2a -O3 -mpopcnt -march=native -mtune=generic -DPEXT -funsafe-math-optimizations -g -pthread)
 
 include(CTest)
 
 add_executable(
-  chesslib_gtest
-  tests/test_chesslib_main.cpp
+  blowfish_test
+  tests/test_blowfish_main.cpp
   
 )
 
-target_link_libraries(chesslib_gtest PRIVATE -lgtest chesslib)
+target_link_libraries(blowfish_test PRIVATE -lgtest blowfish_engine)
 
 include(GoogleTest)
-gtest_discover_tests(chesslib_gtest)
+gtest_discover_tests(blowfish_test)

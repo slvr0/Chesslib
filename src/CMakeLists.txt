@@ -3,16 +3,19 @@ cmake_minimum_required(VERSION 3.10.2)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library(chesslib
-    core2/attack_tables.h
-    core2/attack_tables.cpp    
-    core2/chess_board.h
-    core2/chess_board.cpp
-    core2/attack_tables_handler.h
-    core2/attack_tables_handler.cpp
-    core2/move_generator.h
-    core2/move_generator.cpp
 
-    core2/global_utils.cpp
-    
+add_library(blowfish_engine
+    blowfish/chessboard.h
+    blowfish/chessboard.cpp
+    blowfish/chessboard_extractor.h
+    blowfish/chessboard_extractor.cpp
+    blowfish/static_move_tables.h
+    blowfish/static_move_tables.cpp
+    blowfish/position_meta_data.h
+    blowfish/position_meta_data.cpp
+    blowfish/move_generator.h
+    blowfish/move_generator.cpp
+    blowfish/chessboard_generator.h
+    blowfish/chessboard_generator.cpp
+    blowfish/defs.h
 )
