@@ -5,18 +5,12 @@
 #include "defs.h"
 
 
-
-
-
 struct Board;
 
 class ChessboardGenerator {
 
-public : 
-    
+public :     
     static Board CreateFromFen(const std::string& fen); 
-
-
 
 };
 

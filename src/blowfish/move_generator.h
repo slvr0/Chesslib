@@ -23,6 +23,7 @@ public :
     virtual void GetKnightMoves(const Board & board) = 0;
     virtual void GetBishopMoves(const Board & board) = 0;
     virtual void GetRookMoves(const Board & board) = 0;
+    virtual void GetQueenMoves(const Board & board) = 0;
     virtual void GetKingMoves(const Board & board) = 0;
     virtual void SetEnemyOrVoid(const Board& board) = 0;   
 
@@ -44,6 +45,7 @@ public :
     virtual void GetKnightMoves(const Board & board) override;
     virtual void GetBishopMoves(const Board & board) override;
     virtual void GetRookMoves(const Board & board) override;
+    virtual void GetQueenMoves(const Board & board) override;
     virtual void GetKingMoves(const Board & board) override;
 
 };

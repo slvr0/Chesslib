@@ -121,7 +121,8 @@ Board ChessboardGenerator::CreateFromFen(const std::string& fen) {
 
 
     return Board(white_pawn, white_knight, white_bishop, white_rook, white_queen, white_king, 
-                black_pawn, black_knight, black_bishop, black_rook, black_queen, black_king ,
+                black_pawn, black_knight, black_bishop, black_rook, black_queen, black_king,
+
                 
                 BoardState(white_acts, white_oo, white_ooo, black_oo, black_ooo, enp)                    
                );

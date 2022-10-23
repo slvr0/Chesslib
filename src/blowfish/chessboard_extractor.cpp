@@ -18,6 +18,7 @@ char AtBoardPosition(const Square& square, const Board& brd) {
     else return '.';
 }
 
+
 std::string PrintBoardsAndMask(uint64_t val1, uint64_t val2, const Board& val3, const Board& val4) {
 
     std::string str(64 * 4 + 4 * 8, 'o'); //2 boards with space between
