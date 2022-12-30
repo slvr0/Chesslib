@@ -1,7 +1,12 @@
 #pragma once
 
+#include <memory>
+
 #include "defs.h"
 #include "chessboard.h"
+
+
+class IMetaDataRegister;
 
 /*
 Brief : 
@@ -18,7 +23,6 @@ public :
 
     void GetPseudoLegalMoves(const Board & board);
 
-
     virtual void GetPawnMoves(const Board & board) = 0;
     virtual void GetKnightMoves(const Board & board) = 0;
     virtual void GetBishopMoves(const Board & board) = 0;
@@ -31,14 +35,21 @@ public :
 protected : 
     BBoard enemy_or_void_ = 0x0;
     int movecounter_ = 0;
-    
+
+    BBoard checkmask_;
+    BBoard rook_pins_;
+    BBoard bishop_pins_;
+    BBoard moveable_squares_;
+    BBoard kingban_;
+    bool   nocheck_; 
+
+    std::unique_ptr<IMetaDataRegister> metadata_reg_ = nullptr;
+
 };
 
 class WhiteMoveGenerator : public IMoveGenerator {
 public : 
-    WhiteMoveGenerator() {
-
-    }
+    WhiteMoveGenerator();
 
     virtual void SetEnemyOrVoid(const Board& board) override;
     virtual void GetPawnMoves(const Board & board) override;

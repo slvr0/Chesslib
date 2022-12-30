@@ -1,40 +1,46 @@
 #include "position_meta_data.h"
 
+void WhiteMetaDataRegister::InitMetaDataSearch(const Board& board) {
+    rook_pins        = { };
+    bishop_pins      = { };
+    enp_target       = { };
+    checkmask        = { 0xffffffffffffffffull };
+    kingban          = { };
+    kingattack       = { }; //current moves for king
+    enemy_kingattack = { }; //current enemy king attacked squares
+    kingmoves        = { 0x0 };
+    ekingmoves       = { 0x0 };
+    check_status     = { 0x0 };  
 
-void MetaDataRegister::InitMetaDataSearch(const Board& board) {  
 
-        const bool white = board.state_.white_acts_;
-        const bool enemy = !white;     
-
-        kingmoves =  Lookup::King(LSquare(GetActiveKing(board))); //there is room for improvements in these algorithms, many duplicate searches
-        ekingmoves = Lookup::King(LSquare(GetEnemyKing(board)));
-
-        //Pawn checks
-        {
-            const BBoard pl = Pawn_AttackLeft(GetEnemyPawns(board) & Pawns_NotLeft(), enemy);
-            const BBoard pr = Pawn_AttackRight(GetEnemyPawns(board) & Pawns_NotRight(), enemy);
-
-            if (pl & GetActiveKing(board)) check_status = Pawn_AttackRight(GetActiveKing(board), white);
-            else if (pr & GetActiveKing(board)) check_status = Pawn_AttackLeft(GetActiveKing(board), white);
-            else check_status = 0xffffffffffffffffull;
-        }
-
-        //Knight checks
-        {
-            BBoard knightcheck = Lookup::Knight(LSquare(GetActiveKing(board))) & GetEnemyKnights(board);
-            if (knightcheck) check_status = knightcheck;
-        }
-
-        checkmask = check_status;
+    RefreshMetaData(board);
 }
 
+void WhiteMetaDataRegister::RefreshMetaData(const Board & board) {  
+    kingmoves =  Lookup::King(LSquare(board.white_king_)); 
+    ekingmoves = Lookup::King(LSquare(board.black_king_));
 
-void MetaDataRegister::RefreshMetaData(const Board & board) {
+    //Pawn checks
+    {
+        const BBoard pl = Black_Pawn_AttackLeft(board.black_pawn_ & Pawns_NotLeft());
+        const BBoard pr = Black_Pawn_AttackRight(board.black_pawn_ & Pawns_NotRight());
 
-    InitMetaDataSearch(board);
+        if (pl & board.white_king_) check_status = Black_Pawn_AttackRight(board.white_king_);
+        else if (pr & board.white_king_) check_status = Black_Pawn_AttackLeft(board.white_king_);
+        else check_status = 0xffffffffffffffffull;
+    }
 
-    const BBoard king   = GetActiveKing(board);
-    const BBoard eking  = GetEnemyKing(board);
+    //Knight checks
+    {
+        BBoard knightcheck = Lookup::Knight(LSquare(board.white_king_)) & board.black_knight_;
+        if (knightcheck) check_status = knightcheck;
+    }
+
+    checkmask = check_status;
+
+
+    const BBoard king   = board.white_king_;
+    const BBoard eking  = board.black_king_;
     const BBoard kingsq = LSquare(king);
 
     //evaluate pinned pieces and checks from sliders
@@ -42,52 +48,80 @@ void MetaDataRegister::RefreshMetaData(const Board & board) {
         rook_pins = 0; 
         bishop_pins = 0;
         
-        if (Chess_Lookup::RookMask[kingsq] & GetEnemyRookQueen(board))
+        if (Chess_Lookup::RookMask[kingsq] & (board.black_rook_ | board.black_queen_))
         {
-            BBoard atkHV = Lookup::Rook(kingsq, board.occ_) & GetEnemyRookQueen(board);
+            BBoard atkHV = Lookup::Rook(kingsq, board.occ_) & (board.black_rook_ | board.black_queen_);
             LoopBits(atkHV) {
                 Square sq = LSquare(atkHV);
                 CheckBySlider(kingsq, sq);
             }
 
-            BBoard pinnersHV = Lookup::Rook_Xray(kingsq, board.occ_) & GetEnemyRookQueen(board);
+            BBoard pinnersHV = Lookup::Rook_Xray(kingsq, board.occ_) & (board.black_rook_ | board.black_queen_);
             LoopBits(pinnersHV)
             {                
                 RegisterPinHorisontalVertical(kingsq, LSquare(pinnersHV), board);
             }
         }
-        if (Chess_Lookup::BishopMask[kingsq] & GetEnemyBishopQueen(board)) {
-            BBoard atkD12 = Lookup::Bishop(kingsq, board.occ_) & GetEnemyBishopQueen(board);
+        if (Chess_Lookup::BishopMask[kingsq] & (board.black_bishop_ | board.black_queen_)) {
+            BBoard atkD12 = Lookup::Bishop(kingsq, board.occ_) & (board.black_bishop_ | board.black_queen_);
             LoopBits(atkD12) {
                 Square sq = LSquare(atkD12);
                 CheckBySlider(kingsq, sq);
             }
 
-            BBoard pinnersD12 = Lookup::Bishop_Xray(kingsq, board.occ_) & GetEnemyBishopQueen(board);
+            BBoard pinnersD12 = Lookup::Bishop_Xray(kingsq, board.occ_) & (board.black_bishop_ | board.black_queen_);
             LoopBits(pinnersD12)
             {               
                 RegisterPinDiagonal(kingsq, LSquare(pinnersD12), board);
             }
-        }
+        } 
+    }
 
-/*         if constexpr (status.HasEPPawn)
+    
+
+    CalculateKingBan(board);
+}
+
+void WhiteMetaDataRegister::CalculateKingBan(const Board & board) {
+    
+    {
+        
+        BBoard knights = board.black_knight_;
+        LoopBits(knights)
         {
-            RegisterPinEP<status>(kingsq, king, EnemyRookQueen<white>(brd), brd);
-        } */
+            kingban |= Lookup::Knight(LSquare(knights));
+        }
+    }
+
+    // Calculate Check from enemy pawns
+    {
+        
+        const BBoard pl = Black_Pawn_AttackLeft(board.black_pawn_) & Pawns_NotLeft();
+        const BBoard pr = Black_Pawn_AttackRight(board.black_pawn_) & Pawns_NotRight();
+        kingban |= (pl | pr);
     }
 
 
+    // Calculate Enemy Bishop
+    {
+        BBoard bishops = board.black_bishop_;
+        LoopBits(bishops)
+        {
+            const Square sq = LSquare(bishops);                
+            BBoard atk = Lookup::Bishop(sq, board.occ_);
+            kingban |= atk;
+        }
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
+    // Calculate Enemy Rook
+    {
+        BBoard rooks = (board.black_rook_ | board.black_queen_);
+        LoopBits(rooks)
+        {
+            const Square sq = LSquare(rooks);
+            BBoard atk = Lookup::Rook(sq, board.occ_);
+            kingban |= atk;
+        }
+    }
 }
+

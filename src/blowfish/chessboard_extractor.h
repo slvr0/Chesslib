@@ -96,9 +96,6 @@ FORCEINL BBoard GetEnemyBishopQueen(const Board& board) {
 }
 
 
-
-
-
 //helps to visualize the board graphically in console
 class BoardConsoleGUI {
 public : 
