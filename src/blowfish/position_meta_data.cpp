@@ -1,13 +1,13 @@
 #include "position_meta_data.h"
 
 void WhiteMetaDataRegister::InitMetaDataSearch(const Board& board) {
-    rook_pins        = { };
-    bishop_pins      = { };
-    enp_target       = { };
+    rook_pins        = { 0x0 };
+    bishop_pins      = { 0x0 };
+    enp_target       = { 0x0 };
     checkmask        = { 0xffffffffffffffffull };
-    kingban          = { };
-    kingattack       = { }; //current moves for king
-    enemy_kingattack = { }; //current enemy king attacked squares
+    kingban          = { 0x0 };
+    kingattack       = { 0x0 }; //current moves for king
+    enemy_kingattack = { 0x0 }; //current enemy king attacked squares
     kingmoves        = { 0x0 };
     ekingmoves       = { 0x0 };
     check_status     = { 0x0 };  
@@ -75,6 +75,41 @@ void WhiteMetaDataRegister::RefreshMetaData(const Board & board) {
                 RegisterPinDiagonal(kingsq, LSquare(pinnersD12), board);
             }
         } 
+      
+        if(board.state_.enp_ != -1) {     
+            enp_target = 1ULL << board.state_.enp_;
+
+            const BBoard pawns = board.white_pawn_;
+            const BBoard enemy_rook_queens = board.black_rook_ | board.black_queen_;
+            const BBoard enp64 = 1ULL << board.state_.enp_;
+
+            //Special Horizontal1 https://lichess.org/editor?fen=8%2F8%2F8%2F1K1pP1q1%2F8%2F8%2F8%2F8+w+-+-+0+1
+            //Special Horizontal2 https://lichess.org/editor?fen=8%2F8%2F8%2F1K1pP1q1%2F8%2F8%2F8%2F8+w+-+-+0+1
+
+            //King is on EP rank and enemy HV walker is on same rank
+
+            //Remove enemy EP and own EP Candidate from OCC and check if Horizontal path to enemy Slider is open
+            //Quick check: We have king - Enemy Slider - Own Pawn - and enemy EP on the same rank!
+            if ((WhiteEPRank() & king) && (WhiteEPRank() & enemy_rook_queens) && (WhiteEPRank() & pawns))
+            {
+                BBoard EPLpawn = pawns & Pawns_NotLeft()  & (White_Pawn_InvertLeft(enp64)); //Pawn that can EPTake to the left - overflow will not matter because 'Notleft'
+                BBoard EPRpawn = pawns & Pawns_NotRight() & (White_Pawn_InvertRight(enp64));  //Pawn that can EPTake to the right - overflow will not matter because 'NotRight'
+
+
+                //invalidates EP from both angles
+                if (EPLpawn) {
+                    BBoard AfterEPocc = board.occ_ & ~((enp_target >> 8) | EPLpawn);
+                    if ((Lookup::Rook(kingsq, AfterEPocc) & WhiteEPRank()) & enemy_rook_queens) 
+                        enp_target = 0x0;
+                }
+                if (EPRpawn) {
+                    BBoard AfterEPocc = board.occ_ & ~((enp_target >> 8) | EPRpawn);
+                    BoardConsoleGUI::PrintBoard(AfterEPocc); 
+                    if ((Lookup::Rook(kingsq, AfterEPocc) & WhiteEPRank()) & enemy_rook_queens) 
+                        enp_target = 0x0;
+                }
+            }           
+        }
     }
 
     

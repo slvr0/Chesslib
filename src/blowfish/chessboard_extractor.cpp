@@ -115,6 +115,8 @@ void BoardConsoleGUI::PrintBoard(unsigned long const & board) {
     print("\n");
 }
 
+
+
 std::vector<char> BoardConsoleGUI::CopyBoardContent(const Board & board){
 
     std::vector<char> printer;

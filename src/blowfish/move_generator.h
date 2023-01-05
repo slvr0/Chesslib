@@ -30,6 +30,7 @@ public :
     virtual void GetQueenMoves(const Board & board) = 0;
     virtual void GetKingMoves(const Board & board) = 0;
     virtual void SetEnemyOrVoid(const Board& board) = 0;   
+    virtual void GetCastlingMoves(const Board& board) = 0;
 
 
 protected : 
@@ -41,6 +42,7 @@ protected :
     BBoard bishop_pins_;
     BBoard moveable_squares_;
     BBoard kingban_;
+    BBoard enp_target_;
     bool   nocheck_; 
 
     std::unique_ptr<IMetaDataRegister> metadata_reg_ = nullptr;
@@ -58,5 +60,5 @@ public :
     virtual void GetRookMoves(const Board & board) override;
     virtual void GetQueenMoves(const Board & board) override;
     virtual void GetKingMoves(const Board & board) override;
-
+    virtual void GetCastlingMoves(const Board& board) override;
 };

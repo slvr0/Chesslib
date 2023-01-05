@@ -29,9 +29,15 @@ int main() {
     std::string pawn_movement_test_04 = "1k4nn/ppp1P1Pp/8/2p3P1/3P1p2/1K6/1P3P2/8 w - - 0 11"; //assert correct!    
     std::string pawn_movement_test_05 = "1k2b1nn/ppp2PPp/8/2p3P1/K2P1p2/8/1P3P2/8 w - - 0 1"; //assert correct!
 
+    std::string pawn_difficult_enp_01 = "5k2/8/8/1K1Pp1q1/8/8/8/8 w - e6 0 2";
+
+    std::string pawn_difficult_enp_02 = "5k2/8/8/1K1pP1q1/8/8/8/8 w - d6 0 2";
+
+    std::string castle_01 = "2k4r/8/8/8/8/8/4PPP1/R3K2R w KQk - 0 1";
 
 
-    Board chessboard = ChessboardGenerator::CreateFromFen(pawn_movement_test_05);    
+
+    Board chessboard = ChessboardGenerator::CreateFromFen(castle_01);    
     //Board chessboard = ChessboardGenerator::CreateFromFen(pin_test_02);   
 
 /*     std::cout << PrintBoardsAndMask(0,0, chessboard, chessboard) << std::endl; */
@@ -48,8 +54,8 @@ int main() {
         print(t0.elapsed());
     }  */
  
-
     white_movegen.GetPseudoLegalMoves(chessboard);
+
 
     return 0;
 }

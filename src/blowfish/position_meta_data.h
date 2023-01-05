@@ -18,6 +18,22 @@ static constexpr uint64_t Rank7 = 0b00000000111111110000000000000000000000000000
 static constexpr uint64_t RankMid = 0x0000FFFFFFFF0000;
 static constexpr uint64_t Rank_18 = 0xFF000000000000FF;
 
+
+static constexpr uint64_t wRCastleInterferenceSquares = 0x60; //kingside castle, these squares needs to be free and not attacked
+static constexpr uint64_t wLCastleInterferenceSquares = 0xE;  // same , queen side
+
+static constexpr uint64_t bRCastleInterferenceSquares = 0x6000000000000000; //kingside castle, these squares needs to be free and not attacked
+static constexpr uint64_t bLCastleInterferenceSquares = 0xE00000000000000; // same , queen side
+
+
+FORCEINL BBoard WhiteEPRank() {
+    return 0xFFull << 32;
+}
+
+FORCEINL BBoard BlackEPRank() {
+    return 0xFFull << 24;
+}
+
 FORCEINL BBoard Pawns_NotLeft() {
 	return ~File1;
 }

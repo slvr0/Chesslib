@@ -19,6 +19,7 @@ void IMoveGenerator::GetPseudoLegalMoves(const Board& board) {
     bishop_pins_        = metadata_reg_->bishop_pins;
     moveable_squares_   = enemy_or_void_ & checkmask_;
     kingban_            = metadata_reg_->kingban;
+    enp_target_         = metadata_reg_->enp_target;
     nocheck_            = (checkmask_ == 0xffffffffffffffffull);
 
     //if checkmask something then disregard other legal moves right away
@@ -30,6 +31,8 @@ void IMoveGenerator::GetPseudoLegalMoves(const Board& board) {
     GetBishopMoves(board);    
     GetRookMoves(board); 
     GetQueenMoves(board);
+
+    if(nocheck_)  GetCastlingMoves(board);      
 
 }
 
@@ -71,19 +74,12 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board) {
     White_Pawns_PruneRight(pawn_capture_right, bishop_pins_);
 
     //handle ENP
-    if (board.state_.enp_ != -1) {      
-        const BBoard enp_64 = 1ULL << board.state_.enp_;
-
-   
-
-        
-
+    if (enp_target_) {  
         //The eppawn must be an enemy since its only ever valid for a single move
-        Bit EPLpawn = pawns_lr & Pawns_NotLeft()  & (White_Pawn_InvertLeft(enp_64  & checkmask_)); //Pawn that can EPTake to the left - overflow will not matter because 'Notleft'
-        Bit EPRpawn = pawns_lr & Pawns_NotRight() & (White_Pawn_InvertRight(enp_64 & checkmask_));  //Pawn that can EPTake to the right - overflow will not matter because 'NotRight'
+        BBoard EPLpawn = pawns_lr & Pawns_NotLeft()  & (White_Pawn_InvertLeft(enp_target_  & checkmask_)); //Pawn that can EPTake to the left - overflow will not matter because 'Notleft'
+        BBoard EPRpawn = pawns_lr & Pawns_NotRight() & (White_Pawn_InvertRight(enp_target_ & checkmask_));  //Pawn that can EPTake to the right - overflow will not matter because 'NotRight'
 
-     /*    BoardConsoleGUI::PrintBoard(EPLpawn);
-        BoardConsoleGUI::PrintBoard(EPRpawn); */
+
         //Special check for pinned EP Take - which is a very special move since even XRay does not see through the 2 pawns on a single rank
         // White will push you cannot EP take: https://lichess.org/editor?fen=8%2F7B%2F8%2F8%2F4p3%2F3k4%2F5P2%2F8+w+-+-+0+1
         // White will push you cannot EP take: https://lichess.org/editor?fen=8%2F8%2F8%2F8%2F1k2p2R%2F8%2F5P2%2F8+w+-+-+0+1
@@ -149,8 +145,8 @@ void WhiteMoveGenerator::GetKnightMoves(const Board & board) {
 
         while(moves) {            
             Square to = PopBit(moves); 
-            /* std::cout << "N || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
-            ++movecounter_; */
+             std::cout << "N || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
+            ++movecounter_; 
         }
     } 
 }
@@ -173,15 +169,15 @@ void WhiteMoveGenerator::GetBishopMoves(const Board & board) {
             
             while(moves)  {
                 Square to = PopBit(moves); 
-               /*  std::cout << "Q || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
-                ++movecounter_; */
+                std::cout << "Q || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
+                ++movecounter_;
             }
         }
         else {
              while(moves)  {
                 Square to = PopBit(moves); 
-                /* std::cout << "B || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
-                ++movecounter_; */
+                std::cout << "B || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
+                ++movecounter_; 
             }          
         }     
     } 
@@ -193,8 +189,8 @@ void WhiteMoveGenerator::GetBishopMoves(const Board & board) {
 
         while(moves) {            
             Square to = PopBit(moves); 
-           /*  std::cout << "B || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
-            ++movecounter_; */
+            std::cout << "B || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
+            ++movecounter_;
         }
     } 
 }
@@ -209,8 +205,8 @@ void WhiteMoveGenerator::GetRookMoves(const Board & board) {
 
         while(moves) {            
             Square to = PopBit(moves); 
-         /*    std::cout << "R || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
-            ++movecounter_; */
+            std::cout << "R || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
+            ++movecounter_;
         }
     } 
 }
@@ -224,24 +220,32 @@ void WhiteMoveGenerator::GetQueenMoves(const Board & board) {
 
         while(moves) {            
             Square to = PopBit(moves); 
-           /*  std::cout << "Q || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
-            ++movecounter_; */
+            std::cout << "Q || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
+            ++movecounter_;
         } 
-        
-    }  
-    
+    } 
 }
-
 
 void WhiteMoveGenerator::GetKingMoves(const Board & board) {  
     Square x = LSquare(board.white_king_);
-    BBoard moves = Lookup::King(x) &~ kingban_;
+    BBoard moves = Lookup::King(x) &~ (kingban_ | board.white_);
 
     /* BoardConsoleGUI::PrintBoard(moveable_squares_); */
     while(moves) {            
         Square to = PopBit(moves); 
-/*         std::cout << "K || " <<  notations[LSquare(board.white_king_)] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
-        ++movecounter_;  */
+         std::cout << "K || " <<  notations[LSquare(board.white_king_)] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
+        ++movecounter_;  
     }
 
+}
+
+void WhiteMoveGenerator::GetCastlingMoves(const Board& board) {    
+    if(board.state_.white_oo_ && !((board.occ_ | kingban_) & wRCastleInterferenceSquares)) {
+        //we could check if rook and king is in correct position, but we should handle this in state transition 
+        std::cout << "O-O :  || " <<  notations[LSquare(board.white_king_)] << " || " << notations[6] << std::endl;
+    }
+
+    if(board.state_.white_ooo_ && !((board.occ_ | kingban_) & wLCastleInterferenceSquares)) {
+        std::cout << "O-O-O :  || " <<  notations[LSquare(board.white_king_)] << " || " << notations[2] << std::endl;
+    }
 }
