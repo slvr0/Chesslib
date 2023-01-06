@@ -11,6 +11,15 @@ Provides a class representing a chessboard in a bit format. BoardState is a subc
 
 */
 
+enum class PieceType {
+    PAWN = 0, 
+    KNIGHT = 1, 
+    BISHOP = 2,
+    ROOK = 3,
+    QUEEN = 4,
+    KING = 5
+};
+
 struct BoardState {
     const bool white_acts_ = true;
     

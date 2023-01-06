@@ -1,14 +1,17 @@
 #include "move_generator.h"
 
 #include <iostream>
-
-#include "chessboard_extractor.h"
-#include "static_move_tables.h"
-#include "position_meta_data.h"
+#include <assert.h>
 
 
-void IMoveGenerator::GetPseudoLegalMoves(const Board& board) {  
+
+
+
+void IMoveGenerator::GetPseudoLegalMoves(const Board& board, SearchType search_type, int & depth, int & rollout_nr_gen) {  
     movecounter_ = 0;   
+    depth_ = depth;
+
+    search_type_ = search_type;
 
     SetEnemyOrVoid(board);
     
@@ -32,11 +35,10 @@ void IMoveGenerator::GetPseudoLegalMoves(const Board& board) {
     GetRookMoves(board); 
     GetQueenMoves(board);
 
-    if(nocheck_)  GetCastlingMoves(board);      
-
+    if(nocheck_)  GetCastlingMoves(board);    
 }
 
-WhiteMoveGenerator::WhiteMoveGenerator()     
+WhiteMoveGenerator::WhiteMoveGenerator()   
 { 
     metadata_reg_ = std::make_unique<WhiteMetaDataRegister> ();
 }
@@ -108,30 +110,61 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board) {
         uint64_t NoPromote_Move =  pawn_forward_1 & ~White_Pawns_LastRank();        
 
         //we treat promo transitions different
-        while (Promote_Left)    { const Bit pos = PopBit(Promote_Left);     const Square to = White_Pawn_AttackLeft(pos); 
-            std::cout << "P(promoteleft) || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl;}
-        while (Promote_Right)   { const Bit pos = PopBit(Promote_Right);    const Square to = White_Pawn_AttackRight(pos);
-            std::cout << "P(promoteright) || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl;}
-        while (Promote_Move)    { const Bit pos = PopBit(Promote_Move);     const Square to = White_Pawn_Forward(pos);
-            std::cout << "P(promoteforward) || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl;}
-        while (NoPromote_Left)  { const Bit pos = PopBit(NoPromote_Left);   const Square to = White_Pawn_AttackLeft(pos);
-            std::cout << "P || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl;}
-        while (NoPromote_Right) { const Bit pos = PopBit(NoPromote_Right);  const Square to = White_Pawn_AttackRight(pos);
-            std::cout << "P || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl;}
-        while (NoPromote_Move)  { const Bit pos = PopBit(NoPromote_Move);   const Square to = White_Pawn_Forward(pos);
-            std::cout << "P || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl;}
-        while (pawn_forward_2)  { const Bit pos = PopBit(pawn_forward_2);   const Square to = White_Pawn_Forward2(pos);
-            std::cout << "P || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl;}
+        while (Promote_Left)    { 
+            const Bit pos = PopBit(Promote_Left);     const Square to = White_Pawn_AttackLeft(pos); 
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::KNIGHT, pos, to), search_type_, depth_ + 1);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::BISHOP, pos, to), search_type_, depth_ + 1);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::ROOK, pos, to), search_type_, depth_ + 1);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::QUEEN, pos, to), search_type_, depth_ + 1);
+        }
+        while (Promote_Right)   { 
+            const Bit pos = PopBit(Promote_Right);    const Square to = White_Pawn_AttackRight(pos);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::KNIGHT, pos, to), search_type_, depth_ + 1);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::BISHOP, pos, to), search_type_, depth_ + 1);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::ROOK, pos, to), search_type_, depth_ + 1);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::QUEEN, pos, to), search_type_, depth_ + 1);
+        }
+        while (Promote_Move)    { 
+            const Bit pos = PopBit(Promote_Move);     const Square to = White_Pawn_Forward(pos);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::KNIGHT, pos, to), search_type_, depth_ + 1);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::BISHOP, pos, to), search_type_, depth_ + 1);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::ROOK, pos, to), search_type_, depth_ + 1);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::QUEEN, pos, to), search_type_, depth_ + 1);
+        }
+        while (NoPromote_Left)  { 
+            const Bit pos = PopBit(NoPromote_Left);   const Square to = White_Pawn_AttackLeft(pos);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnCapture, PieceType::PAWN, pos, to), search_type_, depth_ + 1);
+        }
+        while (NoPromote_Right) { 
+            const Bit pos = PopBit(NoPromote_Right);  const Square to = White_Pawn_AttackRight(pos);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnCapture, PieceType::PAWN, pos, to), search_type_, depth_ + 1);
+        }
+        while (NoPromote_Move)  { 
+            const Bit pos = PopBit(NoPromote_Move);   const Square to = White_Pawn_Forward(pos);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnMove, PieceType::PAWN, pos, to), search_type_, depth_ + 1);
+            }
+        while (pawn_forward_2)  { 
+            const Bit pos = PopBit(pawn_forward_2);   const Square to = White_Pawn_Forward2(pos);
+            callback_.Trigger(::UpdateMove(board, MoveTypes::PawnPush, PieceType::PAWN, pos, to), search_type_, depth_ + 1);
+            }
     }
-    else {
-        while (pawn_capture_left)  { const Bit pos = PopBit(pawn_capture_left);  const Square to = White_Pawn_AttackLeft(pos);
-            std::cout << "P || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl;}
-        while (pawn_capture_right) { const Bit pos = PopBit(pawn_capture_right); const Square to = White_Pawn_AttackRight(pos);
-            std::cout << "P || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl;}
-        while (pawn_forward_1)     { const Bit pos = PopBit(pawn_forward_1);     const Square to = White_Pawn_Forward(pos);
-            std::cout << "P || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl;}
-        while (pawn_forward_2)     { const Bit pos = PopBit(pawn_forward_2);     const Square to = White_Pawn_Forward2(pos);
-            std::cout << "P || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl;}
+    else { //M_Callback(UpdateBoardWhitePawnCaptureLeft(board, pos, to), SearchType::PERFT, depth_ + 1);
+        while (pawn_capture_left)  { 
+            const Bit pos = PopBit(pawn_capture_left);  const Square to = White_Pawn_AttackLeft(pos);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnCapture, PieceType::PAWN, pos, to), search_type_, depth_ + 1);
+        }
+        while (pawn_capture_right) { 
+            const Bit pos = PopBit(pawn_capture_right); const Square to = White_Pawn_AttackRight(pos);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnCapture, PieceType::PAWN, pos, to), search_type_, depth_ + 1);
+        }
+        while (pawn_forward_1)     { 
+            const Bit pos = PopBit(pawn_forward_1);     const Square to = White_Pawn_Forward(pos);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnMove, PieceType::PAWN, pos, to), search_type_, depth_ + 1);
+        }
+        while (pawn_forward_2)     { 
+            const Bit pos = PopBit(pawn_forward_2);     const Square to = White_Pawn_Forward2(pos);
+            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPush, PieceType::PAWN, pos, to), search_type_, depth_ + 1);
+        }
     }    
 }
 
@@ -249,3 +282,5 @@ void WhiteMoveGenerator::GetCastlingMoves(const Board& board) {
         std::cout << "O-O-O :  || " <<  notations[LSquare(board.white_king_)] << " || " << notations[2] << std::endl;
     }
 }
+
+

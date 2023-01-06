@@ -252,8 +252,6 @@ public:
         kingban |= Chess_Lookup::CheckBetween[king * 64 + enemy]; //King cannot go to square opposite to slider 
     }
 
-    
-
     virtual void            InitMetaDataSearch(const Board& board) = 0;  
     virtual void            RefreshMetaData(const Board & board) = 0;  
 
@@ -281,12 +279,10 @@ public :
         BBoard ekingmoves = { 0x0 };
         BBoard check_status = { 0x0 };
     }
-
-
     
 private :
 
-    virtual void CalculateKingBan(const Board & board) override; 
+    
     virtual void InitMetaDataSearch(const Board& board) override;  
     virtual void RefreshMetaData(const Board & board) override;
 
@@ -310,5 +306,7 @@ private :
             bishop_pins |= pin_mask;
         }
     }
+
+    virtual void CalculateKingBan(const Board & board) override; 
 };
 

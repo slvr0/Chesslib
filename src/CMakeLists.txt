@@ -17,5 +17,17 @@ add_library(blowfish_engine
     blowfish/move_generator.cpp
     blowfish/chessboard_generator.h
     blowfish/chessboard_generator.cpp
+    blowfish/chessboard_traverser.h
+    blowfish/chessboard_traverser.cpp
     blowfish/defs.h
 )
+
+add_library(chess_interface
+    chess_interface/movegen_interface.h
+    chess_interface/movegen_interface.cpp
+
+)
+
+target_link_libraries(blowfish_engine chess_interface)
+
+

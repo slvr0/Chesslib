@@ -9,7 +9,7 @@
 
 #include <immintrin.h>
 
-#define ENABLEDBG 0
+#define ENABLEDBG 1
 #define ENABLEPRINT 0
 
 #define IFDBG if constexpr (ENABLEDBG) 

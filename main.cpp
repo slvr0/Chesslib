@@ -8,6 +8,8 @@
 #include "src/blowfish/move_generator.h"
 #include "src/blowfish/position_meta_data.h"
 
+#include "src/chess_interface/movegen_interface.h"
+
 int main() {
 
     std::string basic_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -42,7 +44,8 @@ int main() {
 
 /*     std::cout << PrintBoardsAndMask(0,0, chessboard, chessboard) << std::endl; */
 
-    WhiteMoveGenerator white_movegen;
+  
+    
 
  //performance check
 /*      {   
@@ -53,8 +56,14 @@ int main() {
 
         print(t0.elapsed());
     }  */
- 
-    white_movegen.GetPseudoLegalMoves(chessboard);
+    int d = 1;
+
+    ChesslibInterface chesslib_io;
+
+    chesslib_io.InitSearch(chessboard, SearchType::PERFT, 2);
+
+    //white_movegen.GetPseudoLegalMoves(chessboard, SearchType::PERFT, d);
+
 
 
     return 0;
