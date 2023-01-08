@@ -39,7 +39,7 @@ int main() {
 
 
 
-    Board chessboard = ChessboardGenerator::CreateFromFen(castle_01);    
+    Board chessboard = ChessboardGenerator::CreateFromFen(basic_pos);    
     //Board chessboard = ChessboardGenerator::CreateFromFen(pin_test_02);   
 
 /*     std::cout << PrintBoardsAndMask(0,0, chessboard, chessboard) << std::endl; */
@@ -60,11 +60,31 @@ int main() {
 
     ChesslibInterface chesslib_io;
 
-    chesslib_io.InitSearch(chessboard, SearchType::PERFT, 2);
+    BoardDummy dummy;
+    {   
+        Timer t0; 
+        int from = 3;
+        int to = 4;
+        for(int i = 0; i < 1e6 ; ++i) {
+            chesslib_io.InitSearch(chessboard, SearchType::PERFT, 2);
+            /* int from = 3;
+            int to = 4; */
 
-    //white_movegen.GetPseudoLegalMoves(chessboard, SearchType::PERFT, d);
+
+/*                 for(int i = 0 ; i < 20 ; ++i) {
+                    Board nb = UpdateMove(chessboard, MoveTypes::PawnCapture, PieceType::PAWN, from, to); 
+                } */
+        }
+
+        print(t0.elapsed());
+    }  
 
 
+
+  /*   BBoard rookmove = 1ULL << 56 | 1ULL << 59;
+    BBoard kingmove = 1ULL << 60 | 1ULL << 58;
+    print(rookmove);
+    print(kingmove); */
 
     return 0;
 }

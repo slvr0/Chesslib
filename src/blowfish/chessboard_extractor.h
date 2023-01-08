@@ -28,71 +28,71 @@ FORCEINL BBoard GetBlackOrVoid(const Board& board) {
 }
 
 FORCEINL BBoard GetActive(const Board& board) {
-    return board.state_.white_acts_ ? board.white_ : board.black_;
+    return board.white_acts_ ? board.white_ : board.black_;
 }
 
 FORCEINL BBoard GetActivePawns(const Board& board) {
-    return board.state_.white_acts_ ? board.white_pawn_ : board.black_pawn_;
+    return board.white_acts_ ? board.white_pawn_ : board.black_pawn_;
 }
 
 FORCEINL BBoard GetEnemyPawns(const Board& board) {
-    return board.state_.white_acts_ ? board.black_pawn_ : board.white_pawn_;
+    return board.white_acts_ ? board.black_pawn_ : board.white_pawn_;
 }
 
 FORCEINL BBoard GetActiveKnights(const Board& board) {
-    return board.state_.white_acts_ ? board.white_knight_ : board.black_knight_;
+    return board.white_acts_ ? board.white_knight_ : board.black_knight_;
 }
 
 FORCEINL BBoard GetEnemyKnights(const Board& board) {
-    return board.state_.white_acts_ ? board.black_knight_ : board.white_knight_;
+    return board.white_acts_ ? board.black_knight_ : board.white_knight_;
 }
 
 FORCEINL BBoard GetActiveBishops(const Board& board) {
-    return board.state_.white_acts_ ? board.white_bishop_ : board.black_bishop_;
+    return board.white_acts_ ? board.white_bishop_ : board.black_bishop_;
 }
 
 FORCEINL BBoard GetEnemyBishops(const Board& board) {
-    return board.state_.white_acts_ ? board.black_bishop_ : board.white_bishop_;
+    return board.white_acts_ ? board.black_bishop_ : board.white_bishop_;
 }
 
 FORCEINL BBoard GetActiveRooks(const Board& board) {
-    return board.state_.white_acts_ ? board.white_rook_ : board.black_rook_;
+    return board.white_acts_ ? board.white_rook_ : board.black_rook_;
 }
 
 FORCEINL BBoard GetEnemyRooks(const Board& board) {
-    return board.state_.white_acts_ ? board.black_rook_ : board.white_rook_;
+    return board.white_acts_ ? board.black_rook_ : board.white_rook_;
 }
 
 FORCEINL BBoard GetActiveQueens(const Board& board) {
-    return board.state_.white_acts_ ? board.white_queen_ : board.black_queen_;
+    return board.white_acts_ ? board.white_queen_ : board.black_queen_;
 }
 
 FORCEINL BBoard GetEnemyQueens(const Board& board) {
-    return board.state_.white_acts_ ? board.black_queen_ : board.white_queen_;
+    return board.white_acts_ ? board.black_queen_ : board.white_queen_;
 }
 
 FORCEINL BBoard GetActiveKing(const Board& board) {
-    return board.state_.white_acts_ ? board.white_king_ : board.black_king_;
+    return board.white_acts_ ? board.white_king_ : board.black_king_;
 }
 
 FORCEINL BBoard GetEnemyKing(const Board& board) {
-    return board.state_.white_acts_ ? board.black_king_ : board.white_king_;
+    return board.white_acts_ ? board.black_king_ : board.white_king_;
 }
 
 FORCEINL BBoard GetActiveRookQueen(const Board& board) {
-    return board.state_.white_acts_ ? board.white_rook_ | board.white_queen_ : board.black_rook_ | board.black_queen_;
+    return board.white_acts_ ? board.white_rook_ | board.white_queen_ : board.black_rook_ | board.black_queen_;
 }
 
 FORCEINL BBoard GetEnemyRookQueen(const Board& board) {
-    return board.state_.white_acts_ ? board.black_rook_ | board.black_queen_ : board.white_rook_ | board.white_queen_;
+    return board.white_acts_ ? board.black_rook_ | board.black_queen_ : board.white_rook_ | board.white_queen_;
 }
 
 FORCEINL BBoard GetActiveBishopQueen(const Board& board) {
-    return board.state_.white_acts_ ? board.white_bishop_ | board.white_queen_ : board.black_bishop_ | board.black_queen_;
+    return board.white_acts_ ? board.white_bishop_ | board.white_queen_ : board.black_bishop_ | board.black_queen_;
 }
 
 FORCEINL BBoard GetEnemyBishopQueen(const Board& board) {
-    return board.state_.white_acts_ ? board.black_bishop_ | board.black_queen_ : board.white_bishop_ | board.white_queen_;
+    return board.white_acts_ ? board.black_bishop_ | board.black_queen_ : board.white_bishop_ | board.white_queen_;
 }
 
 

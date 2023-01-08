@@ -25,6 +25,8 @@ void WhiteMetaDataRegister::RefreshMetaData(const Board & board) {
         const BBoard pl = Black_Pawn_AttackLeft(board.black_pawn_ & Pawns_NotLeft());
         const BBoard pr = Black_Pawn_AttackRight(board.black_pawn_ & Pawns_NotRight());
 
+        kingban |= (pl | pr);
+
         if (pl & board.white_king_) check_status = Black_Pawn_AttackRight(board.white_king_);
         else if (pr & board.white_king_) check_status = Black_Pawn_AttackLeft(board.white_king_);
         else check_status = 0xffffffffffffffffull;
@@ -76,12 +78,12 @@ void WhiteMetaDataRegister::RefreshMetaData(const Board & board) {
             }
         } 
       
-        if(board.state_.enp_ != -1) {     
-            enp_target = 1ULL << board.state_.enp_;
+        if(board.enp_ != -1) {     
+            enp_target = 1ULL << board.enp_;
 
             const BBoard pawns = board.white_pawn_;
             const BBoard enemy_rook_queens = board.black_rook_ | board.black_queen_;
-            const BBoard enp64 = 1ULL << board.state_.enp_;
+            const BBoard enp64 = 1ULL << board.enp_;
 
             //Special Horizontal1 https://lichess.org/editor?fen=8%2F8%2F8%2F1K1pP1q1%2F8%2F8%2F8%2F8+w+-+-+0+1
             //Special Horizontal2 https://lichess.org/editor?fen=8%2F8%2F8%2F1K1pP1q1%2F8%2F8%2F8%2F8+w+-+-+0+1
@@ -95,7 +97,6 @@ void WhiteMetaDataRegister::RefreshMetaData(const Board & board) {
                 BBoard EPLpawn = pawns & Pawns_NotLeft()  & (White_Pawn_InvertLeft(enp64)); //Pawn that can EPTake to the left - overflow will not matter because 'Notleft'
                 BBoard EPRpawn = pawns & Pawns_NotRight() & (White_Pawn_InvertRight(enp64));  //Pawn that can EPTake to the right - overflow will not matter because 'NotRight'
 
-
                 //invalidates EP from both angles
                 if (EPLpawn) {
                     BBoard AfterEPocc = board.occ_ & ~((enp_target >> 8) | EPLpawn);
@@ -103,39 +104,21 @@ void WhiteMetaDataRegister::RefreshMetaData(const Board & board) {
                         enp_target = 0x0;
                 }
                 if (EPRpawn) {
-                    BBoard AfterEPocc = board.occ_ & ~((enp_target >> 8) | EPRpawn);
-                    BoardConsoleGUI::PrintBoard(AfterEPocc); 
+                    BBoard AfterEPocc = board.occ_ & ~((enp_target >> 8) | EPRpawn);                    
                     if ((Lookup::Rook(kingsq, AfterEPocc) & WhiteEPRank()) & enemy_rook_queens) 
                         enp_target = 0x0;
                 }
             }           
         }
-    }
-
-    
-
-    CalculateKingBan(board);
-}
-
-void WhiteMetaDataRegister::CalculateKingBan(const Board & board) {
-    
-    {
-        
+    } 
+       
+    {        
         BBoard knights = board.black_knight_;
         LoopBits(knights)
         {
             kingban |= Lookup::Knight(LSquare(knights));
         }
     }
-
-    // Calculate Check from enemy pawns
-    {
-        
-        const BBoard pl = Black_Pawn_AttackLeft(board.black_pawn_) & Pawns_NotLeft();
-        const BBoard pr = Black_Pawn_AttackRight(board.black_pawn_) & Pawns_NotRight();
-        kingban |= (pl | pr);
-    }
-
 
     // Calculate Enemy Bishop
     {
@@ -158,5 +141,9 @@ void WhiteMetaDataRegister::CalculateKingBan(const Board & board) {
             kingban |= atk;
         }
     }
+}
+
+void WhiteMetaDataRegister::CalculateKingBan(const Board & board) {    
+
 }
 

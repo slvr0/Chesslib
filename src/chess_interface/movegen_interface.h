@@ -16,10 +16,10 @@ public :
 
     void M_Callback(const Board& board, SearchType search_type, int depth);
 
+    inline int GetEnumaratedMoves() { return n_moves_;}
 
 private : 
     MoveGeneratorHeader mgen_;
     int n_moves_ = 0;
     int max_depth_ = 0;
-
 };

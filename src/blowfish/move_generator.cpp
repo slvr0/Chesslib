@@ -3,19 +3,17 @@
 #include <iostream>
 #include <assert.h>
 
-
-
-
+//consider removing the movetype evaluation for each insertion, maybe just faster too check on castle legality if we have a rook in corret place?
 
 void IMoveGenerator::GetPseudoLegalMoves(const Board& board, SearchType search_type, int & depth, int & rollout_nr_gen) {  
     movecounter_ = 0;   
     depth_ = depth;
+    search_type_ = search_type;   
+    enemy_or_void_ = ~board.white_;
 
-    search_type_ = search_type;
 
-    SetEnemyOrVoid(board);
     
-    metadata_reg_->RefreshMetaData(board);  
+/*     metadata_reg_->RefreshMetaData(board);  
 
     checkmask_          = metadata_reg_->checkmask;
     rook_pins_          = metadata_reg_->rook_pins;
@@ -23,10 +21,12 @@ void IMoveGenerator::GetPseudoLegalMoves(const Board& board, SearchType search_t
     moveable_squares_   = enemy_or_void_ & checkmask_;
     kingban_            = metadata_reg_->kingban;
     enp_target_         = metadata_reg_->enp_target;
-    nocheck_            = (checkmask_ == 0xffffffffffffffffull);
+    nocheck_            = (checkmask_ == 0xffffffffffffffffull); */
+
+
 
     //if checkmask something then disregard other legal moves right away
-    GetKingMoves(board);
+/*     GetKingMoves(board);
 
     //else proceed these/
     GetPawnMoves(board);
@@ -35,18 +35,142 @@ void IMoveGenerator::GetPseudoLegalMoves(const Board& board, SearchType search_t
     GetRookMoves(board); 
     GetQueenMoves(board);
 
-    if(nocheck_)  GetCastlingMoves(board);    
+    if(nocheck_) GetCastlingMoves(board);   */  
+}
+
+
+void WhiteMoveGenerator::RefreshMetaDataInternal(const Board& board) {
+    kingmoves_ =  Lookup::King(LSquare(board.white_king_)); 
+    ekingmoves_ = Lookup::King(LSquare(board.black_king_));
+
+    //Pawn checks
+    {
+        const BBoard pl = Black_Pawn_AttackLeft(board.black_pawn_ & Pawns_NotLeft());
+        const BBoard pr = Black_Pawn_AttackRight(board.black_pawn_ & Pawns_NotRight());
+
+        kingban_ |= (pl | pr);
+
+        if (pl & board.white_king_) check_status_ = Black_Pawn_AttackRight(board.white_king_);
+        else if (pr & board.white_king_) check_status_ = Black_Pawn_AttackLeft(board.white_king_);
+        else check_status_ = 0xffffffffffffffffull;
+    }
+
+    //Knight checks
+    {
+        BBoard knightcheck = Lookup::Knight(LSquare(board.white_king_)) & board.black_knight_;
+        if (knightcheck) check_status_ = knightcheck;
+    }
+
+    checkmask_ = check_status_;
+
+
+    const BBoard king   = board.white_king_;
+    const BBoard eking  = board.black_king_;
+    const BBoard kingsq = LSquare(king);
+
+    //evaluate pinned pieces and checks from sliders
+    {
+        rook_pins_ = 0; 
+        bishop_pins_ = 0;
+        
+        if (Chess_Lookup::RookMask[kingsq] & (board.black_rook_ | board.black_queen_))
+        {
+            BBoard atkHV = Lookup::Rook(kingsq, board.occ_) & (board.black_rook_ | board.black_queen_);
+            LoopBits(atkHV) {
+                Square sq = LSquare(atkHV);
+                CheckBySlider(kingsq, sq);
+            }
+
+            BBoard pinnersHV = Lookup::Rook_Xray(kingsq, board.occ_) & (board.black_rook_ | board.black_queen_);
+            LoopBits(pinnersHV)
+            {                
+                RegisterPinHorisontalVertical(kingsq, LSquare(pinnersHV), board);
+            }
+        }
+        if (Chess_Lookup::BishopMask[kingsq] & (board.black_bishop_ | board.black_queen_)) {
+            BBoard atkD12 = Lookup::Bishop(kingsq, board.occ_) & (board.black_bishop_ | board.black_queen_);
+            LoopBits(atkD12) {
+                Square sq = LSquare(atkD12);
+                CheckBySlider(kingsq, sq);
+            }
+
+            BBoard pinnersD12 = Lookup::Bishop_Xray(kingsq, board.occ_) & (board.black_bishop_ | board.black_queen_);
+            LoopBits(pinnersD12)
+            {               
+                RegisterPinDiagonal(kingsq, LSquare(pinnersD12), board);
+            }
+        } 
+      
+        if(board.enp_ != -1) {     
+            enp_target_ = 1ULL << board.enp_;
+
+            const BBoard pawns = board.white_pawn_;
+            const BBoard enemy_rook_queens = board.black_rook_ | board.black_queen_;
+            const BBoard enp64 = 1ULL << board.enp_;
+
+            //Special Horizontal1 https://lichess.org/editor?fen=8%2F8%2F8%2F1K1pP1q1%2F8%2F8%2F8%2F8+w+-+-+0+1
+            //Special Horizontal2 https://lichess.org/editor?fen=8%2F8%2F8%2F1K1pP1q1%2F8%2F8%2F8%2F8+w+-+-+0+1
+
+            //King is on EP rank and enemy HV walker is on same rank
+
+            //Remove enemy EP and own EP Candidate from OCC and check if Horizontal path to enemy Slider is open
+            //Quick check: We have king - Enemy Slider - Own Pawn - and enemy EP on the same rank!
+            if ((WhiteEPRank() & king) && (WhiteEPRank() & enemy_rook_queens) && (WhiteEPRank() & pawns))
+            {
+                BBoard EPLpawn = pawns & Pawns_NotLeft()  & (White_Pawn_InvertLeft(enp64)); //Pawn that can EPTake to the left - overflow will not matter because 'Notleft'
+                BBoard EPRpawn = pawns & Pawns_NotRight() & (White_Pawn_InvertRight(enp64));  //Pawn that can EPTake to the right - overflow will not matter because 'NotRight'
+
+                //invalidates EP from both angles
+                if (EPLpawn) {
+                    BBoard AfterEPocc = board.occ_ & ~((enp_target_ >> 8) | EPLpawn);
+                    if ((Lookup::Rook(kingsq, AfterEPocc) & WhiteEPRank()) & enemy_rook_queens) 
+                        enp_target_ = 0x0;
+                }
+                if (EPRpawn) {
+                    BBoard AfterEPocc = board.occ_ & ~((enp_target_ >> 8) | EPRpawn);                    
+                    if ((Lookup::Rook(kingsq, AfterEPocc) & WhiteEPRank()) & enemy_rook_queens) 
+                        enp_target_ = 0x0;
+                }
+            }           
+        }
+    } 
+       
+    {        
+        BBoard knights = board.black_knight_;
+        LoopBits(knights)
+        {
+            kingban_ |= Lookup::Knight(LSquare(knights));
+        }
+    }
+
+    // Calculate Enemy Bishop
+    {
+        BBoard bishops = board.black_bishop_;
+        LoopBits(bishops)
+        {
+            const Square sq = LSquare(bishops);                
+            BBoard atk = Lookup::Bishop(sq, board.occ_);
+            kingban_ |= atk;
+        }
+    }
+
+    // Calculate Enemy Rook
+    {
+        BBoard rooks = (board.black_rook_ | board.black_queen_);
+        LoopBits(rooks)
+        {
+            const Square sq = LSquare(rooks);
+            BBoard atk = Lookup::Rook(sq, board.occ_);
+            kingban_ |= atk;
+        }
+    }
 }
 
 WhiteMoveGenerator::WhiteMoveGenerator()   
 { 
     metadata_reg_ = std::make_unique<WhiteMetaDataRegister> ();
+    legal_moves_.reserve(max_allocation_size_);
 }
-
-void WhiteMoveGenerator::SetEnemyOrVoid(const Board& board) {
-    enemy_or_void_ = GetBlackOrVoid(board);
-}
-
 
 //section logic merely copied from gargantua
 void WhiteMoveGenerator::GetPawnMoves(const Board & board) {
@@ -81,7 +205,6 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board) {
         BBoard EPLpawn = pawns_lr & Pawns_NotLeft()  & (White_Pawn_InvertLeft(enp_target_  & checkmask_)); //Pawn that can EPTake to the left - overflow will not matter because 'Notleft'
         BBoard EPRpawn = pawns_lr & Pawns_NotRight() & (White_Pawn_InvertRight(enp_target_ & checkmask_));  //Pawn that can EPTake to the right - overflow will not matter because 'NotRight'
 
-
         //Special check for pinned EP Take - which is a very special move since even XRay does not see through the 2 pawns on a single rank
         // White will push you cannot EP take: https://lichess.org/editor?fen=8%2F7B%2F8%2F8%2F4p3%2F3k4%2F5P2%2F8+w+-+-+0+1
         // White will push you cannot EP take: https://lichess.org/editor?fen=8%2F8%2F8%2F8%2F1k2p2R%2F8%2F5P2%2F8+w+-+-+0+1
@@ -112,58 +235,92 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board) {
         //we treat promo transitions different
         while (Promote_Left)    { 
             const Bit pos = PopBit(Promote_Left);     const Square to = White_Pawn_AttackLeft(pos); 
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::KNIGHT, pos, to), search_type_, depth_ + 1);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::BISHOP, pos, to), search_type_, depth_ + 1);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::ROOK, pos, to), search_type_, depth_ + 1);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::QUEEN, pos, to), search_type_, depth_ + 1);
+
+            #ifdef _DEBUG 
+                UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to);
+                UpdatePawnPromotion(board, PieceType::BISHOP, pos, to);
+                UpdatePawnPromotion(board, PieceType::ROOK, pos, to);
+                UpdatePawnPromotion(board, PieceType::QUEEN, pos, to);            
+            #endif      
         }
         while (Promote_Right)   { 
             const Bit pos = PopBit(Promote_Right);    const Square to = White_Pawn_AttackRight(pos);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::KNIGHT, pos, to), search_type_, depth_ + 1);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::BISHOP, pos, to), search_type_, depth_ + 1);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::ROOK, pos, to), search_type_, depth_ + 1);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::QUEEN, pos, to), search_type_, depth_ + 1);
+
+            #ifdef _DEBUG
+                UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to);
+                UpdatePawnPromotion(board, PieceType::BISHOP, pos, to);
+                UpdatePawnPromotion(board, PieceType::ROOK, pos, to);
+                UpdatePawnPromotion(board, PieceType::QUEEN, pos, to); 
+            #endif
         }
         while (Promote_Move)    { 
             const Bit pos = PopBit(Promote_Move);     const Square to = White_Pawn_Forward(pos);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::KNIGHT, pos, to), search_type_, depth_ + 1);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::BISHOP, pos, to), search_type_, depth_ + 1);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::ROOK, pos, to), search_type_, depth_ + 1);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPromote, PieceType::QUEEN, pos, to), search_type_, depth_ + 1);
+
+            #ifdef _DEBUG 
+                UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to);
+                UpdatePawnPromotion(board, PieceType::BISHOP, pos, to);
+                UpdatePawnPromotion(board, PieceType::ROOK, pos, to);
+                UpdatePawnPromotion(board, PieceType::QUEEN, pos, to); 
+            #endif 
         }
         while (NoPromote_Left)  { 
             const Bit pos = PopBit(NoPromote_Left);   const Square to = White_Pawn_AttackLeft(pos);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnCapture, PieceType::PAWN, pos, to), search_type_, depth_ + 1);
+
+            #ifdef _DEBUG 
+                UpdatePawnCapture(board, pos, to);
+            #endif
+            
         }
         while (NoPromote_Right) { 
             const Bit pos = PopBit(NoPromote_Right);  const Square to = White_Pawn_AttackRight(pos);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnCapture, PieceType::PAWN, pos, to), search_type_, depth_ + 1);
+
+            #ifdef _DEBUG 
+                UpdatePawnCapture(board, pos, to);
+            #endif
         }
         while (NoPromote_Move)  { 
             const Bit pos = PopBit(NoPromote_Move);   const Square to = White_Pawn_Forward(pos);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnMove, PieceType::PAWN, pos, to), search_type_, depth_ + 1);
-            }
+
+            #ifdef _DEBUG 
+                UpdatePawnMove(board, pos, to);
+            #endif            
+            
+        }
         while (pawn_forward_2)  { 
             const Bit pos = PopBit(pawn_forward_2);   const Square to = White_Pawn_Forward2(pos);
-            callback_.Trigger(::UpdateMove(board, MoveTypes::PawnPush, PieceType::PAWN, pos, to), search_type_, depth_ + 1);
-            }
+
+            #ifdef _DEBUG 
+                UpdatePawnPush(board, pos, to);
+            #endif           
+        }
     }
-    else { //M_Callback(UpdateBoardWhitePawnCaptureLeft(board, pos, to), SearchType::PERFT, depth_ + 1);
+    else { 
         while (pawn_capture_left)  { 
             const Bit pos = PopBit(pawn_capture_left);  const Square to = White_Pawn_AttackLeft(pos);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnCapture, PieceType::PAWN, pos, to), search_type_, depth_ + 1);
+            #ifdef _DEBUG
+                UpdatePawnCapture(board, pos, to);
+            #endif
         }
         while (pawn_capture_right) { 
             const Bit pos = PopBit(pawn_capture_right); const Square to = White_Pawn_AttackRight(pos);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnCapture, PieceType::PAWN, pos, to), search_type_, depth_ + 1);
+
+            #ifdef _DEBUG
+                UpdatePawnCapture(board, pos, to);
+            #endif
         }
         while (pawn_forward_1)     { 
             const Bit pos = PopBit(pawn_forward_1);     const Square to = White_Pawn_Forward(pos);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnMove, PieceType::PAWN, pos, to), search_type_, depth_ + 1);
+
+            #ifdef _DEBUG
+                UpdatePawnMove(board, pos, to);
+            #endif
         }
         while (pawn_forward_2)     { 
             const Bit pos = PopBit(pawn_forward_2);     const Square to = White_Pawn_Forward2(pos);
-            callback_.Trigger(UpdateMove(board, MoveTypes::PawnPush, PieceType::PAWN, pos, to), search_type_, depth_ + 1);
+
+            #ifdef _DEBUG
+                UpdatePawnPush(board, pos, to);
+            #endif
         }
     }    
 }
@@ -178,8 +335,9 @@ void WhiteMoveGenerator::GetKnightMoves(const Board & board) {
 
         while(moves) {            
             Square to = PopBit(moves); 
-             std::cout << "N || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
-            ++movecounter_; 
+            #ifdef _DEBUG
+                UpdateKnightMove(board, x, to);
+            #endif       
         }
     } 
 }
@@ -202,15 +360,19 @@ void WhiteMoveGenerator::GetBishopMoves(const Board & board) {
             
             while(moves)  {
                 Square to = PopBit(moves); 
-                std::cout << "Q || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
-                ++movecounter_;
+
+                #ifdef _DEBUG
+                    UpdateQueenMove(board, x, to);
+                #endif
             }
         }
         else {
              while(moves)  {
                 Square to = PopBit(moves); 
-                std::cout << "B || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
-                ++movecounter_; 
+
+                #ifdef _DEBUG
+                    UpdateBishopMove(board, x, to);
+                #endif
             }          
         }     
     } 
@@ -222,8 +384,9 @@ void WhiteMoveGenerator::GetBishopMoves(const Board & board) {
 
         while(moves) {            
             Square to = PopBit(moves); 
-            std::cout << "B || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
-            ++movecounter_;
+            #ifdef _DEBUG
+                UpdateBishopMove(board, x, to);
+            #endif
         }
     } 
 }
@@ -238,8 +401,9 @@ void WhiteMoveGenerator::GetRookMoves(const Board & board) {
 
         while(moves) {            
             Square to = PopBit(moves); 
-            std::cout << "R || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
-            ++movecounter_;
+            #ifdef _DEBUG 
+                UpdateRookMove(board, x, to);
+            #endif            
         }
     } 
 }
@@ -252,9 +416,10 @@ void WhiteMoveGenerator::GetQueenMoves(const Board & board) {
         BBoard moves = Lookup::Queen(x, board.occ_) & moveable_squares_; 
 
         while(moves) {            
-            Square to = PopBit(moves); 
-            std::cout << "Q || " <<  notations[x] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
-            ++movecounter_;
+            Square to = PopBit(moves);           
+            #ifdef _DEBUG
+                UpdateQueenMove(board, x, to);
+            #endif
         } 
     } 
 }
@@ -265,21 +430,27 @@ void WhiteMoveGenerator::GetKingMoves(const Board & board) {
 
     /* BoardConsoleGUI::PrintBoard(moveable_squares_); */
     while(moves) {            
-        Square to = PopBit(moves); 
-         std::cout << "K || " <<  notations[LSquare(board.white_king_)] << " || " << notations[LeastBit(to)] << std::endl; //replacing this with a callback in the future.
-        ++movecounter_;  
+        Square to = PopBit(moves);    
+        #ifdef _DEBUG
+            UpdateKingMove(board, x, to);
+        #endif
     }
 
 }
 
 void WhiteMoveGenerator::GetCastlingMoves(const Board& board) {    
-    if(board.state_.white_oo_ && !((board.occ_ | kingban_) & wRCastleInterferenceSquares)) {
-        //we could check if rook and king is in correct position, but we should handle this in state transition 
-        std::cout << "O-O :  || " <<  notations[LSquare(board.white_king_)] << " || " << notations[6] << std::endl;
+    if(board.white_oo_ && !((board.occ_ | kingban_) & wRCastleInterferenceSquares)) {
+        //we could check if rook and king is in correct position, but we should handle this in state transition, Or maybe it should be handled here... 
+        //decided, add check that rook is in place.
+        #ifdef _DEBUG
+            UpdateCastle00(board);
+        #endif
     }
 
-    if(board.state_.white_ooo_ && !((board.occ_ | kingban_) & wLCastleInterferenceSquares)) {
-        std::cout << "O-O-O :  || " <<  notations[LSquare(board.white_king_)] << " || " << notations[2] << std::endl;
+    if(board.white_ooo_ && !((board.occ_ | kingban_) & wLCastleInterferenceSquares)) {
+        #ifdef _DEBUG
+            UpdateCastle000(board);
+        #endif
     }
 }
 

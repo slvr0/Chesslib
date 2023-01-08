@@ -10,6 +10,7 @@
 #include "static_move_tables.h"
 #include "position_meta_data.h"
 
+#include "dubious.h"
 
 
 enum class SearchType {
@@ -23,20 +24,20 @@ enum class SearchType {
 class MoveGenCallback {
 public :
     //bind
-    inline bool Subscribe(std::function<void(const Board&, SearchType, int)> ftor) {
+    inline bool Subscribe(std::function<void(const Board&, const SearchType&, const int &)> ftor) {
         ftor_ = ftor;
 
         return true;
     }
     //trigger update
     inline void Trigger(const Board& b, SearchType st, int d) {
-        if(ENABLEDBG)
-            m_assert((ftor_), "The callback function has not been defined\n");        
+        /* if(ENABLEDBG)
+            m_assert((ftor_), "The callback function has not been defined\n");    */     
 
         ftor_(b, st, d);
     }
 
-    std::function<void(const Board&, SearchType, int)> ftor_ = nullptr;    
+    std::function<void(const Board&, const SearchType&, const int &)> ftor_ = nullptr;    
 };
 
 /*
@@ -63,7 +64,7 @@ public :
     virtual void SetEnemyOrVoid(const Board& board) = 0;   
     virtual void GetCastlingMoves(const Board& board) = 0;
 
-    inline bool SetCallback(std::function<void(const Board&, SearchType, int)> ftor) {
+    inline bool SetCallback(std::function<void(const Board&, const SearchType&, const int &)> ftor) {
         return callback_.Subscribe(ftor);
     }
 
@@ -81,25 +82,103 @@ protected :
     uint16_t depth_;
     SearchType search_type_;
 
+
+
     std::unique_ptr<IMetaDataRegister> metadata_reg_ = nullptr;
     MoveGenCallback callback_;  
-     
+
+    //for move allocation, remove later ( we dont allocate shit )
+    const size_t max_allocation_size_ = 100;
+    std::vector<Board> legal_moves_;
+    uint16_t search_index_ = 0;
+    bool trigger_cb_ = true; //for debug  
 };
 
 class WhiteMoveGenerator : public IMoveGenerator {
 public : 
     WhiteMoveGenerator();
 
-    virtual void SetEnemyOrVoid(const Board& board) override;
-    virtual void GetPawnMoves(const Board & board) override;
-    virtual void GetKnightMoves(const Board & board) override;
-    virtual void GetBishopMoves(const Board & board) override;
-    virtual void GetRookMoves(const Board & board) override;
-    virtual void GetQueenMoves(const Board & board) override;
-    virtual void GetKingMoves(const Board & board) override;
-    virtual void GetCastlingMoves(const Board& board) override;
+    inline void SetEnemyOrVoid(const Board& board) override {
+        enemy_or_void_ = GetBlackOrVoid(board);
+    }
+
+    inline void GetLegalMoves(const Board& board, const SearchType& search_type) {
+
+        movecounter_ = 0;   
+        depth_ = 0; //specify input later
+        search_type_ = search_type;   
+        enemy_or_void_ = ~board.white_;
+
+        RefreshMetaDataInternal(board);
+
+        //if checkmask something then disregard other legal moves right away
+        GetKingMoves(board);
+
+        //else proceed these/
+        GetPawnMoves(board);
+        GetKnightMoves(board);
+        GetBishopMoves(board);    
+        GetRookMoves(board); 
+        GetQueenMoves(board);
+
+        if(nocheck_) GetCastlingMoves(board);     
+    }
+
+
+    void GetPawnMoves(const Board & board);
+    void GetKnightMoves(const Board & board);
+    void GetBishopMoves(const Board & board);
+    void GetRookMoves(const Board & board);
+    void GetQueenMoves(const Board & board);
+    void GetKingMoves(const Board & board);
+    void GetCastlingMoves(const Board& board);
+
+    void RefreshMetaDataInternal(const Board& board);
 
 private:
+
+    BBoard rook_pins_        = { 0x0 };
+    BBoard bishop_pins_      = { 0x0 };
+    BBoard enp_target_       = { 0x0 };
+    BBoard checkmask_        = { 0xffffffffffffffffull };
+    BBoard kingban_          = { 0x0 };
+    BBoard kingattack_       = { 0x0 }; //current moves for king
+    BBoard enemy_kingattack_ = { 0x0 }; //current enemy king attacked squares
+    BBoard kingmoves_        = { 0x0 };
+    BBoard ekingmoves_       = { 0x0 };
+    BBoard check_status_     = { 0x0 };
+
+    FORCEINL void CheckBySlider(const Square& king,const Square& enemy) {
+        if (checkmask_ == 0xffffffffffffffffull)
+        {
+            checkmask_ = Chess_Lookup::PinBetween[king * 64 + enemy]; //Checks are only stopped between king and enemy including taking the enemy
+        }
+        else checkmask_ = 0; //If we already have a slider check registered, this means we're now doubleattacked and thus, only available moves are with king
+        kingban_ |= Chess_Lookup::CheckBetween[king * 64 + enemy]; //King cannot go to square opposite to slider 
+    }
+
+    FORCEINL void RegisterPinHorisontalVertical(const Square & king, const Square & enemy, const Board& board) {
+        const BBoard pin_mask = Chess_Lookup::PinBetween[king * 64 + enemy];
+
+        if (pin_mask & board.white_) {
+        rook_pins_ |= pin_mask;
+        }
+    }
+
+    FORCEINL void RegisterPinDiagonal(const Square& king, const Square& enemy, const Board& board) {
+        const BBoard pin_mask = Chess_Lookup::PinBetween[king * 64 + enemy];
+
+        // https://lichess.org/editor?fen=6q1%2F8%2F8%2F3pP3%2F8%2F1K6%2F8%2F8+w+-+-+0+1
+        if (board.enp_ != -1) {
+            if (pin_mask & (1ULL << board.enp_)) enp_target_ = 0;
+        }
+
+        if (pin_mask & board.white_) {
+        bishop_pins_ |= pin_mask;
+        }
+    }
+
+ 
      
 };
 
@@ -110,11 +189,11 @@ public :
         
     }
     
-    MoveGeneratorHeader(std::function<void(const Board&, SearchType, int)> ftor) {
+    MoveGeneratorHeader(std::function<void(const Board&, const SearchType&, const int &)> ftor) {
         this->BindCallback(ftor);
     }
 
-    bool BindCallback(std::function<void(const Board&, SearchType, int)> ftor) {      
+    bool BindCallback(std::function<void(const Board&, const SearchType&, const int &)> ftor) {      
         return wmgen_.SetCallback(ftor);
     }
 
@@ -123,11 +202,12 @@ public :
 
         int include_later = 0; // for random rollout move id caps       
 
-        if(board.state_.white_acts_) wmgen_.GetPseudoLegalMoves(board, SearchType::PERFT, depth, include_later);
+        if(board.white_acts_) wmgen_.GetLegalMoves(board, SearchType::PERFT);
         else return;
     }
 
 private:    
-    WhiteMoveGenerator              wmgen_;
+    WhiteMoveGenerator              wmgen_;   
+   
 };
 

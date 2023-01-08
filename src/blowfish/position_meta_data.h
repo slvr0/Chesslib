@@ -25,6 +25,15 @@ static constexpr uint64_t wLCastleInterferenceSquares = 0xE;  // same , queen si
 static constexpr uint64_t bRCastleInterferenceSquares = 0x6000000000000000; //kingside castle, these squares needs to be free and not attacked
 static constexpr uint64_t bLCastleInterferenceSquares = 0xE00000000000000; // same , queen side
 
+static constexpr uint64_t w00_Rookmoves = 0xA0;
+static constexpr uint64_t w00_KingMoves = 0x50;
+static constexpr uint64_t w000_Rookmoves = 0x9;
+static constexpr uint64_t w000_KingMoves = 0x14;
+
+static constexpr uint64_t b00_Rookmoves = 0xA000000000000000;
+static constexpr uint64_t b00_KingMoves = 0x5000000000000000;
+static constexpr uint64_t b000_Rookmoves = 0x900000000000000;
+static constexpr uint64_t b000_KingMoves = 0x1400000000000000;
 
 FORCEINL BBoard WhiteEPRank() {
     return 0xFFull << 32;
@@ -298,8 +307,8 @@ private :
         const BBoard pin_mask = Chess_Lookup::PinBetween[king * 64 + enemy];
 
         // https://lichess.org/editor?fen=6q1%2F8%2F8%2F3pP3%2F8%2F1K6%2F8%2F8+w+-+-+0+1
-        if (board.state_.enp_ != -1) {
-            if (pin_mask & (1ULL << board.state_.enp_)) enp_target = 0;
+        if (board.enp_ != -1) {
+            if (pin_mask & (1ULL << board.enp_)) enp_target = 0;
         }
 
         if (pin_mask & board.white_) {

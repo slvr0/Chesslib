@@ -9,11 +9,13 @@
 
 #include <immintrin.h>
 
-#define ENABLEDBG 1
-#define ENABLEPRINT 0
 
-#define IFDBG if constexpr (ENABLEDBG) 
-#define IFPRN if constexpr (ENABLEPRINT) 
+#define ENABLEDBG 1
+
+#if ENABLEDBG
+    #define _DEBUG
+#endif
+
 
 #define m_assert(expr, msg) assert(( (void)(msg), (expr) ))
 

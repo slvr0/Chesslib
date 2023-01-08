@@ -19,7 +19,7 @@ void ChesslibInterface::InitSearch(const Board &board, SearchType search_type, i
 }
 
 void ChesslibInterface::M_Callback(const Board& board, SearchType search_type, int depth) {
-    if(search_type == SearchType::PERFT && depth < max_depth_) {
-        print("this callback triggered!");
-    }
+    /* if(search_type == SearchType::PERFT && depth < max_depth_) {
+        ++n_moves_;
+    } */
 }
