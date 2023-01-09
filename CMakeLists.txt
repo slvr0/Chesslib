@@ -27,8 +27,12 @@ target_include_directories(main PUBLIC)
 #flags  -m64 -mfma -mavx2 -msse2 -msse3 -march=skylake  -funsafe-math-optimizations -fno-math-errno 
 #-avx2 -mbmi2 
 #-O3 -mpopcnt -mssse3 -march=native -mtune=generic -DPEXT -funsafe-math-optimizations -std=c++2a -g -pthread
-target_link_libraries(main PUBLIC -lgtest blowfish_engine chess_interface -std=c++2a -O3 -mpopcnt -march=native -mtune=generic -DPEXT -funsafe-math-optimizations -g -pthread)
 
+#these run currently
+#-O3 -mpopcnt -march=native -mtune=generic -DPEXT -funsafe-math-optimizations 
+
+target_link_libraries(main PUBLIC -lgtest blowfish_engine chess_interface -O3 -mpopcnt -march=native -mtune=generic -DPEXT -funsafe-math-optimizations -std=c++2a  -g -pthread)
+  
 include(CTest)
 
 add_executable(
@@ -36,6 +40,7 @@ add_executable(
   tests/test_blowfish_main.cpp
   
 )
+
 
 target_link_libraries(blowfish_test PRIVATE -lgtest blowfish_engine)
 

@@ -20,6 +20,8 @@ add_library(blowfish_engine
     blowfish/chessboard_traverser.h
     blowfish/chessboard_traverser.cpp
     blowfish/defs.h
+    blowfish/perft_mgfac.h
+    blowfish/perft_mgfac.cpp
 )
 
 add_library(chess_interface

@@ -143,7 +143,3 @@ void WhiteMetaDataRegister::RefreshMetaData(const Board & board) {
     }
 }
 
-void WhiteMetaDataRegister::CalculateKingBan(const Board & board) {    
-
-}
-

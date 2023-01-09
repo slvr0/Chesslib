@@ -4,13 +4,13 @@
 
 #include "../blowfish/chessboard.h"
 #include "../blowfish/move_generator.h"
+#include "../blowfish/perft_mgfac.h"
 
 //creates monte carlo trees and sends search requests towards chesslib from incoming calls from comm lib
 
 class ChesslibInterface {
 public : 
-    ChesslibInterface();
-   
+    ChesslibInterface() = default;   
 
     void InitSearch(const Board &board, SearchType search_type, int maxdepth);
 
@@ -19,7 +19,7 @@ public :
     inline int GetEnumaratedMoves() { return n_moves_;}
 
 private : 
-    MoveGeneratorHeader mgen_;
+    PerftMGFactory perft_factory_;
     int n_moves_ = 0;
     int max_depth_ = 0;
 };

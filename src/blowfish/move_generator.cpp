@@ -5,40 +5,6 @@
 
 //consider removing the movetype evaluation for each insertion, maybe just faster too check on castle legality if we have a rook in corret place?
 
-void IMoveGenerator::GetPseudoLegalMoves(const Board& board, SearchType search_type, int & depth, int & rollout_nr_gen) {  
-    movecounter_ = 0;   
-    depth_ = depth;
-    search_type_ = search_type;   
-    enemy_or_void_ = ~board.white_;
-
-
-    
-/*     metadata_reg_->RefreshMetaData(board);  
-
-    checkmask_          = metadata_reg_->checkmask;
-    rook_pins_          = metadata_reg_->rook_pins;
-    bishop_pins_        = metadata_reg_->bishop_pins;
-    moveable_squares_   = enemy_or_void_ & checkmask_;
-    kingban_            = metadata_reg_->kingban;
-    enp_target_         = metadata_reg_->enp_target;
-    nocheck_            = (checkmask_ == 0xffffffffffffffffull); */
-
-
-
-    //if checkmask something then disregard other legal moves right away
-/*     GetKingMoves(board);
-
-    //else proceed these/
-    GetPawnMoves(board);
-    GetKnightMoves(board);
-    GetBishopMoves(board);    
-    GetRookMoves(board); 
-    GetQueenMoves(board);
-
-    if(nocheck_) GetCastlingMoves(board);   */  
-}
-
-
 void WhiteMoveGenerator::RefreshMetaDataInternal(const Board& board) {
     kingmoves_ =  Lookup::King(LSquare(board.white_king_)); 
     ekingmoves_ = Lookup::King(LSquare(board.black_king_));
@@ -166,21 +132,40 @@ void WhiteMoveGenerator::RefreshMetaDataInternal(const Board& board) {
     }
 }
 
-WhiteMoveGenerator::WhiteMoveGenerator()   
+WhiteMoveGenerator::WhiteMoveGenerator(MoveGeneratorHeader* parent) : 
+    parent_(parent)   
 { 
-    metadata_reg_ = std::make_unique<WhiteMetaDataRegister> ();
-    legal_moves_.reserve(max_allocation_size_);
+   
 }
 
-//section logic merely copied from gargantua
-void WhiteMoveGenerator::GetPawnMoves(const Board & board) {
-    //start by defining which pawns can move diagonally and which can move forward
+void WhiteMoveGenerator::ParseLegalMoves(const Board& board, const int& depth) {
+
+    movecounter_ = 0;   
+    depth_ = depth;      
+    enemy_or_void_ = ~board.white_;
+    nocheck_ = (checkmask_ == 0xffffffffffffffffull); 
+    moveable_squares_   = enemy_or_void_ & checkmask_;
+
+
+    RefreshMetaDataInternal(board);
+
+    //if checkmask something then disregard other legal moves right away
+    GetKingMoves(board);
+
+    //else proceed these/
+    GetPawnMoves(board);
+    GetKnightMoves(board);
+    GetBishopMoves(board);    
+    GetRookMoves(board); 
+    GetQueenMoves(board);
+
+    if(nocheck_) GetCastlingMoves(board);     
+}
+
+void WhiteMoveGenerator::GetPawnMoves(const Board & board) {  
     const BBoard pawns_lr = board.white_pawn_ &~ rook_pins_;
     const BBoard pawns_hv = board.white_pawn_ &~ bishop_pins_;
 
-    //define which pawns can capture left/right, move forward and move forward 2 steps
-    //guess this can be done in two ways, but the big brain style is to start from the enemy occupant squares and invert back to the capture position.
-    //capture left / right
     BBoard pawn_capture_left  = pawns_lr & White_Pawn_InvertLeft(board.black_ & Pawns_NotRight() & checkmask_);
     BBoard pawn_capture_right  = pawns_lr & White_Pawn_InvertRight(board.black_ & Pawns_NotLeft() & checkmask_);    
 
@@ -198,22 +183,17 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board) {
     White_Pawns_PruneMove2(pawn_forward_2, rook_pins_);
     White_Pawns_PruneLeft(pawn_capture_left, bishop_pins_);
     White_Pawns_PruneRight(pawn_capture_right, bishop_pins_);
-
-    //handle ENP
-    if (enp_target_) {  
-        //The eppawn must be an enemy since its only ever valid for a single move
-        BBoard EPLpawn = pawns_lr & Pawns_NotLeft()  & (White_Pawn_InvertLeft(enp_target_  & checkmask_)); //Pawn that can EPTake to the left - overflow will not matter because 'Notleft'
-        BBoard EPRpawn = pawns_lr & Pawns_NotRight() & (White_Pawn_InvertRight(enp_target_ & checkmask_));  //Pawn that can EPTake to the right - overflow will not matter because 'NotRight'
-
-        //Special check for pinned EP Take - which is a very special move since even XRay does not see through the 2 pawns on a single rank
-        // White will push you cannot EP take: https://lichess.org/editor?fen=8%2F7B%2F8%2F8%2F4p3%2F3k4%2F5P2%2F8+w+-+-+0+1
-        // White will push you cannot EP take: https://lichess.org/editor?fen=8%2F8%2F8%2F8%2F1k2p2R%2F8%2F5P2%2F8+w+-+-+0+1
+   
+    if (enp_target_) {    
+        BBoard EPLpawn = pawns_lr & Pawns_NotLeft()  & (White_Pawn_InvertLeft(enp_target_  & checkmask_)); 
+        BBoard EPRpawn = pawns_lr & Pawns_NotRight() & (White_Pawn_InvertRight(enp_target_ & checkmask_));  
         
         if (EPLpawn | EPRpawn) //Todo: bench if slower or faster
         {
             White_Pawn_PruneLeftEP(EPLpawn, bishop_pins_);
             White_Pawn_PruneRightEP(EPRpawn, bishop_pins_);
 
+            //enumerate these...
             if(EPLpawn) { const Bit pos = PopBit(EPLpawn);     const Square to = White_Pawn_AttackLeft(pos); 
             std::cout << "P(EP LEFT) || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl;} // add legal EP move
             if(EPRpawn) { const Bit pos = PopBit(EPRpawn);    const Square to = White_Pawn_AttackRight(pos);
@@ -237,37 +217,50 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board) {
             const Bit pos = PopBit(Promote_Left);     const Square to = White_Pawn_AttackLeft(pos); 
 
             #ifdef _DEBUG 
-                UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to);
-                UpdatePawnPromotion(board, PieceType::BISHOP, pos, to);
-                UpdatePawnPromotion(board, PieceType::ROOK, pos, to);
-                UpdatePawnPromotion(board, PieceType::QUEEN, pos, to);            
+                const Board nb1 = UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to);
+                parent_->OnInsert(nb1, depth_ + 1);
+                const Board nb2 = UpdatePawnPromotion(board, PieceType::BISHOP, pos, to);
+                parent_->OnInsert(nb2, depth_ + 1);
+                const Board nb3 = UpdatePawnPromotion(board, PieceType::ROOK, pos, to);
+                parent_->OnInsert(nb3, depth_ + 1);
+                const Board nb4 = UpdatePawnPromotion(board, PieceType::QUEEN, pos, to);  
+                parent_->OnInsert(nb4, depth_ + 1);          
             #endif      
         }
         while (Promote_Right)   { 
             const Bit pos = PopBit(Promote_Right);    const Square to = White_Pawn_AttackRight(pos);
 
             #ifdef _DEBUG
-                UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to);
-                UpdatePawnPromotion(board, PieceType::BISHOP, pos, to);
-                UpdatePawnPromotion(board, PieceType::ROOK, pos, to);
-                UpdatePawnPromotion(board, PieceType::QUEEN, pos, to); 
+                const Board nb1 = UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to);
+                parent_->OnInsert(nb1, depth_ + 1);
+                const Board nb2 = UpdatePawnPromotion(board, PieceType::BISHOP, pos, to);
+                parent_->OnInsert(nb2, depth_ + 1);
+                const Board nb3 = UpdatePawnPromotion(board, PieceType::ROOK, pos, to);
+                parent_->OnInsert(nb3, depth_ + 1);
+                const Board nb4 = UpdatePawnPromotion(board, PieceType::QUEEN, pos, to); 
+                parent_->OnInsert(nb4, depth_ + 1);
             #endif
         }
         while (Promote_Move)    { 
             const Bit pos = PopBit(Promote_Move);     const Square to = White_Pawn_Forward(pos);
 
             #ifdef _DEBUG 
-                UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to);
-                UpdatePawnPromotion(board, PieceType::BISHOP, pos, to);
-                UpdatePawnPromotion(board, PieceType::ROOK, pos, to);
-                UpdatePawnPromotion(board, PieceType::QUEEN, pos, to); 
+                const Board nb1 = UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to);
+                parent_->OnInsert(nb1, depth_ + 1);
+                const Board nb2 = UpdatePawnPromotion(board, PieceType::BISHOP, pos, to);
+                parent_->OnInsert(nb2, depth_ + 1);
+                const Board nb3 = UpdatePawnPromotion(board, PieceType::ROOK, pos, to);
+                parent_->OnInsert(nb3, depth_ + 1);
+                const Board nb4 = UpdatePawnPromotion(board, PieceType::QUEEN, pos, to); 
+                parent_->OnInsert(nb4, depth_ + 1);
             #endif 
         }
         while (NoPromote_Left)  { 
             const Bit pos = PopBit(NoPromote_Left);   const Square to = White_Pawn_AttackLeft(pos);
 
             #ifdef _DEBUG 
-                UpdatePawnCapture(board, pos, to);
+                const Board nb = UpdatePawnCapture(board, pos, to);
+                parent_->OnInsert(nb, depth_ + 1);
             #endif
             
         }
@@ -275,14 +268,16 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board) {
             const Bit pos = PopBit(NoPromote_Right);  const Square to = White_Pawn_AttackRight(pos);
 
             #ifdef _DEBUG 
-                UpdatePawnCapture(board, pos, to);
+                const Board nb = UpdatePawnCapture(board, pos, to);
+                parent_->OnInsert(nb, depth_ + 1);
             #endif
         }
         while (NoPromote_Move)  { 
             const Bit pos = PopBit(NoPromote_Move);   const Square to = White_Pawn_Forward(pos);
 
             #ifdef _DEBUG 
-                UpdatePawnMove(board, pos, to);
+                const Board nb =UpdatePawnMove(board, pos, to);
+                parent_->OnInsert(nb, depth_ + 1);
             #endif            
             
         }
@@ -290,7 +285,8 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board) {
             const Bit pos = PopBit(pawn_forward_2);   const Square to = White_Pawn_Forward2(pos);
 
             #ifdef _DEBUG 
-                UpdatePawnPush(board, pos, to);
+                const Board nb =UpdatePawnPush(board, pos, to);
+                parent_->OnInsert(nb, depth_ + 1);
             #endif           
         }
     }
@@ -298,35 +294,39 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board) {
         while (pawn_capture_left)  { 
             const Bit pos = PopBit(pawn_capture_left);  const Square to = White_Pawn_AttackLeft(pos);
             #ifdef _DEBUG
-                UpdatePawnCapture(board, pos, to);
+                const Board nb =UpdatePawnCapture(board, pos, to);
+                parent_->OnInsert(nb, depth_ + 1);
             #endif
         }
         while (pawn_capture_right) { 
             const Bit pos = PopBit(pawn_capture_right); const Square to = White_Pawn_AttackRight(pos);
 
             #ifdef _DEBUG
-                UpdatePawnCapture(board, pos, to);
+                const Board nb =UpdatePawnCapture(board, pos, to);
+                parent_->OnInsert(nb, depth_ + 1);
             #endif
         }
         while (pawn_forward_1)     { 
             const Bit pos = PopBit(pawn_forward_1);     const Square to = White_Pawn_Forward(pos);
 
             #ifdef _DEBUG
-                UpdatePawnMove(board, pos, to);
+                const Board nb = UpdatePawnMove(board, pos, to);
+                parent_->OnInsert(nb, depth_ + 1);
             #endif
         }
         while (pawn_forward_2)     { 
             const Bit pos = PopBit(pawn_forward_2);     const Square to = White_Pawn_Forward2(pos);
 
             #ifdef _DEBUG
-                UpdatePawnPush(board, pos, to);
+                const Board nb = UpdatePawnPush(board, pos, to);
+                parent_->OnInsert(nb, depth_ + 1);
             #endif
         }
     }    
 }
 
 void WhiteMoveGenerator::GetKnightMoves(const Board & board) {
-    BBoard knights = board.white_knight_ & (~ (rook_pins_ | bishop_pins_)); //a pinned knight can never move regardless 
+    BBoard knights = board.white_knight_ & (~ (rook_pins_ | bishop_pins_)); //a pinned knight can never move!
 
     LoopBits(knights) {
         Square x = LSquare(knights);    
@@ -336,7 +336,8 @@ void WhiteMoveGenerator::GetKnightMoves(const Board & board) {
         while(moves) {            
             Square to = PopBit(moves); 
             #ifdef _DEBUG
-                UpdateKnightMove(board, x, to);
+                const Board nb = UpdateKnightMove(board, x, to);
+                parent_->OnInsert(nb, depth_ + 1);
             #endif       
         }
     } 
@@ -362,7 +363,8 @@ void WhiteMoveGenerator::GetBishopMoves(const Board & board) {
                 Square to = PopBit(moves); 
 
                 #ifdef _DEBUG
-                    UpdateQueenMove(board, x, to);
+                    const Board nb = UpdateQueenMove(board, x, to);
+                    parent_->OnInsert(nb, depth_ + 1);
                 #endif
             }
         }
@@ -371,7 +373,8 @@ void WhiteMoveGenerator::GetBishopMoves(const Board & board) {
                 Square to = PopBit(moves); 
 
                 #ifdef _DEBUG
-                    UpdateBishopMove(board, x, to);
+                    const Board nb = UpdateBishopMove(board, x, to);
+                    parent_->OnInsert(nb, depth_ + 1);
                 #endif
             }          
         }     
@@ -385,7 +388,8 @@ void WhiteMoveGenerator::GetBishopMoves(const Board & board) {
         while(moves) {            
             Square to = PopBit(moves); 
             #ifdef _DEBUG
-                UpdateBishopMove(board, x, to);
+                const Board nb = UpdateBishopMove(board, x, to);
+                parent_->OnInsert(nb, depth_ + 1);
             #endif
         }
     } 
@@ -402,7 +406,8 @@ void WhiteMoveGenerator::GetRookMoves(const Board & board) {
         while(moves) {            
             Square to = PopBit(moves); 
             #ifdef _DEBUG 
-                UpdateRookMove(board, x, to);
+                const Board nb = UpdateRookMove(board, x, to);
+                parent_->OnInsert(nb, depth_ + 1);
             #endif            
         }
     } 
@@ -418,7 +423,8 @@ void WhiteMoveGenerator::GetQueenMoves(const Board & board) {
         while(moves) {            
             Square to = PopBit(moves);           
             #ifdef _DEBUG
-                UpdateQueenMove(board, x, to);
+                const Board nb = UpdateQueenMove(board, x, to);
+                parent_->OnInsert(nb, depth_ + 1);
             #endif
         } 
     } 
@@ -428,30 +434,30 @@ void WhiteMoveGenerator::GetKingMoves(const Board & board) {
     Square x = LSquare(board.white_king_);
     BBoard moves = Lookup::King(x) &~ (kingban_ | board.white_);
 
-    /* BoardConsoleGUI::PrintBoard(moveable_squares_); */
     while(moves) {            
         Square to = PopBit(moves);    
         #ifdef _DEBUG
-            UpdateKingMove(board, x, to);
+            const Board nb = UpdateKingMove(board, x, to);
+            parent_->OnInsert(nb, depth_ + 1);
         #endif
     }
-
 }
 
 void WhiteMoveGenerator::GetCastlingMoves(const Board& board) {    
-    if(board.white_oo_ && !((board.occ_ | kingban_) & wRCastleInterferenceSquares)) {
-        //we could check if rook and king is in correct position, but we should handle this in state transition, Or maybe it should be handled here... 
-        //decided, add check that rook is in place.
+    if(board.white_oo_ && !((board.occ_ | kingban_) & wRCastleInterferenceSquares)) {        
         #ifdef _DEBUG
-            UpdateCastle00(board);
+            const Board nb = UpdateCastle00(board);
+            parent_->OnInsert(nb, depth_ + 1);
         #endif
     }
 
     if(board.white_ooo_ && !((board.occ_ | kingban_) & wLCastleInterferenceSquares)) {
         #ifdef _DEBUG
-            UpdateCastle000(board);
+            const Board nb = UpdateCastle000(board);
+            parent_->OnInsert(nb, depth_ + 1);
         #endif
     }
 }
+
 
 

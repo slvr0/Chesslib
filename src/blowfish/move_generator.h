@@ -12,118 +12,18 @@
 
 #include "dubious.h"
 
-
+//remove later, move gen doesnt care, literally
 enum class SearchType {
     PERFT = 0, 
     TREE_BRANCH = 1,
     RANDOM_ROLLOUT = 2
 };
 
-//some callback structure that can be bound by other
-//very simple, one user can attach to the callback
-class MoveGenCallback {
-public :
-    //bind
-    inline bool Subscribe(std::function<void(const Board&, const SearchType&, const int &)> ftor) {
-        ftor_ = ftor;
+class MoveGeneratorHeader;
 
-        return true;
-    }
-    //trigger update
-    inline void Trigger(const Board& b, SearchType st, int d) {
-        /* if(ENABLEDBG)
-            m_assert((ftor_), "The callback function has not been defined\n");    */     
-
-        ftor_(b, st, d);
-    }
-
-    std::function<void(const Board&, const SearchType&, const int &)> ftor_ = nullptr;    
-};
-
-/*
-Brief : 
-
-Given a chessboard this class can generate pseudo legal and legal moves from the current state of the board
-
-Dependencies : chessboard_extractor, position_meta_data
-*/
-
-//We create a general shell of a movegenerator and deduce specific logic separation for white and black in subclasses , defined in virtual functions
-class IMoveGenerator {
+class WhiteMoveGenerator {
 public : 
-    virtual ~IMoveGenerator() {}
-
-    void GetPseudoLegalMoves(const Board & board, SearchType search_type, int & depth, int & rollout_nr_gen);
-
-    virtual void GetPawnMoves(const Board & board) = 0;
-    virtual void GetKnightMoves(const Board & board) = 0;
-    virtual void GetBishopMoves(const Board & board) = 0;
-    virtual void GetRookMoves(const Board & board) = 0;
-    virtual void GetQueenMoves(const Board & board) = 0;
-    virtual void GetKingMoves(const Board & board) = 0;
-    virtual void SetEnemyOrVoid(const Board& board) = 0;   
-    virtual void GetCastlingMoves(const Board& board) = 0;
-
-    inline bool SetCallback(std::function<void(const Board&, const SearchType&, const int &)> ftor) {
-        return callback_.Subscribe(ftor);
-    }
-
-protected : 
-    BBoard enemy_or_void_ = 0x0;
-    int movecounter_ = 0;
-
-    BBoard checkmask_;
-    BBoard rook_pins_;
-    BBoard bishop_pins_;
-    BBoard moveable_squares_;
-    BBoard kingban_;
-    BBoard enp_target_;
-    bool   nocheck_; 
-    uint16_t depth_;
-    SearchType search_type_;
-
-
-
-    std::unique_ptr<IMetaDataRegister> metadata_reg_ = nullptr;
-    MoveGenCallback callback_;  
-
-    //for move allocation, remove later ( we dont allocate shit )
-    const size_t max_allocation_size_ = 100;
-    std::vector<Board> legal_moves_;
-    uint16_t search_index_ = 0;
-    bool trigger_cb_ = true; //for debug  
-};
-
-class WhiteMoveGenerator : public IMoveGenerator {
-public : 
-    WhiteMoveGenerator();
-
-    inline void SetEnemyOrVoid(const Board& board) override {
-        enemy_or_void_ = GetBlackOrVoid(board);
-    }
-
-    inline void GetLegalMoves(const Board& board, const SearchType& search_type) {
-
-        movecounter_ = 0;   
-        depth_ = 0; //specify input later
-        search_type_ = search_type;   
-        enemy_or_void_ = ~board.white_;
-
-        RefreshMetaDataInternal(board);
-
-        //if checkmask something then disregard other legal moves right away
-        GetKingMoves(board);
-
-        //else proceed these/
-        GetPawnMoves(board);
-        GetKnightMoves(board);
-        GetBishopMoves(board);    
-        GetRookMoves(board); 
-        GetQueenMoves(board);
-
-        if(nocheck_) GetCastlingMoves(board);     
-    }
-
+    WhiteMoveGenerator(MoveGeneratorHeader* parent = nullptr);
 
     void GetPawnMoves(const Board & board);
     void GetKnightMoves(const Board & board);
@@ -133,20 +33,29 @@ public :
     void GetKingMoves(const Board & board);
     void GetCastlingMoves(const Board& board);
 
-    void RefreshMetaDataInternal(const Board& board);
+    void RefreshMetaDataInternal(const Board& board);    
+
+    void ParseLegalMoves(const Board& board, const int& depth);  
 
 private:
+    int depth_ = 0;
+    size_t movecounter_ = 0;
+    SearchType search_type_;
+    BBoard enemy_or_void_;
 
-    BBoard rook_pins_        = { 0x0 };
-    BBoard bishop_pins_      = { 0x0 };
-    BBoard enp_target_       = { 0x0 };
-    BBoard checkmask_        = { 0xffffffffffffffffull };
-    BBoard kingban_          = { 0x0 };
-    BBoard kingattack_       = { 0x0 }; //current moves for king
-    BBoard enemy_kingattack_ = { 0x0 }; //current enemy king attacked squares
-    BBoard kingmoves_        = { 0x0 };
-    BBoard ekingmoves_       = { 0x0 };
-    BBoard check_status_     = { 0x0 };
+    BBoard checkmask_         = { 0xffffffffffffffffull };
+    BBoard rook_pins_         = { 0x0 };
+    BBoard bishop_pins_       = { 0x0 };
+    BBoard moveable_squares_  = { 0x0 };
+
+    BBoard enp_target_        = { 0x0 };
+    BBoard kingban_           = { 0x0 };   
+    BBoard kingmoves_         = { 0x0 };
+    BBoard ekingmoves_        = { 0x0 };
+    BBoard check_status_      = { 0x0 };
+    BBoard nocheck_           = { 0x0 };   
+
+    MoveGeneratorHeader* parent_ = nullptr;
 
     FORCEINL void CheckBySlider(const Square& king,const Square& enemy) {
         if (checkmask_ == 0xffffffffffffffffull)
@@ -177,36 +86,31 @@ private:
         bishop_pins_ |= pin_mask;
         }
     }
-
- 
      
 };
 
-//has white / black mgens , white / black metadata registers and callback for users to act on found moves. also, entry point for searches.
+
+//this class will be user implemented to tailor the need for search. Question is what is needed in order to work with OnInsert. 
+
+//PUREPERFT , cares about depth
+//SIMPLEEXPAND, cares about nothing just collects found moves
+//TREE_EXP cares about nothing , internally keeps track of where to insert
+//TREE_ROLL cares about current move id.
+
+// Conclude to cover these needs we simply require to return depth and all needs can be overrided
+
 class MoveGeneratorHeader{
 public :
     MoveGeneratorHeader() {
+        wmgen_ = WhiteMoveGenerator(this); //reinitialize like a punk
+    }
+
+    //implement me
+    inline virtual void OnInsert(const Board& board, const int& depth) {
         
     }
-    
-    MoveGeneratorHeader(std::function<void(const Board&, const SearchType&, const int &)> ftor) {
-        this->BindCallback(ftor);
-    }
 
-    bool BindCallback(std::function<void(const Board&, const SearchType&, const int &)> ftor) {      
-        return wmgen_.SetCallback(ftor);
-    }
-
-    //interface keeps track of max depth
-    inline void PruneSearch_PERFT(const Board& board, int depth) {
-
-        int include_later = 0; // for random rollout move id caps       
-
-        if(board.white_acts_) wmgen_.GetLegalMoves(board, SearchType::PERFT);
-        else return;
-    }
-
-private:    
+protected:    
     WhiteMoveGenerator              wmgen_;   
    
 };

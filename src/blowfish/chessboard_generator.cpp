@@ -119,31 +119,8 @@ Board ChessboardGenerator::CreateFromFen(const std::string& fen) {
 
     int totalmoves = std::stoi(fen.substr(spos, fen.size())); 
 
-
     return Board(white_pawn, white_knight, white_bishop, white_rook, white_queen, white_king, 
                 black_pawn, black_knight, black_bishop, black_rook, black_queen, black_king,                
                 white_acts, white_oo, white_ooo, black_oo, black_ooo, enp                  
                );
-
-/*     BBoard white_pawn, BBoard white_knight, BBoard white_bishop, BBoard white_rook, BBoard white_queen, BBoard white_king,
-    BBoard black_pawn, BBoard black_knight, BBoard black_bishop, BBoard black_rook, BBoard black_queen, BBoard black_king, 
-    BoardState state */
-
 }
-
-
-/* Board ChessboardGenerator::CreateFromFen(const std::string_view & fen_string) {
-
-return Board(FEN::FenToBmp(fen_string, 'P'), FEN::FenToBmp(fen_string, 'N'), FEN::FenToBmp(fen_string, 'B'), FEN::FenToBmp(fen_string, 'R'), FEN::FenToBmp(fen_string, 'Q'), FEN::FenToBmp(fen_string, 'K') , 
-FEN::FenToBmp(fen_string, 'p'), FEN::FenToBmp(fen_string, 'n'), FEN::FenToBmp(fen_string, 'b'), FEN::FenToBmp(fen_string, 'r'), FEN::FenToBmp(fen_string, 'q'), FEN::FenToBmp(fen_string, 'k'),
-
-BoardState( (FEN::FenInfo<FenField::white>(fen_string)),
-            (FEN::FenInfo<FenField::WCastleR>(fen_string)), (FEN::FenInfo<FenField::WCastleL>(fen_string)), 
-            (FEN::FenInfo<FenField::BCastleR>(fen_string)), (FEN::FenInfo<FenField::BCastleL>(fen_string)), 
-            (FEN::FenInfo<FenField::hasEP>(fen_string))
-            )
-
-
-);
-} */
-

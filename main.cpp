@@ -60,7 +60,6 @@ int main() {
 
     ChesslibInterface chesslib_io;
 
-    BoardDummy dummy;
     {   
         Timer t0; 
         int from = 3;

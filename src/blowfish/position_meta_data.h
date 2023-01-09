@@ -266,7 +266,7 @@ public:
 
     FORCEINL virtual void   RegisterPinHorisontalVertical(const Square & king, const Square & enemy, const Board& board) = 0;
     FORCEINL virtual void   RegisterPinDiagonal(Square king, Square enemy, const Board& board) = 0;    
-    virtual void            CalculateKingBan(const Board & board) = 0;
+    
 };
 
 
@@ -316,6 +316,6 @@ private :
         }
     }
 
-    virtual void CalculateKingBan(const Board & board) override; 
+    
 };
 
