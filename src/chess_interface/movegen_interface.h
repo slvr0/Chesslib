@@ -8,15 +8,16 @@
 
 //creates monte carlo trees and sends search requests towards chesslib from incoming calls from comm lib
 
+enum class SearchType {
+    PERFT = 0
+
+};
+
 class ChesslibInterface {
 public : 
     ChesslibInterface() = default;   
 
-    void InitSearch(const Board &board, SearchType search_type, int maxdepth);
-
-    void M_Callback(const Board& board, SearchType search_type, int depth);
-
-    inline int GetEnumaratedMoves() { return n_moves_;}
+    int InitSearch(const Board &board, SearchType search_type, int maxdepth);
 
 private : 
     PerftMGFactory perft_factory_;

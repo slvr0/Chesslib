@@ -47,43 +47,29 @@ int main() {
   
     
 
- //performance check
-/*      {   
-        Timer t0; 
-        for(int i = 0; i < 1e6 ; ++i) {
-            white_movegen.GetPseudoLegalMoves(chessboard);
-        }
-
-        print(t0.elapsed());
-    }  */
-    int d = 1;
 
     ChesslibInterface chesslib_io;
+/* 
 
     {   
         Timer t0; 
         int from = 3;
         int to = 4;
         for(int i = 0; i < 1e6 ; ++i) {
-            chesslib_io.InitSearch(chessboard, SearchType::PERFT, 2);
-            /* int from = 3;
-            int to = 4; */
-
-
-/*                 for(int i = 0 ; i < 20 ; ++i) {
-                    Board nb = UpdateMove(chessboard, MoveTypes::PawnCapture, PieceType::PAWN, from, to); 
-                } */
+                  
+   
         }
 
         print(t0.elapsed());
     }  
 
 
+ */
+  
 
-  /*   BBoard rookmove = 1ULL << 56 | 1ULL << 59;
-    BBoard kingmove = 1ULL << 60 | 1ULL << 58;
-    print(rookmove);
-    print(kingmove); */
+    auto ret = chesslib_io.InitSearch(chessboard, SearchType::PERFT, 4);   
+
+    print(ret);
 
     return 0;
 }

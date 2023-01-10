@@ -15,6 +15,10 @@ add_library(blowfish_engine
     blowfish/position_meta_data.cpp
     blowfish/move_generator.h
     blowfish/move_generator.cpp
+    blowfish/wmovegen.h
+    blowfish/wmovegen.cpp
+    blowfish/bmovegen.h
+    blowfish/bmovegen.cpp
     blowfish/chessboard_generator.h
     blowfish/chessboard_generator.cpp
     blowfish/chessboard_traverser.h
@@ -22,6 +26,7 @@ add_library(blowfish_engine
     blowfish/defs.h
     blowfish/perft_mgfac.h
     blowfish/perft_mgfac.cpp
+
 )
 
 add_library(chess_interface

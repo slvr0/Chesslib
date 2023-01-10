@@ -1,6 +1,7 @@
 #include "movegen_interface.h"
 
-void ChesslibInterface::InitSearch(const Board &board, SearchType search_type, int maxdepth){
+
+int ChesslibInterface::InitSearch(const Board &board, SearchType search_type, int maxdepth){
     switch(search_type) {
         case SearchType::PERFT : {
             max_depth_ = maxdepth;
@@ -8,13 +9,12 @@ void ChesslibInterface::InitSearch(const Board &board, SearchType search_type, i
 
             int curr_depth = 0;
             int N = perft_factory_.Enumerate(board, maxdepth);   
-            print(N);     
+            return N;     
+
+
         }
     }
-}
 
-void ChesslibInterface::M_Callback(const Board& board, SearchType search_type, int depth) {
-    /* if(search_type == SearchType::PERFT && depth < max_depth_) {
-        ++n_moves_;
-    } */
+    return 0;
+
 }
