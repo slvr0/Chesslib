@@ -35,6 +35,29 @@ static constexpr uint64_t b00_KingMoves = 0x5000000000000000;
 static constexpr uint64_t b000_Rookmoves = 0x900000000000000;
 static constexpr uint64_t b000_KingMoves = 0x1400000000000000;
 
+//imported
+static constexpr uint64_t WNotOccupiedL = 0b01110000ull;
+static constexpr uint64_t WNotAttackedL = 0b00111000ull;
+
+static constexpr uint64_t WNotOccupiedR = 0b00000110ull;
+static constexpr uint64_t WNotAttackedR = 0b00001110ull;
+
+static constexpr uint64_t BNotOccupiedL = 0b01110000ull << 56ull;
+static constexpr uint64_t BNotAttackedL = 0b00111000ull << 56ull;
+
+static constexpr uint64_t BNotOccupiedR = 0b00000110ull << 56ull;
+static constexpr uint64_t BNotAttackedR = 0b00001110ull << 56ull;
+
+static constexpr uint64_t WRookL_Change = 0b11111000ull;
+static constexpr uint64_t BRookL_Change = 0b11111000ull << 56ull;
+static constexpr uint64_t WRookR_Change = 0b00001111ull;
+static constexpr uint64_t BRookR_Change = 0b00001111ull << 56ull;
+
+static constexpr uint64_t WRookL = 0b10000000ull;
+static constexpr uint64_t BRookL = 0b10000000ull << 56ull;
+static constexpr uint64_t WRookR = 0b00000001ull;
+static constexpr uint64_t BRookR = 0b00000001ull << 56ull;
+
 FORCEINL BBoard WhiteEPRank() {
     return 0xFFull << 32;
 }

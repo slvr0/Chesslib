@@ -27,7 +27,6 @@ MGSearchContextualObject BlackMoveGenerator::RefreshMetaDataInternal(const Board
 
     context.checkmask_ = context.check_status_;
 
-
     const BBoard king   = board.black_king_;
     const BBoard eking  = board.white_king_;
     const BBoard kingsq = LSquare(king);
@@ -149,7 +148,6 @@ void BlackMoveGenerator::ParseLegalMoves(const Board& board, const int& depth) {
     context_object.nocheck_ = (context_object.checkmask_ == 0xffffffffffffffffull); 
     context_object.moveable_squares_   = context_object.enemy_or_void_ & context_object.checkmask_;
 
-
     //if checkmask something then disregard other legal moves right away
     GetKingMoves(board, context_object);
 
@@ -167,8 +165,8 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
     const BBoard pawns_lr = board.black_pawn_ &~ context.rook_pins_;
     const BBoard pawns_hv = board.black_pawn_ &~ context.bishop_pins_;
 
-    BBoard pawn_capture_left  = pawns_lr & Black_Pawn_InvertLeft(board.black_ & Pawns_NotRight() & context.checkmask_);
-    BBoard pawn_capture_right  = pawns_lr & Black_Pawn_InvertRight(board.black_ & Pawns_NotLeft() & context.checkmask_);    
+    BBoard pawn_capture_left  = pawns_lr & Black_Pawn_InvertLeft(board.black_ & Pawns_NotLeft() & context.checkmask_);
+    BBoard pawn_capture_right  = pawns_lr & Black_Pawn_InvertRight(board.black_ & Pawns_NotRight() & context.checkmask_);    
 
     //forward
     BBoard pawn_forward_1 = pawns_hv & Black_Pawn_Backward(~board.occ_); // no checkmask needed here? why? it comes later
@@ -217,110 +215,145 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
         while (Promote_Left)    { 
             const Bit pos = PopBit(Promote_Left);     const Square to = Black_Pawn_AttackLeft(pos); 
 
+            const Board nb1 = UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to);
+            parent_->OnInsert(nb1, context.depth_ + 1);
+            const Board nb2 = UpdatePawnPromotion(board, PieceType::BISHOP, pos, to);
+            parent_->OnInsert(nb2, context.depth_ + 1);
+            const Board nb3 = UpdatePawnPromotion(board, PieceType::ROOK, pos, to);
+            parent_->OnInsert(nb3, context.depth_ + 1);
+            const Board nb4 = UpdatePawnPromotion(board, PieceType::QUEEN, pos, to);  
+            parent_->OnInsert(nb4, context.depth_ + 1);          
+             
             #ifdef _DEBUG 
-                const Board nb1 = UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to);
-                parent_->OnInsert(nb1, context.depth_ + 1);
-                const Board nb2 = UpdatePawnPromotion(board, PieceType::BISHOP, pos, to);
-                parent_->OnInsert(nb2, context.depth_ + 1);
-                const Board nb3 = UpdatePawnPromotion(board, PieceType::ROOK, pos, to);
-                parent_->OnInsert(nb3, context.depth_ + 1);
-                const Board nb4 = UpdatePawnPromotion(board, PieceType::QUEEN, pos, to);  
-                parent_->OnInsert(nb4, context.depth_ + 1);          
-            #endif      
+                parent_->OnInsertDebug(board, nb1, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Knight");
+                parent_->OnInsertDebug(board, nb2, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Bishop");
+                parent_->OnInsertDebug(board, nb3, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Rook");
+                parent_->OnInsertDebug(board, nb4, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Queen");       
+            #endif    
         }
         while (Promote_Right)   { 
             const Bit pos = PopBit(Promote_Right);    const Square to = Black_Pawn_AttackRight(pos);
 
-            #ifdef _DEBUG
-                const Board nb1 = UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to);
-                parent_->OnInsert(nb1, context.depth_ + 1);
-                const Board nb2 = UpdatePawnPromotion(board, PieceType::BISHOP, pos, to);
-                parent_->OnInsert(nb2, context.depth_ + 1);
-                const Board nb3 = UpdatePawnPromotion(board, PieceType::ROOK, pos, to);
-                parent_->OnInsert(nb3, context.depth_ + 1);
-                const Board nb4 = UpdatePawnPromotion(board, PieceType::QUEEN, pos, to); 
-                parent_->OnInsert(nb4, context.depth_ + 1);
-            #endif
+            
+            const Board nb1 = UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to);
+            parent_->OnInsert(nb1, context.depth_ + 1);
+            const Board nb2 = UpdatePawnPromotion(board, PieceType::BISHOP, pos, to);
+            parent_->OnInsert(nb2, context.depth_ + 1);
+            const Board nb3 = UpdatePawnPromotion(board, PieceType::ROOK, pos, to);
+            parent_->OnInsert(nb3, context.depth_ + 1);
+            const Board nb4 = UpdatePawnPromotion(board, PieceType::QUEEN, pos, to); 
+            parent_->OnInsert(nb4, context.depth_ + 1);
+            
+            #ifdef _DEBUG 
+                parent_->OnInsertDebug(board, nb1, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Knight");
+                parent_->OnInsertDebug(board, nb2, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Bishop");
+                parent_->OnInsertDebug(board, nb3, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Rook");
+                parent_->OnInsertDebug(board, nb4, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Queen");       
+            #endif 
         }
         while (Promote_Move)    { 
             const Bit pos = PopBit(Promote_Move);     const Square to = Black_Pawn_Forward(pos);
 
+             
+            const Board nb1 = UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to);
+            parent_->OnInsert(nb1, context.depth_ + 1);
+            const Board nb2 = UpdatePawnPromotion(board, PieceType::BISHOP, pos, to);
+            parent_->OnInsert(nb2, context.depth_ + 1);
+            const Board nb3 = UpdatePawnPromotion(board, PieceType::ROOK, pos, to);
+            parent_->OnInsert(nb3, context.depth_ + 1);
+            const Board nb4 = UpdatePawnPromotion(board, PieceType::QUEEN, pos, to); 
+            parent_->OnInsert(nb4, context.depth_ + 1);
+            
             #ifdef _DEBUG 
-                const Board nb1 = UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to);
-                parent_->OnInsert(nb1, context.depth_ + 1);
-                const Board nb2 = UpdatePawnPromotion(board, PieceType::BISHOP, pos, to);
-                parent_->OnInsert(nb2, context.depth_ + 1);
-                const Board nb3 = UpdatePawnPromotion(board, PieceType::ROOK, pos, to);
-                parent_->OnInsert(nb3, context.depth_ + 1);
-                const Board nb4 = UpdatePawnPromotion(board, PieceType::QUEEN, pos, to); 
-                parent_->OnInsert(nb4, context.depth_ + 1);
+                parent_->OnInsertDebug(board, nb1, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Knight");
+                parent_->OnInsertDebug(board, nb2, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Bishop");
+                parent_->OnInsertDebug(board, nb3, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Rook");
+                parent_->OnInsertDebug(board, nb4, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Queen");       
             #endif 
         }
         while (NoPromote_Left)  { 
             const Bit pos = PopBit(NoPromote_Left);   const Square to = Black_Pawn_AttackLeft(pos);
 
+           
+            const Board nb = UpdatePawnCapture(board, pos, to);
+            parent_->OnInsert(nb, context.depth_ + 1);
+           
             #ifdef _DEBUG 
-                const Board nb = UpdatePawnCapture(board, pos, to);
-                parent_->OnInsert(nb, context.depth_ + 1);
+                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn capture Left");
             #endif
             
         }
         while (NoPromote_Right) { 
             const Bit pos = PopBit(NoPromote_Right);  const Square to = Black_Pawn_AttackRight(pos);
-
+            
+            const Board nb = UpdatePawnCapture(board, pos, to);
+            parent_->OnInsert(nb, context.depth_ + 1);
+            
             #ifdef _DEBUG 
-                const Board nb = UpdatePawnCapture(board, pos, to);
-                parent_->OnInsert(nb, context.depth_ + 1);
+                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn capture Right");
             #endif
         }
         while (NoPromote_Move)  { 
             const Bit pos = PopBit(NoPromote_Move);   const Square to = Black_Pawn_Forward(pos);
-
+           
+            const Board nb =UpdatePawnMove(board, pos, to);
+            parent_->OnInsert(nb, context.depth_ + 1);
+             
             #ifdef _DEBUG 
-                const Board nb =UpdatePawnMove(board, pos, to);
-                parent_->OnInsert(nb, context.depth_ + 1);
+                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Move");
             #endif            
             
         }
         while (pawn_forward_2)  { 
             const Bit pos = PopBit(pawn_forward_2);   const Square to = Black_Pawn_Forward2(pos);
 
+            const Board nb =UpdatePawnPush(board, pos, to);
+            parent_->OnInsert(nb, context.depth_ + 1);
+              
             #ifdef _DEBUG 
-                const Board nb =UpdatePawnPush(board, pos, to);
-                parent_->OnInsert(nb, context.depth_ + 1);
-            #endif           
+                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Push");
+            #endif       
         }
     }
     else { 
         while (pawn_capture_left)  { 
             const Bit pos = PopBit(pawn_capture_left);  const Square to = Black_Pawn_AttackLeft(pos);
-            #ifdef _DEBUG
-                const Board nb =UpdatePawnCapture(board, pos, to);
-                parent_->OnInsert(nb, context.depth_ + 1);
+            
+            const Board nb =UpdatePawnCapture(board, pos, to);
+            parent_->OnInsert(nb, context.depth_ + 1);
+            
+            #ifdef _DEBUG 
+                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn capture Left");
             #endif
         }
         while (pawn_capture_right) { 
             const Bit pos = PopBit(pawn_capture_right); const Square to = Black_Pawn_AttackRight(pos);
 
-            #ifdef _DEBUG
-                const Board nb =UpdatePawnCapture(board, pos, to);
-                parent_->OnInsert(nb, context.depth_ + 1);
+            const Board nb =UpdatePawnCapture(board, pos, to);
+            parent_->OnInsert(nb, context.depth_ + 1);
+            
+            #ifdef _DEBUG 
+                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn capture Right");
             #endif
         }
         while (pawn_forward_1)     { 
             const Bit pos = PopBit(pawn_forward_1);     const Square to = Black_Pawn_Forward(pos);
 
-            #ifdef _DEBUG
-                const Board nb = UpdatePawnMove(board, pos, to);
-                parent_->OnInsert(nb, context.depth_ + 1);
-            #endif
+            const Board nb = UpdatePawnMove(board, pos, to);
+            parent_->OnInsert(nb, context.depth_ + 1);
+        
+            #ifdef _DEBUG 
+                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Move");
+            #endif 
         }
         while (pawn_forward_2)     { 
             const Bit pos = PopBit(pawn_forward_2);     const Square to = Black_Pawn_Forward2(pos);
 
-            #ifdef _DEBUG
-                const Board nb = UpdatePawnPush(board, pos, to);
-                parent_->OnInsert(nb, context.depth_ + 1);
+            const Board nb = UpdatePawnPush(board, pos, to);
+            parent_->OnInsert(nb, context.depth_ + 1);
+            
+            #ifdef _DEBUG 
+                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Push");
             #endif
         }
     }    
@@ -336,10 +369,13 @@ void BlackMoveGenerator::GetKnightMoves(const Board & board, MGSearchContextualO
 
         while(moves) {            
             Square to = PopBit(moves); 
-            #ifdef _DEBUG
-                const Board nb = UpdateKnightMove(board, x, to);
-                parent_->OnInsert(nb, context.depth_ + 1);
-            #endif       
+            
+            const Board nb = UpdateKnightMove(board, x, to);
+            parent_->OnInsert(nb, context.depth_ + 1);
+           
+            #ifdef _DEBUG 
+                parent_->OnInsertDebug(board, nb, notations[x] + " -> " + notations[LSquare(to)] + " Knight Move");
+            #endif    
         }
     } 
 }
@@ -362,20 +398,24 @@ void BlackMoveGenerator::GetBishopMoves(const Board & board, MGSearchContextualO
             
             while(moves)  {
                 Square to = PopBit(moves); 
-
-                #ifdef _DEBUG
-                    const Board nb = UpdateQueenMove(board, x, to);
-                    parent_->OnInsert(nb, context.depth_ + 1);
-                #endif
+                
+                const Board nb = UpdateQueenMove(board, x, to);
+                parent_->OnInsert(nb, context.depth_ + 1);
+                
+                #ifdef _DEBUG 
+                    parent_->OnInsertDebug(board, nb, notations[x] + " -> " + notations[LSquare(to)] + " Queen Move");
+                #endif 
             }
         }
         else {
              while(moves)  {
-                Square to = PopBit(moves); 
-
-                #ifdef _DEBUG
-                    const Board nb = UpdateBishopMove(board, x, to);
-                    parent_->OnInsert(nb, context.depth_ + 1);
+                Square to = PopBit(moves);
+                
+                const Board nb = UpdateBishopMove(board, x, to);
+                parent_->OnInsert(nb, context.depth_ + 1);
+                
+                #ifdef _DEBUG 
+                    parent_->OnInsertDebug(board, nb, notations[x] + " -> " + notations[LSquare(to)] + " Bishop Move");
                 #endif
             }          
         }     
@@ -388,9 +428,12 @@ void BlackMoveGenerator::GetBishopMoves(const Board & board, MGSearchContextualO
 
         while(moves) {            
             Square to = PopBit(moves); 
-            #ifdef _DEBUG
-                const Board nb = UpdateBishopMove(board, x, to);
-                parent_->OnInsert(nb, context.depth_ + 1);
+
+            const Board nb = UpdateBishopMove(board, x, to);
+            parent_->OnInsert(nb, context.depth_ + 1);
+            
+            #ifdef _DEBUG 
+                parent_->OnInsertDebug(board, nb, notations[x] + " -> " + notations[LSquare(to)] + " Bishop Move");
             #endif
         }
     } 
@@ -406,10 +449,13 @@ void BlackMoveGenerator::GetRookMoves(const Board & board, MGSearchContextualObj
 
         while(moves) {            
             Square to = PopBit(moves); 
+           
+            const Board nb = UpdateRookMove(board, x, to);
+            parent_->OnInsert(nb, context.depth_ + 1);            
+
             #ifdef _DEBUG 
-                const Board nb = UpdateRookMove(board, x, to);
-                parent_->OnInsert(nb, context.depth_ + 1);
-            #endif            
+                parent_->OnInsertDebug(board, nb, notations[x] + " -> " + notations[LSquare(to)] + " Rook Move");
+            #endif             
         }
     } 
 }
@@ -423,39 +469,51 @@ void BlackMoveGenerator::GetQueenMoves(const Board & board, MGSearchContextualOb
 
         while(moves) {            
             Square to = PopBit(moves);           
-            #ifdef _DEBUG
-                const Board nb = UpdateQueenMove(board, x, to);
-                parent_->OnInsert(nb, context.depth_ + 1);
-            #endif
+           
+            const Board nb = UpdateQueenMove(board, x, to);
+            parent_->OnInsert(nb, context.depth_ + 1);
+            
+            #ifdef _DEBUG 
+                parent_->OnInsertDebug(board, nb, notations[x] + " -> " + notations[LSquare(to)] + " Queen Move");
+            #endif 
         } 
     } 
 }
 
 void BlackMoveGenerator::GetKingMoves(const Board & board, MGSearchContextualObject & context) {  
     Square x = LSquare(board.black_king_);
-    BBoard moves = Lookup::King(x) &~ (context.kingban_ | board.white_);
+    BBoard moves = Lookup::King(x) &~ (context.kingban_ | board.black_);
 
     while(moves) {            
         Square to = PopBit(moves);    
-        #ifdef _DEBUG
-            const Board nb = UpdateKingMove(board, x, to);
-            parent_->OnInsert(nb, context.depth_ + 1);
-        #endif
+      
+        const Board nb = UpdateKingMove(board, x, to);
+        parent_->OnInsert(nb, context.depth_ + 1);
+      
+        #ifdef _DEBUG 
+            parent_->OnInsertDebug(board, nb, notations[x] + " -> " + notations[LSquare(to)] + " King Move");
+        #endif 
     }
 }
 
 void BlackMoveGenerator::GetCastlingMoves(const Board& board, MGSearchContextualObject & context) {    
     if(board.black_oo_ && !((board.occ_ | context.kingban_) & bRCastleInterferenceSquares)) {        
-        #ifdef _DEBUG
-            const Board nb = UpdateCastle00(board);
-            parent_->OnInsert(nb, context.depth_ + 1);
+        
+        const Board nb = UpdateCastle00(board);
+        parent_->OnInsert(nb, context.depth_ + 1);      
+
+        #ifdef _DEBUG 
+            parent_->OnInsertDebug(board, nb, "Castle King Side");
         #endif
     }
 
-    if(board.white_ooo_ && !((board.occ_ | context.kingban_) & bLCastleInterferenceSquares)) {
-        #ifdef _DEBUG
-            const Board nb = UpdateCastle000(board);
-            parent_->OnInsert(nb, context.depth_ + 1);
+    if(board.white_ooo_ && !((board.occ_ | context.kingban_) & bLCastleInterferenceSquares)) {        
+        const Board nb = UpdateCastle000(board);
+        parent_->OnInsert(nb, context.depth_ + 1);
+      
+
+         #ifdef _DEBUG 
+            parent_->OnInsertDebug(board, nb, "Castle Queen Side");
         #endif
     }
 }

@@ -20,34 +20,6 @@ enum class PieceType {
     KING = 5
 };
 
-/* class BoardState {
-public:
-    bool white_acts_ = true;
-    
-    bool white_oo_ = true;
-    bool white_ooo_ = true;
-    bool black_oo_ = true;
-    bool black_ooo_ = true;
-
-    int enp_ = -1;
-
-    BoardState() {}
-
-    BoardState(const BoardState& state) :
-        white_acts_(state.white_acts_), 
-        white_oo_(state.white_oo_), white_ooo_(state.white_ooo_), black_oo_(state.black_oo_), black_ooo_(state.black_ooo_),        
-        enp_(state.enp_)
-    {
-
-    }
-
-    BoardState(const bool & white_acts, const bool & white_oo, const bool & white_ooo, const bool & black_oo, const bool & black_ooo, const int enp) :
-    white_acts_(white_acts), white_oo_(white_oo), white_ooo_(white_ooo), black_oo_(black_oo), black_ooo_(black_ooo), enp_(enp)
-    {
-
-    }
-}; */
-
 class Board {
 public :
     BBoard white_pawn_;
@@ -62,20 +34,18 @@ public :
     BBoard black_bishop_;
     BBoard black_rook_;
     BBoard black_queen_;
-    BBoard black_king_;    
+    BBoard black_king_; 
 
     BBoard white_;
     BBoard black_;    
     BBoard occ_;
 
-    bool white_acts_ = true;
-
-    bool white_oo_ = true;
-    bool white_ooo_ = true;
-    bool black_oo_ = true;
-    bool black_ooo_ = true;
-
-    int enp_ = -1;
+    bool white_acts_    = true;
+    bool white_oo_      = true;
+    bool white_ooo_     = true;
+    bool black_oo_      = true;
+    bool black_ooo_     = true;
+    int enp_            = -1;
 
     Board(
     BBoard white_pawn, BBoard white_knight, BBoard white_bishop, BBoard white_rook, BBoard white_queen, BBoard white_king,

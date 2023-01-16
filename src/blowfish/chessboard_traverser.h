@@ -4,27 +4,27 @@
 #include "position_meta_data.h"
 
 
-FORCEINL Board UpdatePawnMove(const Board & board, const int & from, const int & to) {
+FORCEINL Board UpdatePawnMove(const Board & board, const BBoard & from, const BBoard & to) {
     Board nb = board;
 
     const bool is_white = board.white_acts_;
-    BBoard move = (1ULL << from | 1ULL << to);
+    BBoard move = (from | to);
 
     if(is_white)    {nb.white_pawn_      ^= move; nb.white_ ^= move;}
     else            {nb.black_pawn_      ^= move; nb.black_ ^= move;}
 
     nb.occ_ = nb.white_ | nb.black_;
 
-    nb.white_acts_ != nb.white_acts_;
+    nb.white_acts_ = !nb.white_acts_;
 
     return nb;
 }
 
-FORCEINL Board UpdatePawnPush(const Board & board, const int & from, const int & to) {
+FORCEINL Board UpdatePawnPush(const Board & board, const BBoard & from, const BBoard & to) {
     Board nb = board;
 
     const bool is_white = board.white_acts_;
-    BBoard move = (1ULL << from | 1ULL << to);
+    BBoard move = (from | to);
 
     if(is_white)    {nb.white_pawn_ ^= move; nb.white_ ^= move;}
     else            {nb.black_pawn_ ^= move; nb.black_ ^= move;}
@@ -33,16 +33,16 @@ FORCEINL Board UpdatePawnPush(const Board & board, const int & from, const int &
 
     nb.enp_ = to;
 
-    nb.white_acts_ != nb.white_acts_;
+    nb.white_acts_ = !nb.white_acts_;
 
     return nb;
 }
 
-FORCEINL Board UpdatePawnCapture(const Board & board, const int & from, const int & to) {
+FORCEINL Board UpdatePawnCapture(const Board & board, const BBoard & from, const BBoard & to) {
     Board nb = board;
 
     const bool is_white = board.white_acts_;
-    const BBoard move = (1ULL << from | 1ULL << to);
+    const BBoard move = (from | to);
     const BBoard rem = ~to;
 
     if(is_white)    {nb.white_pawn_ ^= move;  nb.white_ ^= move; nb.black_ &= rem; nb.black_pawn_ &= rem; nb.black_knight_ &= rem; nb.black_bishop_ &= rem; nb.black_rook_ &= rem; nb.black_queen_ &= rem;}
@@ -50,18 +50,18 @@ FORCEINL Board UpdatePawnCapture(const Board & board, const int & from, const in
 
     nb.occ_ = nb.white_ | nb.black_;
 
-    nb.white_acts_ != nb.white_acts_;
+    nb.white_acts_ = !nb.white_acts_;
 
     return nb;
 }
 
-FORCEINL Board UpdatePawnPromotion(const Board & board, const PieceType& ptype, const int & from, const int & to) {
+FORCEINL Board UpdatePawnPromotion(const Board & board, const PieceType& ptype, const BBoard & from, const BBoard & to) {
     Board nb = board;
 
     const bool is_white = board.white_acts_;
     const bool is_capture = to & board.occ_;
 
-    const BBoard move = (1ULL << from | 1ULL << to);
+    const BBoard move = (from | to);
     const BBoard rem = ~to;
     
     if(is_white) {
@@ -87,7 +87,7 @@ FORCEINL Board UpdatePawnPromotion(const Board & board, const PieceType& ptype, 
 
     nb.occ_ = nb.white_ | nb.black_;
 
-    nb.white_acts_ != nb.white_acts_;
+    nb.white_acts_ = !nb.white_acts_;
 
     return nb;
 }
@@ -96,7 +96,7 @@ FORCEINL Board UpdatePawnEnpassaint(const Board & board, const int & from, const
     Board nb = board;
 
     const bool is_white = board.white_acts_;
-    const BBoard move = (1ULL << from | 1ULL << to);
+    const BBoard move = (from | to);
     const BBoard rem = ~(to | enemy);
 
     if(is_white)    {nb.white_pawn_ ^= move;  nb.white_ ^= move; nb.black_ &= rem; nb.black_pawn_ &= rem; nb.black_knight_ &= rem; nb.black_bishop_ &= rem; nb.black_rook_ &= rem; nb.black_queen_ &= rem;}
@@ -104,18 +104,18 @@ FORCEINL Board UpdatePawnEnpassaint(const Board & board, const int & from, const
     
     nb.occ_ = nb.white_ | nb.black_;
 
-    nb.white_acts_ != nb.white_acts_;
+    nb.white_acts_ = !nb.white_acts_;
 
     return nb;
 }
 
-FORCEINL Board UpdateKnightMove(const Board & board, const int & from, const int & to) {
+FORCEINL Board UpdateKnightMove(const Board & board, const int & from, const BBoard & to) {
     Board nb = board;
 
     const bool is_white = board.white_acts_;
     const bool is_capture = to & board.occ_;
 
-    const BBoard move = (1ULL << from | 1ULL << to);
+    const BBoard move = (1ULL << from | to);
     const BBoard rem = ~to; 
 
     if(is_white) {
@@ -133,18 +133,18 @@ FORCEINL Board UpdateKnightMove(const Board & board, const int & from, const int
 
     nb.occ_ = nb.white_ | nb.black_;  
 
-    nb.white_acts_ != nb.white_acts_;
+    nb.white_acts_ = !nb.white_acts_;
 
     return nb; 
 }
 
-FORCEINL Board UpdateBishopMove(const Board & board, const int & from, const int & to) {
+FORCEINL Board UpdateBishopMove(const Board & board, const int & from, const BBoard & to) {
     Board nb = board;
 
     const bool is_white = board.white_acts_;
     const bool is_capture = to & board.occ_;
 
-    const BBoard move = (1ULL << from | 1ULL << to);
+    const BBoard move = (1ULL << from | to);
     const BBoard rem = ~to; 
 
     if(is_white) {
@@ -162,18 +162,18 @@ FORCEINL Board UpdateBishopMove(const Board & board, const int & from, const int
 
     nb.occ_ = nb.white_ | nb.black_; 
 
-    nb.white_acts_ != nb.white_acts_; 
+    nb.white_acts_ = !nb.white_acts_;
 
     return nb; 
 }
 
-FORCEINL Board UpdateRookMove(const Board & board, const int & from, const int & to) {
+FORCEINL Board UpdateRookMove(const Board & board, const int & from, const BBoard & to) {
     Board nb = board;
 
     const bool is_white = board.white_acts_;
     const bool is_capture = to & board.occ_;
 
-    const BBoard move = (1ULL << from | 1ULL << to);
+    const BBoard move = (1ULL << from | to);
     const BBoard rem = ~to; 
 
     if(is_white) {
@@ -191,18 +191,18 @@ FORCEINL Board UpdateRookMove(const Board & board, const int & from, const int &
 
     nb.occ_ = nb.white_ | nb.black_;  
 
-    nb.white_acts_ != nb.white_acts_;
+    nb.white_acts_ = !nb.white_acts_;
 
     return nb; 
 }
 
-FORCEINL Board UpdateQueenMove(const Board & board, const int & from, const int & to) {
+FORCEINL Board UpdateQueenMove(const Board & board, const int & from, const BBoard & to) {
     Board nb = board;
 
     const bool is_white = board.white_acts_;
     const bool is_capture = to & board.occ_;
 
-    const BBoard move = (1ULL << from | 1ULL << to);
+    const BBoard move = (1ULL << from | to);
     const BBoard rem = ~to; 
 
     if(is_white) {
@@ -220,18 +220,18 @@ FORCEINL Board UpdateQueenMove(const Board & board, const int & from, const int 
 
     nb.occ_ = nb.white_ | nb.black_;  
 
-    nb.white_acts_ != nb.white_acts_;
+    nb.white_acts_ = !nb.white_acts_;
 
     return nb; 
 }
 
-FORCEINL Board UpdateKingMove(const Board & board, const int & from, const int & to) {
+FORCEINL Board UpdateKingMove(const Board & board, const int & from, const BBoard & to) {
     Board nb = board;
 
     const bool is_white = board.white_acts_;
     const bool is_capture = to & board.occ_;
 
-    const BBoard move = (1ULL << from | 1ULL << to);
+    const BBoard move = (1ULL << from | to);
     const BBoard rem = ~to; 
 
     if(is_white) {
@@ -255,7 +255,7 @@ FORCEINL Board UpdateKingMove(const Board & board, const int & from, const int &
 
     nb.occ_ = nb.white_ | nb.black_;  
 
-    nb.white_acts_ != nb.white_acts_;    
+    nb.white_acts_ = !nb.white_acts_;   
 
     return nb; 
 }
@@ -288,7 +288,7 @@ FORCEINL Board UpdateCastle00(const Board & board) {
 
     nb.occ_ = nb.white_ | nb.black_; 
 
-    nb.white_acts_ != nb.white_acts_;
+    nb.white_acts_ = !nb.white_acts_;
 
     return nb; 
 }
@@ -321,7 +321,7 @@ FORCEINL Board UpdateCastle000(const Board & board) {
 
     nb.occ_ = nb.white_ | nb.black_;  
 
-    nb.white_acts_ != nb.white_acts_;
+    nb.white_acts_ = !nb.white_acts_;
 
     return nb;     
 }

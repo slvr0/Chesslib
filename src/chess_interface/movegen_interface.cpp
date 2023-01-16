@@ -8,7 +8,9 @@ int ChesslibInterface::InitSearch(const Board &board, SearchType search_type, in
             n_moves_ = 0;
 
             int curr_depth = 0;
-            int N = perft_factory_.Enumerate(board, maxdepth);   
+            int N = perft_factory_.Enumerate(board, maxdepth);  
+
+             
             return N;     
 
 
@@ -16,5 +18,4 @@ int ChesslibInterface::InitSearch(const Board &board, SearchType search_type, in
     }
 
     return 0;
-
 }

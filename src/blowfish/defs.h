@@ -101,3 +101,13 @@ private:
     std::chrono::time_point<clock_t> time_;
 
 };
+
+template <typename... Args>
+inline uint64_t InsertBits(Args ... args)
+{
+    uint64_t ret { 0x0 };
+   
+    ([&] {ret |= 1ULL << args;} (), ...); 
+
+    return ret;
+}

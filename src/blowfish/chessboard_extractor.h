@@ -103,6 +103,8 @@ public :
     static void PrintBoard(const Board & board, const int & print_mode= 0, char spec_type= ' ');
     static void PrintBoard(unsigned long const & board);
 
+    static std::string BoardAsString(const Board& board);
+
 private:
     static std::vector<char> CopyBoardContent(const Board & board);    
 };

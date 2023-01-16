@@ -2,7 +2,7 @@
 
 //#include "test_board.h"
 //#include "test_attack_tables.h"
-
+#include "test_black_mgen.h"
 
 /* bool Chesslib::AttackTablesHandler::initialized = false; */
 
