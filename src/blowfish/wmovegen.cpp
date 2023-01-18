@@ -12,6 +12,8 @@ MGSearchContextualObject WhiteMoveGenerator::RefreshMetaDataInternal(const Board
         const BBoard pl = Black_Pawn_AttackLeft(board.black_pawn_ & Pawns_NotLeft());
         const BBoard pr = Black_Pawn_AttackRight(board.black_pawn_ & Pawns_NotRight());
 
+ 
+
         context.kingban_ |= (pl | pr);
 
         if (pl & board.white_king_) context.check_status_ = Black_Pawn_AttackRight(board.white_king_);
@@ -194,11 +196,15 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             White_Pawn_PruneLeftEP(EPLpawn,     context.bishop_pins_);
             White_Pawn_PruneRightEP(EPRpawn,    context.bishop_pins_);
 
+            /*
+
             //enumerate these...
             if(EPLpawn) { const Bit pos = PopBit(EPLpawn);     const Square to = White_Pawn_AttackLeft(pos); 
             std::cout << "P(EP LEFT) || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl;} // add legal EP move
             if(EPRpawn) { const Bit pos = PopBit(EPRpawn);    const Square to = White_Pawn_AttackRight(pos);
             std::cout << "P(EP RIGHT) || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl; } // add legal EP move
+
+            */
         }
     }
 
@@ -226,10 +232,10 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             parent_->OnInsert(nb4, context.depth_ + 1);   
 
             #ifdef _DEBUG 
-                parent_->OnInsertDebug(board, nb1, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Knight");
-                parent_->OnInsertDebug(board, nb2, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Bishop");
-                parent_->OnInsertDebug(board, nb3, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Rook");
-                parent_->OnInsertDebug(board, nb4, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Queen");       
+                parent_->OnInsertDebug(board, nb1, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn Promote Knight");
+                parent_->OnInsertDebug(board, nb2, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn Promote Bishop");
+                parent_->OnInsertDebug(board, nb3, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn Promote Rook");
+                parent_->OnInsertDebug(board, nb4, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn Promote Queen");       
             #endif      
         }
         while (Promote_Right)   { 
@@ -244,10 +250,10 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             parent_->OnInsert(nb4, context.depth_ + 1);
 
             #ifdef _DEBUG
-                parent_->OnInsertDebug(board, nb1, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Knight");
-                parent_->OnInsertDebug(board, nb2, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Bishop");
-                parent_->OnInsertDebug(board, nb3, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Rook");
-                parent_->OnInsertDebug(board, nb4, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Queen");  
+                parent_->OnInsertDebug(board, nb1, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn Promote Knight");
+                parent_->OnInsertDebug(board, nb2, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn Promote Bishop");
+                parent_->OnInsertDebug(board, nb3, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn Promote Rook");
+                parent_->OnInsertDebug(board, nb4, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn Promote Queen");  
             #endif
         }
         while (Promote_Move)    { 
@@ -262,10 +268,10 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             parent_->OnInsert(nb4, context.depth_ + 1);
 
             #ifdef _DEBUG 
-                parent_->OnInsertDebug(board, nb1, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Knight");
-                parent_->OnInsertDebug(board, nb2, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Bishop");
-                parent_->OnInsertDebug(board, nb3, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Rook");
-                parent_->OnInsertDebug(board, nb4, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Promote Queen");   
+                parent_->OnInsertDebug(board, nb1, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn Promote Knight");
+                parent_->OnInsertDebug(board, nb2, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn Promote Bishop");
+                parent_->OnInsertDebug(board, nb3, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn Promote Rook");
+                parent_->OnInsertDebug(board, nb4, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn Promote Queen");   
             #endif 
         }
         while (NoPromote_Left)  { 
@@ -274,7 +280,7 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             parent_->OnInsert(nb, context.depth_ + 1);
 
             #ifdef _DEBUG 
-                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn capture Left");
+                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn capture Left");
             #endif
             
         }
@@ -284,7 +290,7 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             parent_->OnInsert(nb, context.depth_ + 1);
 
             #ifdef _DEBUG 
-                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn capture Right");
+                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)]  + notations[LSquare(to)] + " Pawn capture Right");
             #endif
         }
         while (NoPromote_Move)  { 
@@ -293,7 +299,7 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             parent_->OnInsert(nb, context.depth_ + 1);
 
             #ifdef _DEBUG 
-                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Move");
+                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn Move");
             #endif            
             
         }
@@ -303,7 +309,7 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             parent_->OnInsert(nb, context.depth_ + 1);
 
             #ifdef _DEBUG 
-                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Push");
+                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)]  + notations[LSquare(to)] + " Pawn Push");
             #endif           
         }
     }
@@ -314,7 +320,7 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             parent_->OnInsert(nb, context.depth_ + 1);           
 
             #ifdef _DEBUG 
-                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn capture Left");
+                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn capture Left");
             #endif
         }
         while (pawn_capture_right) { 
@@ -323,7 +329,7 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             parent_->OnInsert(nb, context.depth_ + 1);     
 
             #ifdef _DEBUG 
-                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn capture Right");
+                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)]  + notations[LSquare(to)] + " Pawn capture Right");
             #endif
         }
         while (pawn_forward_1)     { 
@@ -332,7 +338,7 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             parent_->OnInsert(nb, context.depth_ + 1);
 
             #ifdef _DEBUG 
-                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Move");
+                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn Move");
             #endif 
         }
         while (pawn_forward_2)     { 
@@ -341,7 +347,7 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             parent_->OnInsert(nb, context.depth_ + 1);            
 
             #ifdef _DEBUG 
-                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + " -> " + notations[LSquare(to)] + " Pawn Push");
+                parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn Push");
             #endif
         }
     }    
@@ -362,7 +368,7 @@ void WhiteMoveGenerator::GetKnightMoves(const Board & board, MGSearchContextualO
             parent_->OnInsert(nb, context.depth_ + 1);
 
             #ifdef _DEBUG 
-                parent_->OnInsertDebug(board, nb, notations[x] + " -> " + notations[LSquare(to)] + " Knight Move");
+                parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)] + " Knight Move");
             #endif    
         }
     } 
@@ -376,8 +382,8 @@ void WhiteMoveGenerator::GetBishopMoves(const Board & board, MGSearchContextualO
     BBoard bishops = board.white_bishop_ &~ context.rook_pins_; //including non pinned bishops (HV) 
     
     BBoard pinned_bishops = (bishops | queens) & context.bishop_pins_; //including pinned queens diagonally here.
-    BBoard nopin_bishops = bishops & ~context.bishop_pins_;
-
+    BBoard nopin_bishops = bishops & ~context.bishop_pins_; 
+    
     LoopBits(pinned_bishops) {
         Square x = LSquare(pinned_bishops);
 
@@ -392,7 +398,7 @@ void WhiteMoveGenerator::GetBishopMoves(const Board & board, MGSearchContextualO
                 parent_->OnInsert(nb, context.depth_ + 1);               
 
                 #ifdef _DEBUG 
-                    parent_->OnInsertDebug(board, nb, notations[x] + " -> " + notations[LSquare(to)] + " Queen Move");
+                    parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)] + " Queen Move");
                 #endif  
             }
         }
@@ -404,15 +410,15 @@ void WhiteMoveGenerator::GetBishopMoves(const Board & board, MGSearchContextualO
                 parent_->OnInsert(nb, context.depth_ + 1);                
 
                 #ifdef _DEBUG 
-                    parent_->OnInsertDebug(board, nb, notations[x] + " -> " + notations[LSquare(to)] + " Bishop Move");
+                    parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)] + " Bishop Move");
                 #endif  
             }          
         }     
     } 
 
     LoopBits(nopin_bishops) {
-        Square x = LSquare(bishops);
-
+        Square x = LSquare(nopin_bishops);
+    
         BBoard moves = Lookup::Bishop(x, board.occ_) & context.moveable_squares_; 
 
         while(moves) {            
@@ -422,14 +428,41 @@ void WhiteMoveGenerator::GetBishopMoves(const Board & board, MGSearchContextualO
             parent_->OnInsert(nb, context.depth_ + 1);            
 
             #ifdef _DEBUG 
-                parent_->OnInsertDebug(board, nb, notations[x] + " -> " + notations[LSquare(to)] + " Bishop Move");
+                parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)] + " Bishop Move");
             #endif  
         }
     } 
 }
 
 void WhiteMoveGenerator::GetRookMoves(const Board & board, MGSearchContextualObject & context) {
-    BBoard rooks = board.white_rook_; 
+    BBoard pinned_rooks  = (board.white_rook_ | board.white_queen_) & context.rook_pins_;
+    BBoard rooks = board.white_rook_ & ~context.rook_pins_;
+
+    LoopBits(pinned_rooks) {
+        Square x = LSquare(pinned_rooks);
+        BBoard moves = Lookup::Rook(x, board.occ_) & context.moveable_squares_ & context.rook_pins_; 
+
+        while(moves) {
+            const Square to = PopBit(moves);
+            if(1ULL << x & board.white_queen_) {
+                const Board nb = UpdateQueenMove(board, x, to);
+                parent_->OnInsert(nb, context.depth_ + 1); 
+                 
+                #ifdef _DEBUG 
+                    parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)] + " Queen Move");
+                #endif    
+            }
+            else {
+                const Board nb = UpdateRookMove(board, x, to);
+                parent_->OnInsert(nb, context.depth_ + 1); 
+
+                #ifdef _DEBUG 
+                    parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)] + " Rook Move");
+                #endif       
+            }
+        }
+
+    }
 
     LoopBits(rooks) {
         Square x = LSquare(rooks);
@@ -437,16 +470,16 @@ void WhiteMoveGenerator::GetRookMoves(const Board & board, MGSearchContextualObj
         BBoard moves = Lookup::Rook(x, board.occ_) & context.moveable_squares_; 
 
         while(moves) {            
-            Square to = PopBit(moves); 
+            const Square to = PopBit(moves); 
 
             const Board nb = UpdateRookMove(board, x, to);
             parent_->OnInsert(nb, context.depth_ + 1);            
 
             #ifdef _DEBUG 
-                parent_->OnInsertDebug(board, nb, notations[x] + " -> " + notations[LSquare(to)] + " Rook Move");
+                parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)] + " Rook Move");
             #endif            
         }
-    } 
+    }                                            
 }
 
 void WhiteMoveGenerator::GetQueenMoves(const Board & board, MGSearchContextualObject & context) {
@@ -463,13 +496,15 @@ void WhiteMoveGenerator::GetQueenMoves(const Board & board, MGSearchContextualOb
             parent_->OnInsert(nb, context.depth_ + 1);       
 
             #ifdef _DEBUG 
-                parent_->OnInsertDebug(board, nb, notations[x] + " -> " + notations[LSquare(to)] + " Queen Move");
+                parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)] + " Queen Move");
             #endif   
         } 
     } 
 }
 
 void WhiteMoveGenerator::GetKingMoves(const Board & board, MGSearchContextualObject & context) {  
+    m_assert(board.white_king_ != 0,  "White has no king");
+    
     Square x = LSquare(board.white_king_);
     BBoard moves = Lookup::King(x) &~ (context.kingban_ | board.white_);
 
@@ -480,7 +515,7 @@ void WhiteMoveGenerator::GetKingMoves(const Board & board, MGSearchContextualObj
         parent_->OnInsert(nb, context.depth_ + 1);        
 
         #ifdef _DEBUG 
-            parent_->OnInsertDebug(board, nb, notations[x] + " -> " + notations[LSquare(to)] + " King Move");
+            parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)] + " King Move");
         #endif   
     }
 }

@@ -22,23 +22,23 @@ enum class PieceType {
 
 class Board {
 public :
-    BBoard white_pawn_;
-    BBoard white_knight_;
-    BBoard white_bishop_;
-    BBoard white_rook_;
-    BBoard white_queen_;
-    BBoard white_king_;
+    BBoard white_pawn_ { 0x0 };
+    BBoard white_knight_{ 0x0 };
+    BBoard white_bishop_{ 0x0 };
+    BBoard white_rook_{ 0x0 };
+    BBoard white_queen_{ 0x0 };
+    BBoard white_king_{ 0x0 };
 
-    BBoard black_pawn_;
-    BBoard black_knight_;
-    BBoard black_bishop_;
-    BBoard black_rook_;
-    BBoard black_queen_;
-    BBoard black_king_; 
+    BBoard black_pawn_{ 0x0 };
+    BBoard black_knight_{ 0x0 };
+    BBoard black_bishop_{ 0x0 };
+    BBoard black_rook_{ 0x0 };
+    BBoard black_queen_{ 0x0 };
+    BBoard black_king_{ 0x0 }; 
 
-    BBoard white_;
-    BBoard black_;    
-    BBoard occ_;
+    BBoard white_{ 0x0 };
+    BBoard black_{ 0x0 };    
+    BBoard occ_{ 0x0 };
 
     bool white_acts_    = true;
     bool white_oo_      = true;

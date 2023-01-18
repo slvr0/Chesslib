@@ -61,7 +61,12 @@ int main() {
 
 
  */
-    auto ret = chesslib_io.InitSearch(chessboard, SearchType::PERFT, 4);  
+
+    Board kiwipep = ChessboardGenerator::CreateFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+
+    Board chesstest = ChessboardGenerator::CreateFromFen("rnbqkb1r/pppppppp/5n2/8/5P2/8/PPPPPKPP/RNBQ1BNR b kq - 2 2");
+
+    auto ret = chesslib_io.InitSearch(chessboard, SearchType::PERFT_DIVIDE, 3);  
     
  
 

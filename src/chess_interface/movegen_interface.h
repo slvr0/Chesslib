@@ -5,13 +5,16 @@
 #include "../blowfish/chessboard.h"
 #include "../blowfish/move_generator.h"
 #include "../blowfish/perft_mgfac.h"
-
-//creates monte carlo trees and sends search requests towards chesslib from incoming calls from comm lib
+#include "../blowfish/perft_divider.h"
 
 enum class SearchType {
-    PERFT = 0
+    PERFT = 0,
+    PERFT_DIVIDE = 1,
+
 
 };
+
+//Interface between user and move generator requests.
 
 class ChesslibInterface {
 public : 
@@ -19,8 +22,6 @@ public :
 
     int InitSearch(const Board &board, SearchType search_type, int maxdepth);
 
-private : 
-    PerftMGFactory perft_factory_;
-    int n_moves_ = 0;
-    int max_depth_ = 0;
+private :     
+
 };

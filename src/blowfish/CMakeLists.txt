@@ -1,0 +1,31 @@
+cmake_minimum_required(VERSION 3.10.2)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_library(blowfish_engine
+    chessboard.h
+    chessboard.cpp
+    chessboard_extractor.h
+    chessboard_extractor.cpp
+    static_move_tables.h
+    static_move_tables.cpp
+    position_meta_data.h
+    position_meta_data.cpp
+    move_generator.h
+    move_generator.cpp
+    wmovegen.h
+    wmovegen.cpp
+    bmovegen.h
+    bmovegen.cpp
+    chessboard_generator.h
+    chessboard_generator.cpp
+    chessboard_traverser.h
+    chessboard_traverser.cpp
+    defs.h
+    perft_mgfac.h
+    perft_mgfac.cpp
+    perft_divider.h
+    perft_divider.cpp
+)
+

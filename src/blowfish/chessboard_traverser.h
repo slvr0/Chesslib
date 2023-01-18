@@ -31,7 +31,7 @@ FORCEINL Board UpdatePawnPush(const Board & board, const BBoard & from, const BB
 
     nb.occ_ = nb.white_ | nb.black_;
 
-    nb.enp_ = to;
+    nb.enp_ = LSquare(to);
 
     nb.white_acts_ = !nb.white_acts_;
 

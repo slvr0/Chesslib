@@ -18,6 +18,7 @@ FetchContent_MakeAvailable(googletest)
 add_library(GTest::GTest INTERFACE IMPORTED)
 
 add_subdirectory(src)
+
 add_subdirectory(tests)
 add_executable(main main.cpp)
 
@@ -32,7 +33,10 @@ target_include_directories(main PUBLIC)
 #-O3 -mpopcnt -march=native -mtune=generic -DPEXT -funsafe-math-optimizations 
 
 target_link_libraries(main PUBLIC -lgtest blowfish_engine chess_interface -O3 -mpopcnt -march=native -mtune=generic -DPEXT -funsafe-math-optimizations -std=c++2a  -g -pthread)
-  
+
+target_include_directories(blowfish_engine PUBLIC src/blowfish)
+target_include_directories(chess_interface PUBLIC src/chess_interface)
+
 include(CTest)
 
 add_executable(

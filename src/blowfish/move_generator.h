@@ -49,7 +49,7 @@ public :
 
     }
 
-    inline void OnInsertDebug(const Board& b1, const Board& b2, const std::string & info) {
+    inline virtual void OnInsertDebug(const Board& b1, const Board& b2, const std::string & info) {
         dbug_file_ << "--------------------------------------------------------ENTRY-------------------------------------------------------------------------------------------\n";
         dbug_file_ <<  info + "\n";
         dbug_file_ << BoardConsoleGUI::BoardAsString(b1);
