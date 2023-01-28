@@ -45,9 +45,7 @@ add_executable(
   
 )
 
-
 target_link_libraries(blowfish_test PRIVATE -lgtest blowfish_engine)
-
 
 include(GoogleTest)
 gtest_discover_tests(blowfish_test)

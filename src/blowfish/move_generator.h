@@ -50,7 +50,7 @@ public :
     }
 
     inline virtual void OnInsertDebug(const Board& b1, const Board& b2, const std::string & info) {
-        dbug_file_ << "--------------------------------------------------------ENTRY-------------------------------------------------------------------------------------------\n";
+/*         dbug_file_ << "--------------------------------------------------------ENTRY-------------------------------------------------------------------------------------------\n";
         dbug_file_ <<  info + "\n";
         dbug_file_ << BoardConsoleGUI::BoardAsString(b1);
         dbug_file_ << "\nB Statistics | " << "White Acts : " << b1.white_acts_ << " WhiteCastleKingSide : " << b1.white_oo_ << " WhiteCastleQueenSide : " << b1.white_ooo_ << \
@@ -59,7 +59,7 @@ public :
             " BlackCastleKingSide : " << b2.black_oo_ << " BlackCastleQueenSide : " << b2.black_ooo_ << " Enpaissant : " << b2.enp_ << "\n";    
         dbug_file_ << "\n";
         dbug_file_ << BoardConsoleGUI::BoardAsString(b2);
-        dbug_file_ << "\n";
+        dbug_file_ << "\n"; */
 
     }
     

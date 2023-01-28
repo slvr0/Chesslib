@@ -8,8 +8,13 @@ int PerftMGFactory::Enumerate(const Board& board, const int& maxdepth) {
     maxdepth_       = maxdepth;
     n               = 0;
     const int depth = 0;    
+    
+    
+    Perft(board, depth);  
 
-    Perft(board, depth);   
+
+
+     
 
     return n;
 }

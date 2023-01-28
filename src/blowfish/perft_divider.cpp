@@ -1,19 +1,25 @@
 #include "perft_divider.h"
 #include "perft_mgfac.h"
 
-void PerftDividerFactory::Enumerate(const Board & board, const int & maxdepth) {
-    max_depth_ = maxdepth;
-    int _ = Perft(board, 1);
+void PerftDividerFactory::Enumerate(const Board & board, const int & maxdepth) {    
+    BoardNode* root = new BoardNode(board);
 
-    PerftMGFactory perft_mg;
+    std::vector<BoardNode*> curr_nodelist {root};
+    next_nodelist_.clear();
+    
+    n = 1;
 
-    for(auto const& entry : div_entries_) {
-        std::string hash = entry.first;
-        DividerContextObject* context = entry.second;
-        context->entries = perft_mg.Enumerate(context->board_entry, maxdepth - 1);
+    for(int i = 0 ; i < maxdepth; ++i) {
+        for(auto & nodeptr : curr_nodelist) {   
+            brdptr_ = nodeptr;
+            Perft(nodeptr->board_, 1);   
+        }
 
-        std::cout << hash << "\t : \t" << context->entries << std::endl;
+        curr_nodelist = next_nodelist_;
+        next_nodelist_.clear();
     }
+
+    print(n);
 }
 
 unsigned long PerftDividerFactory::Perft(const Board & board, const int & depth) {
@@ -23,11 +29,16 @@ unsigned long PerftDividerFactory::Perft(const Board & board, const int & depth)
 
 void PerftDividerFactory::OnInsertDebug(const Board& b1, const Board& b2, const std::string & info) {   
 
-    std::string cutn_dry = info.substr(0, 4);
-    std::transform(cutn_dry.begin(), cutn_dry.end(), cutn_dry.begin(), ::tolower); 
-    div_entries_[cutn_dry] = new DividerContextObject(b2);
+
 }
 
-void PerftDividerFactory::OnInsert(const Board& board, const int& depth) {     
-    //not necessary in head, adding map entries in insert debug
+void PerftDividerFactory::OnInsert(const Board& board, const int& depth) {  
+    BoardNode* newNode = new BoardNode(board);            
+    brdptr_->InsertNode(newNode);
+
+    next_nodelist_.push_back(newNode);    
+
+    ++n;  
 }
+
+
