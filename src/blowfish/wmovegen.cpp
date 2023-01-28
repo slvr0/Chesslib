@@ -7,6 +7,7 @@ MGSearchContextualObject WhiteMoveGenerator::RefreshMetaDataInternal(const Board
     context.kingmoves_ =  Lookup::King(LSquare(board.white_king_)); 
     context.ekingmoves_ = Lookup::King(LSquare(board.black_king_));
 
+
     //Pawn checks
     {
         const BBoard pl = Black_Pawn_AttackLeft(board.black_pawn_ & Pawns_NotLeft());
@@ -111,7 +112,7 @@ MGSearchContextualObject WhiteMoveGenerator::RefreshMetaDataInternal(const Board
 
     // Calculate Enemy Bishop
     {
-        BBoard bishops = board.black_bishop_;
+        BBoard bishops = board.black_bishop_ | board.black_queen_;
         LoopBits(bishops)
         {
             const Square sq = LSquare(bishops);                

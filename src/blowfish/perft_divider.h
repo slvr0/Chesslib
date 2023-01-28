@@ -9,15 +9,6 @@
 
 
 
-struct DividerContextObject {
-
-    DividerContextObject(const Board& board) :
-        board_entry(board), entries(0) {
-    }
-    const Board           board_entry;
-    unsigned long   entries;
-};
-
 class BoardNode {
 public : 
     BoardNode(const Board& board) : board_(board){
@@ -36,9 +27,14 @@ public :
         branches_.push_back(node);
     }
 
+    inline bool IsLeaf() {
+        return branches_.empty();
+    }
+
     inline size_t GetEntries() const { return branches_.size();}
 
-    Board board_;
+    Board                   board_;
+    std::string             tag_ = " ";
     std::vector<BoardNode*> branches_;
 
 };
@@ -55,9 +51,13 @@ public :
     void            OnInsertDebug(const Board& b1, const Board& b2, const std::string & info) override;
 
 private:
-    std::map<std::string, DividerContextObject*> div_entries_;
+    int CountNodesAndLeafFrom(BoardNode* node);
+
+private:
     int max_depth_ = 0; 
     int n = 0;
     std::vector<BoardNode*> next_nodelist_;
     BoardNode* brdptr_ = nullptr;
+
+
 };

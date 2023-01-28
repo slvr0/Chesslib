@@ -12,7 +12,7 @@
 
 int main() {
 
-    std::string basic_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
     std::string opendiag = "rnbqkbnr/pp2pppp/2p5/3p4/3P4/6P1/PPP1PP1P/RNBQKBNR w KQkq - 0 3";
     std::string open_diag_rooks = "rnbqkbnr/p4p1p/4p3/1Ppp2p1/3P3P/5NP1/1PP1PP2/RNBQKB1R w KQkq - 0 7";
 
@@ -37,7 +37,7 @@ int main() {
 
     std::string castle_01 = "2k4r/8/8/8/8/8/4PPP1/R3K2R w KQk - 0 1";
 
-    Board chessboard = ChessboardGenerator::CreateFromFen(basic_pos);    
+      
     //Board chessboard = ChessboardGenerator::CreateFromFen(pin_test_02);   
 
 /*     std::cout << PrintBoardsAndMask(0,0, chessboard, chessboard) << std::endl; */
@@ -65,8 +65,18 @@ int main() {
     Board kiwipep = ChessboardGenerator::CreateFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
 
     Board chesstest = ChessboardGenerator::CreateFromFen("rnbqkb1r/pppppppp/5n2/8/5P2/8/PPPPPKPP/RNBQ1BNR b kq - 2 2");
+    
 
-    auto ret = chesslib_io.InitSearch(chessboard, SearchType::PERFT_DIVIDE, 3);  
+    Board startpos = ChessboardGenerator::CreateFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");  
+    Board perftdivide_follows1 = ChessboardGenerator::CreateFromFen("rnbqkbnr/pppppppp/8/8/8/2P5/PP1PPPPP/RNBQKBNR b KQkq - 0 1");
+    Board perftdivide_follows2 = ChessboardGenerator::CreateFromFen("rnbqkbnr/ppppp1pp/8/5p2/8/1QP5/PP1PPPPP/RNB1KBNR b KQkq - 1 2");
+
+    Board any_test = ChessboardGenerator::CreateFromFen("rnb1kbnr/pp1ppppp/1qp5/8/8/P4P2/1PPPP1PP/RNBQKBNR w KQkq - 0 1");
+
+
+    auto ret = chesslib_io.InitSearch(startpos, SearchType::PERFT_DIVIDE, 4);  
+
+  
     
  
 

@@ -108,7 +108,7 @@ MGSearchContextualObject BlackMoveGenerator::RefreshMetaDataInternal(const Board
 
     // Calculate Enemy Bishop
     {
-        BBoard bishops = board.white_bishop_;
+        BBoard bishops = board.white_bishop_ | board.white_queen_;
         LoopBits(bishops)
         {
             const Square sq = LSquare(bishops);                
