@@ -7,13 +7,10 @@ MGSearchContextualObject WhiteMoveGenerator::RefreshMetaDataInternal(const Board
     context.kingmoves_ =  Lookup::King(LSquare(board.white_king_)); 
     context.ekingmoves_ = Lookup::King(LSquare(board.black_king_));
 
-
     //Pawn checks
     {
-        const BBoard pl = Black_Pawn_AttackLeft(board.black_pawn_ & Pawns_NotLeft());
-        const BBoard pr = Black_Pawn_AttackRight(board.black_pawn_ & Pawns_NotRight());
-
- 
+        const BBoard pl = Black_Pawn_AttackLeft(board.black_pawn_ & Pawns_NotRight());
+        const BBoard pr = Black_Pawn_AttackRight(board.black_pawn_ & Pawns_NotLeft());
 
         context.kingban_ |= (pl | pr);
 
@@ -29,7 +26,6 @@ MGSearchContextualObject WhiteMoveGenerator::RefreshMetaDataInternal(const Board
     }
 
     context.checkmask_ = context.check_status_;
-
 
     const BBoard king   = board.white_king_;
     const BBoard eking  = board.black_king_;
@@ -69,7 +65,7 @@ MGSearchContextualObject WhiteMoveGenerator::RefreshMetaDataInternal(const Board
         } 
       
         if(board.enp_ != -1) {     
-            context.enp_target_ = 1ULL << board.enp_;
+            context.enp_target_ = 1ULL << board.enp_; // enp_target == enp64
 
             const BBoard pawns = board.white_pawn_;
             const BBoard enemy_rook_queens = board.black_rook_ | board.black_queen_;
@@ -97,8 +93,8 @@ MGSearchContextualObject WhiteMoveGenerator::RefreshMetaDataInternal(const Board
                     BBoard AfterEPocc = board.occ_ & ~((context.enp_target_ >> 8) | EPRpawn);                    
                     if ((Lookup::Rook(kingsq, AfterEPocc) & WhiteEPRank()) & enemy_rook_queens) 
                         context.enp_target_ = 0x0;
-                }
-            }           
+                }  
+            }                     
         }
     } 
        
@@ -172,7 +168,8 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
 
     BBoard pawn_capture_left    = pawns_lr & White_Pawn_InvertLeft(board.black_ & Pawns_NotLeft() & context.checkmask_);
     BBoard pawn_capture_right   = pawns_lr & White_Pawn_InvertRight(board.black_ & Pawns_NotRight() & context.checkmask_);    
-
+ 
+    
     //forward
     BBoard pawn_forward_1 = pawns_hv & White_Pawn_Backward(~board.occ_); // no checkmask needed here? why? it comes later
 
@@ -189,23 +186,39 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
     White_Pawns_PruneRight(pawn_capture_right,  context.bishop_pins_);
    
     if (context.enp_target_) {    
-        BBoard EPLpawn = pawns_lr & Pawns_NotLeft()  & (White_Pawn_InvertLeft(context.enp_target_  & context.checkmask_)); 
-        BBoard EPRpawn = pawns_lr & Pawns_NotRight() & (White_Pawn_InvertRight(context.enp_target_ & context.checkmask_));  
-        
-        if (EPLpawn | EPRpawn) //Todo: bench if slower or faster
-        {
+        BBoard EPLpawn = pawns_lr  & (White_Pawn_InvertLeft(context.enp_target_  & Pawns_NotLeft() & context.checkmask_) ); 
+        BBoard EPRpawn = pawns_lr  & (White_Pawn_InvertRight(context.enp_target_ & Pawns_NotRight()  & context.checkmask_) ); 
+
+        if (EPLpawn | EPRpawn)
+        {            
             White_Pawn_PruneLeftEP(EPLpawn,     context.bishop_pins_);
             White_Pawn_PruneRightEP(EPRpawn,    context.bishop_pins_);
 
-            /*
+            if(EPLpawn) {
+                const Bit pos = PopBit(EPLpawn); 
+                const Square to = White_Pawn_AttackLeft(pos); 
+                
+                const Board epl_board = UpdatePawnEnpassaint(board, pos, to, context.enp_target_);
 
-            //enumerate these...
-            if(EPLpawn) { const Bit pos = PopBit(EPLpawn);     const Square to = White_Pawn_AttackLeft(pos); 
-            std::cout << "P(EP LEFT) || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl;} // add legal EP move
-            if(EPRpawn) { const Bit pos = PopBit(EPRpawn);    const Square to = White_Pawn_AttackRight(pos);
-            std::cout << "P(EP RIGHT) || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl; } // add legal EP move
+                parent_->OnInsert(epl_board, context.depth_ + 1);
 
-            */
+                #ifdef _DEBUG 
+                    parent_->OnInsertDebug(board, epl_board, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn EPL");
+                #endif
+            }
+
+            if(EPRpawn) {
+                const Bit pos = PopBit(EPRpawn); 
+                const Square to = White_Pawn_AttackLeft(pos); 
+                
+                const Board epr_board = UpdatePawnEnpassaint(board, pos, to, context.enp_target_);
+
+                parent_->OnInsert(epr_board, context.depth_ + 1);
+
+                #ifdef _DEBUG 
+                    parent_->OnInsertDebug(board, epr_board, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn EPR");
+                #endif
+            }
         }
     }
 
@@ -390,7 +403,7 @@ void WhiteMoveGenerator::GetBishopMoves(const Board & board, MGSearchContextualO
 
         BBoard moves = Lookup::Bishop(x, board.occ_) & context.moveable_squares_ & context.bishop_pins_; 
 
-        if(1ULL << x & queens) {
+        if((1ULL << x) & queens) {
             
             while(moves)  {
                 Square to = PopBit(moves); 
@@ -404,7 +417,9 @@ void WhiteMoveGenerator::GetBishopMoves(const Board & board, MGSearchContextualO
             }
         }
         else {
-             while(moves)  {
+
+             while(moves)  {               
+
                 Square to = PopBit(moves); 
                 
                 const Board nb = UpdateBishopMove(board, x, to);
@@ -418,9 +433,11 @@ void WhiteMoveGenerator::GetBishopMoves(const Board & board, MGSearchContextualO
     } 
 
     LoopBits(nopin_bishops) {
+
         Square x = LSquare(nopin_bishops);
     
-        BBoard moves = Lookup::Bishop(x, board.occ_) & context.moveable_squares_; 
+        BBoard moves = Lookup::Bishop(x, board.occ_) & context.moveable_squares_;  
+ 
 
         while(moves) {            
             Square to = PopBit(moves); 
@@ -436,13 +453,16 @@ void WhiteMoveGenerator::GetBishopMoves(const Board & board, MGSearchContextualO
 }
 
 void WhiteMoveGenerator::GetRookMoves(const Board & board, MGSearchContextualObject & context) {
-    BBoard pinned_rooks  = (board.white_rook_ | board.white_queen_) & context.rook_pins_;
-    BBoard rooks = board.white_rook_ & ~context.rook_pins_;
+    BBoard queens   = board.white_queen_;     
+    BBoard rooks    = board.white_rook_ & ~context.bishop_pins_;
+
+    BBoard pinned_rooks  = (rooks | queens) & context.rook_pins_;  
+    BBoard nopin_rooks   = rooks & ~context.rook_pins_;  
 
     LoopBits(pinned_rooks) {
         Square x = LSquare(pinned_rooks);
         BBoard moves = Lookup::Rook(x, board.occ_) & context.moveable_squares_ & context.rook_pins_; 
-
+        
         while(moves) {
             const Square to = PopBit(moves);
             if(1ULL << x & board.white_queen_) {
@@ -462,11 +482,10 @@ void WhiteMoveGenerator::GetRookMoves(const Board & board, MGSearchContextualObj
                 #endif       
             }
         }
-
     }
 
-    LoopBits(rooks) {
-        Square x = LSquare(rooks);
+    LoopBits(nopin_rooks) {
+        Square x = LSquare(nopin_rooks);
 
         BBoard moves = Lookup::Rook(x, board.occ_) & context.moveable_squares_; 
 
@@ -484,7 +503,7 @@ void WhiteMoveGenerator::GetRookMoves(const Board & board, MGSearchContextualObj
 }
 
 void WhiteMoveGenerator::GetQueenMoves(const Board & board, MGSearchContextualObject & context) {
-    BBoard queens = board.white_queen_; 
+    BBoard queens = board.white_queen_ & ~(context.rook_pins_ | context.bishop_pins_); 
 
     LoopBits(queens) {
         Square x = LSquare(queens);

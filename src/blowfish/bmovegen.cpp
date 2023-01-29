@@ -184,23 +184,39 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
     Black_Pawns_PruneRight(pawn_capture_right,  context.bishop_pins_);
    
     if (context.enp_target_) {    
-        BBoard EPLpawn = pawns_lr & Pawns_NotLeft()  & (Black_Pawn_InvertLeft(context.enp_target_  & context.checkmask_)); 
-        BBoard EPRpawn = pawns_lr & Pawns_NotRight() & (Black_Pawn_InvertRight(context.enp_target_ & context.checkmask_));  
-        
-        if (EPLpawn | EPRpawn) //Todo: bench if slower or faster
+        BBoard EPLpawn = pawns_lr  & (Black_Pawn_InvertLeft(context.enp_target_  & Pawns_NotLeft() & context.checkmask_) ); 
+        BBoard EPRpawn = pawns_lr  & (Black_Pawn_InvertRight(context.enp_target_ & Pawns_NotRight()  & context.checkmask_) );        
+
+        if (EPLpawn | EPRpawn)
         {
             Black_Pawn_PruneLeftEP(EPLpawn,     context.bishop_pins_);
             Black_Pawn_PruneRightEP(EPRpawn,    context.bishop_pins_);
 
-            //enumerate these... PERFT 4 this foudns moves? something wrong here?
+            if(EPLpawn) {
+                const Bit pos = PopBit(EPLpawn); 
+                const Square to = Black_Pawn_AttackLeft(pos); 
+                
+                const Board epl_board = UpdatePawnEnpassaint(board, pos, to, context.enp_target_);
 
-            /*
-            if(EPLpawn) { const Bit pos = PopBit(EPLpawn);     const Square to = Black_Pawn_AttackLeft(pos); 
-            std::cout << "P(EP LEFT) || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl;} // add legal EP move
-            if(EPRpawn) { const Bit pos = PopBit(EPRpawn);    const Square to = Black_Pawn_AttackRight(pos);
-            std::cout << "P(EP RIGHT) || " <<  notations[LSquare(pos)] << " || " << notations[LeastBit(to)] << std::endl; } // add legal EP move
+                parent_->OnInsert(epl_board, context.depth_ + 1);
 
-            */
+                #ifdef _DEBUG 
+                    parent_->OnInsertDebug(board, epl_board, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn EPL");
+                #endif
+            }
+
+            if(EPRpawn) {
+                const Bit pos = PopBit(EPRpawn); 
+                const Square to = Black_Pawn_AttackLeft(pos); 
+                
+                const Board epr_board = UpdatePawnEnpassaint(board, pos, to, context.enp_target_);
+
+                parent_->OnInsert(epr_board, context.depth_ + 1);
+
+                #ifdef _DEBUG 
+                    parent_->OnInsertDebug(board, epr_board, notations[LSquare(pos)] + notations[LSquare(to)] + " Pawn EPR");
+                #endif
+            }
         }
     }
 
@@ -388,66 +404,73 @@ void BlackMoveGenerator::GetBishopMoves(const Board & board, MGSearchContextualO
     BBoard bishops = board.black_bishop_ &~ context.rook_pins_; //including non pinned bishops (HV) 
     
     BBoard pinned_bishops = (bishops | queens) & context.bishop_pins_; //including pinned queens diagonally here.
-    BBoard nopin_bishops = bishops & ~context.bishop_pins_;
-
+    BBoard nopin_bishops = bishops & ~context.bishop_pins_; 
+    
     LoopBits(pinned_bishops) {
         Square x = LSquare(pinned_bishops);
 
         BBoard moves = Lookup::Bishop(x, board.occ_) & context.moveable_squares_ & context.bishop_pins_; 
 
-        if(1ULL << x & queens) {
+        if((1ULL << x) & board.black_queen_) {
             
             while(moves)  {
                 Square to = PopBit(moves); 
-                
+            
                 const Board nb = UpdateQueenMove(board, x, to);
-                parent_->OnInsert(nb, context.depth_ + 1);
-                
+                parent_->OnInsert(nb, context.depth_ + 1);               
+
                 #ifdef _DEBUG 
                     parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)] + " Queen Move");
-                #endif 
+                #endif  
             }
         }
         else {
-             while(moves)  {
-                Square to = PopBit(moves);
+
+             while(moves)  {               
+
+                Square to = PopBit(moves); 
                 
                 const Board nb = UpdateBishopMove(board, x, to);
-                parent_->OnInsert(nb, context.depth_ + 1);
-                
+                parent_->OnInsert(nb, context.depth_ + 1);                
+
                 #ifdef _DEBUG 
                     parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)] + " Bishop Move");
-                #endif
+                #endif  
             }          
         }     
     } 
 
     LoopBits(nopin_bishops) {
-        Square x = LSquare(nopin_bishops);
 
-        BBoard moves = Lookup::Bishop(x, board.occ_) & context.moveable_squares_; 
+        Square x = LSquare(nopin_bishops);
+    
+        BBoard moves = Lookup::Bishop(x, board.occ_) & context.moveable_squares_;  
+ 
 
         while(moves) {            
             Square to = PopBit(moves); 
-
-            const Board nb = UpdateBishopMove(board, x, to);
-            parent_->OnInsert(nb, context.depth_ + 1);
             
+            const Board nb = UpdateBishopMove(board, x, to);
+            parent_->OnInsert(nb, context.depth_ + 1);            
+
             #ifdef _DEBUG 
                 parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)] + " Bishop Move");
-            #endif
+            #endif  
         }
-    } 
+    }  
 }
 
 void BlackMoveGenerator::GetRookMoves(const Board & board, MGSearchContextualObject & context) {
-    BBoard pinned_rooks  = (board.black_rook_ | board.black_queen_) & context.rook_pins_;
-    BBoard rooks = board.black_rook_ & ~context.rook_pins_;
+    BBoard queens   = board.black_queen_;     
+    BBoard rooks    = board.black_rook_ & ~context.bishop_pins_;
+
+    BBoard pinned_rooks  = (rooks | queens) & context.rook_pins_;  
+    BBoard nopin_rooks   = rooks & ~context.rook_pins_;  
 
     LoopBits(pinned_rooks) {
         Square x = LSquare(pinned_rooks);
         BBoard moves = Lookup::Rook(x, board.occ_) & context.moveable_squares_ & context.rook_pins_; 
-
+        
         while(moves) {
             const Square to = PopBit(moves);
             if(1ULL << x & board.black_queen_) {
@@ -469,8 +492,8 @@ void BlackMoveGenerator::GetRookMoves(const Board & board, MGSearchContextualObj
         }
     }
 
-    LoopBits(rooks) {
-        Square x = LSquare(rooks);
+    LoopBits(nopin_rooks) {
+        Square x = LSquare(nopin_rooks);
 
         BBoard moves = Lookup::Rook(x, board.occ_) & context.moveable_squares_; 
 
@@ -484,11 +507,11 @@ void BlackMoveGenerator::GetRookMoves(const Board & board, MGSearchContextualObj
                 parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)] + " Rook Move");
             #endif            
         }
-    }
+    } 
 }
 
 void BlackMoveGenerator::GetQueenMoves(const Board & board, MGSearchContextualObject & context) {
-    BBoard queens = board.black_queen_; 
+    BBoard queens = board.black_queen_ & ~(context.rook_pins_ | context.bishop_pins_); 
 
     LoopBits(queens) {
         Square x = LSquare(queens);

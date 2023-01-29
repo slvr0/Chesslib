@@ -1,4 +1,4 @@
-#include "position_meta_data.h"
+/* #include "position_meta_data.h"
 
 void WhiteMetaDataRegister::InitMetaDataSearch(const Board& board) {
     rook_pins        = { 0x0 };
@@ -143,3 +143,4 @@ void WhiteMetaDataRegister::RefreshMetaData(const Board & board) {
     }
 }
 
+ */

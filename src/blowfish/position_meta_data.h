@@ -183,28 +183,28 @@ FORCEINL void Black_Pawns_PruneMove2(BBoard & pawn, const BBoard & pinHV) {
 }
 
 FORCEINL void White_Pawns_PruneLeft(BBoard & pawn, const BBoard & pinD12) {
-    const BBoard pinned = pawn & White_Pawn_InvertLeft(pinD12 & Pawns_NotRight()); //You can go left and are pinned
+    const BBoard pinned = pawn & White_Pawn_InvertLeft(pinD12) & Pawns_NotRight(); //You can go left and are pinned
     const BBoard unpinned = pawn & ~pinD12;
 
-    pawn = (pinned | unpinned); //You can go left and you and your targetsquare is allowed
+    pawn = (pinned | unpinned); //You can go left and you and your targetsquare is allowed 
 }
 
 FORCEINL void Black_Pawns_PruneLeft(BBoard & pawn, const BBoard & pinD12) {
-    const BBoard pinned = pawn & Black_Pawn_InvertLeft(pinD12 & Pawns_NotRight()); //You can go left and are pinned
+    const BBoard pinned = pawn & Black_Pawn_InvertLeft(pinD12) & Pawns_NotRight(); //You can go left and are pinned
     const BBoard unpinned = pawn & ~pinD12;
 
     pawn = (pinned | unpinned); //You can go left and you and your targetsquare is allowed
 }
 
 FORCEINL void White_Pawns_PruneRight(BBoard & pawn, const BBoard & pinD12) {
-    const BBoard pinned = pawn & White_Pawn_InvertRight(pinD12 & Pawns_NotLeft()); //You can go left and are pinned
+    const BBoard pinned = pawn & White_Pawn_InvertRight(pinD12) & Pawns_NotLeft(); //You can go left and are pinned
     const BBoard unpinned = pawn & ~pinD12;
 
     pawn = (pinned | unpinned); //You can go left and you and your targetsquare is allowed
 }
 
 FORCEINL void Black_Pawns_PruneRight(BBoard & pawn, const BBoard & pinD12) {
-    const BBoard pinned = pawn & Black_Pawn_InvertRight(pinD12 & Pawns_NotLeft()); //You can go left and are pinned
+    const BBoard pinned = pawn & Black_Pawn_InvertRight(pinD12) & Pawns_NotLeft(); //You can go left and are pinned
     const BBoard unpinned = pawn & ~pinD12;
 
     pawn = (pinned | unpinned); //You can go left and you and your targetsquare is allowed
@@ -212,7 +212,7 @@ FORCEINL void Black_Pawns_PruneRight(BBoard & pawn, const BBoard & pinD12) {
 
 FORCEINL void White_Pawn_PruneLeftEP(BBoard& pawn, const BBoard& pinD12)
 {
-    const BBoard pinned = pawn & White_Pawn_InvertLeft(pinD12 & Pawns_NotRight()); //You can go left and are pinned
+    const BBoard pinned = pawn & White_Pawn_InvertLeft(pinD12) & Pawns_NotRight(); //You can go left and are pinned
     const BBoard unpinned = pawn & ~pinD12;
 
     pawn = (pinned | unpinned);
@@ -220,7 +220,7 @@ FORCEINL void White_Pawn_PruneLeftEP(BBoard& pawn, const BBoard& pinD12)
 
 FORCEINL void White_Pawn_PruneRightEP(BBoard& pawn, const BBoard& pinD12)
 {
-    const BBoard pinned = pawn & White_Pawn_InvertRight(pinD12 & Pawns_NotLeft()); //You can go right and are pinned
+    const BBoard pinned = pawn & White_Pawn_InvertRight(pinD12) & Pawns_NotLeft(); //You can go right and are pinned
     const BBoard unpinned = pawn & ~pinD12;
 
     pawn = (pinned | unpinned); 
@@ -228,7 +228,7 @@ FORCEINL void White_Pawn_PruneRightEP(BBoard& pawn, const BBoard& pinD12)
 
 FORCEINL void Black_Pawn_PruneLeftEP(BBoard& pawn, const BBoard& pinD12)
 {
-    const BBoard pinned = pawn & Black_Pawn_InvertLeft(pinD12 & Pawns_NotRight()); //You can go left and are pinned
+    const BBoard pinned = pawn & Black_Pawn_InvertLeft(pinD12) & Pawns_NotRight(); //You can go left and are pinned
     const BBoard unpinned = pawn & ~pinD12;
 
     pawn = (pinned | unpinned);
@@ -237,7 +237,7 @@ FORCEINL void Black_Pawn_PruneLeftEP(BBoard& pawn, const BBoard& pinD12)
 
 FORCEINL void Black_Pawn_PruneRightEP(BBoard& pawn, const BBoard& pinD12)
 {
-    const BBoard pinned = pawn & Black_Pawn_InvertRight(pinD12 & Pawns_NotLeft()); //You can go right and are pinned
+    const BBoard pinned = pawn & Black_Pawn_InvertRight(pinD12) & Pawns_NotLeft(); //You can go right and are pinned
     const BBoard unpinned = pawn & ~pinD12;
 
     pawn = (pinned | unpinned); 
@@ -258,7 +258,7 @@ namespace Movestack
 
 // pins need to be searched regardless for each new position.
 
-
+/* 
 
 //each move generator (white/black) initiates its own metaregister for specific side of the board
 class IMetaDataRegister {
@@ -342,3 +342,4 @@ private :
     
 };
 
+ */

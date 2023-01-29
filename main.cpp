@@ -62,26 +62,24 @@ int main() {
 
  */
 
+    Board fixme = ChessboardGenerator::CreateFromFen("rnbqkbnr/pppp1ppp/8/8/3Pp1P1/5P2/PPP1P2P/RNBQKBNR b KQkq d3 0 3");
     Board kiwipep = ChessboardGenerator::CreateFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
 
     Board chesstest = ChessboardGenerator::CreateFromFen("rnbqkb1r/pppppppp/5n2/8/5P2/8/PPPPPKPP/RNBQ1BNR b kq - 2 2");
     
 
     Board startpos = ChessboardGenerator::CreateFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");  
-    Board perftdivide_follows1 = ChessboardGenerator::CreateFromFen("rnbqkbnr/pppppppp/8/8/8/2P5/PP1PPPPP/RNBQKBNR b KQkq - 0 1");
-    Board perftdivide_follows2 = ChessboardGenerator::CreateFromFen("rnbqkbnr/ppppp1pp/8/5p2/8/1QP5/PP1PPPPP/RNB1KBNR b KQkq - 1 2");
+    Board perftdivide_follows1 = ChessboardGenerator::CreateFromFen("rnbqkbnr/pppppppp/8/8/6P1/8/PPPPPP1P/RNBQKBNR b KQkq - 0 1");
+    Board perftdivide_follows2 = ChessboardGenerator::CreateFromFen("rnbqkbnr/1ppppppp/p7/8/6P1/8/PPPPPP1P/RNBQKBNR w KQkq - 0 2");
+    Board perftdivide_follows3 = ChessboardGenerator::CreateFromFen("rnbqkbnr/1ppppppp/p7/6P1/8/8/PPPPPP1P/RNBQKBNR b KQkq - 0 2");
 
-    Board any_test = ChessboardGenerator::CreateFromFen("rnb1kbnr/pp1ppppp/1qp5/8/8/P4P2/1PPPP1PP/RNBQKBNR w KQkq - 0 1");
+    Board perft_new3 = ChessboardGenerator::CreateFromFen("rnbqkbnr/pppp1ppp/8/4p3/7P/5P2/PPPPP1P1/RNBQKBNR b KQkq h5 0 2");
+    Board any_test1 = ChessboardGenerator::CreateFromFen("rnbqkbnr/1pppppp1/p7/6Pp/8/8/PPPPPP1P/RNBQKBNR w KQkq h6 0 3");
+    Board any_test2 = ChessboardGenerator::CreateFromFen("rnbqkbnr/1pppp1pp/p7/5pP1/8/8/PPPPPP1P/RNBQKBNR w KQkq f6 0 3");
 
+    //auto ret = chesslib_io.InitSearch(any_test1, SearchType::PERFT_DIVIDE, 1);  
 
-    auto ret = chesslib_io.InitSearch(startpos, SearchType::PERFT_DIVIDE, 4);  
-
-  
-    
- 
-
-
-
+    auto ret2 = chesslib_io.InitSearch(startpos, SearchType::PERFT_DIVIDE, 5);  
 
 
     /*

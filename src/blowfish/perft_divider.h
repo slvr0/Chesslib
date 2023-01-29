@@ -7,8 +7,6 @@
 #include "chessboard.h"
 #include "move_generator.h"
 
-
-
 class BoardNode {
 public : 
     BoardNode(const Board& board) : board_(board){
@@ -31,11 +29,17 @@ public :
         return branches_.empty();
     }
 
+    inline bool IsTerminal() {
+        return terminal_;
+    }
+
     inline size_t GetEntries() const { return branches_.size();}
 
     Board                   board_;
     std::string             tag_ = " ";
     std::vector<BoardNode*> branches_;
+    int                     depth_ = 0;
+    bool                    terminal_ = false;
 
 };
 
@@ -46,18 +50,19 @@ public :
     }
 
     void            Enumerate(const Board & board, const int & maxdepth);
-    unsigned long   Perft(const Board & board, const int & depth);
+    void            Perft(const Board & board, const int & depth);
     void            OnInsert(const Board& board, const int& depth) override;
     void            OnInsertDebug(const Board& b1, const Board& b2, const std::string & info) override;
 
 private:
-    int CountNodesAndLeafFrom(BoardNode* node);
+    void CountNodesAndLeafFrom(BoardNode* node, int & count);
 
 private:
     int max_depth_ = 0; 
     int n = 0;
     std::vector<BoardNode*> next_nodelist_;
     BoardNode* brdptr_ = nullptr;
+    uint8_t    current_depth_ = 0;
 
 
 };
