@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.10.2)
 
-project(CMAKE_GENERIC)
+project(CHESSLIB)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
@@ -18,8 +18,8 @@ FetchContent_MakeAvailable(googletest)
 add_library(GTest::GTest INTERFACE IMPORTED)
 
 add_subdirectory(src)
-
 add_subdirectory(tests)
+
 add_executable(main main.cpp)
 
 target_include_directories(main PUBLIC)
@@ -45,7 +45,7 @@ add_executable(
   
 )
 
-target_link_libraries(blowfish_test PRIVATE -lgtest blowfish_engine)
+target_link_libraries(blowfish_test PRIVATE -lgtest blowfish_engine chess_interface)
 
 include(GoogleTest)
 gtest_discover_tests(blowfish_test)

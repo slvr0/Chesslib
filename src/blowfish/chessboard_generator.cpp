@@ -118,9 +118,13 @@ Board ChessboardGenerator::CreateFromFen(const std::string& fen) {
     //can be 1 or 2 digits (3?), just read to eof
 
     int totalmoves = std::stoi(fen.substr(spos, fen.size())); 
-
-    return Board(white_pawn, white_knight, white_bishop, white_rook, white_queen, white_king, 
+    Board b1 = Board(white_pawn, white_knight, white_bishop, white_rook, white_queen, white_king, 
                 black_pawn, black_knight, black_bishop, black_rook, black_queen, black_king,                
                 white_acts, white_oo, white_ooo, black_oo, black_ooo, enp                  
                );
+    b1.half_move_ = rule50;
+    b1.full_move_ = totalmoves;
+
+
+    return b1;
 }

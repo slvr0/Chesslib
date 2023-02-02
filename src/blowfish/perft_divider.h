@@ -33,6 +33,14 @@ public :
         return terminal_;
     }
 
+    inline void SetSubnodes(const int& value) {
+        sub_nodes_ = value;
+    }
+
+    inline int GetSubnodes() const {
+        return sub_nodes_;
+    }
+
     inline size_t GetEntries() const { return branches_.size();}
 
     Board                   board_;
@@ -40,6 +48,7 @@ public :
     std::vector<BoardNode*> branches_;
     int                     depth_ = 0;
     bool                    terminal_ = false;
+    int                     sub_nodes_ = 0;
 
 };
 
@@ -49,7 +58,7 @@ public :
         
     }
 
-    void            Enumerate(const Board & board, const int & maxdepth);
+    std::map<std::string, BoardNode*>    Enumerate(const Board & board, const int & maxdepth);
     void            Perft(const Board & board, const int & depth);
     void            OnInsert(const Board& board, const int& depth) override;
     void            OnInsertDebug(const Board& b1, const Board& b2, const std::string & info) override;
@@ -63,6 +72,6 @@ private:
     std::vector<BoardNode*> next_nodelist_;
     BoardNode* brdptr_ = nullptr;
     uint8_t    current_depth_ = 0;
-
+    
 
 };

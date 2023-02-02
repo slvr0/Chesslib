@@ -547,7 +547,7 @@ void WhiteMoveGenerator::GetCastlingMoves(const Board& board, MGSearchContextual
         parent_->OnInsert(nb, context.depth_ + 1);       
 
         #ifdef _DEBUG 
-            parent_->OnInsertDebug(board, nb, "Castle King Side");
+            parent_->OnInsertDebug(board, nb, "e1g1 oo");
         #endif 
     }
 
@@ -557,7 +557,7 @@ void WhiteMoveGenerator::GetCastlingMoves(const Board& board, MGSearchContextual
         parent_->OnInsert(nb, context.depth_ + 1);   
 
         #ifdef _DEBUG 
-            parent_->OnInsertDebug(board, nb, "Castle Queen Side");
+            parent_->OnInsertDebug(board, nb, "e1c1 ooo");
         #endif 
     }
 }

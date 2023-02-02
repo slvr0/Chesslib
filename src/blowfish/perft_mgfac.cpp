@@ -1,6 +1,6 @@
 #include "perft_mgfac.h"
 
-int PerftMGFactory::Enumerate(const Board& board, const int& maxdepth) {
+std::vector<int> PerftMGFactory::Enumerate(const Board& board, const int& maxdepth) {
     found_moves_.clear();
 
     for(int i = 0 ; i < maxdepth + 1 ; ++i) found_moves_.push_back(0);
@@ -9,20 +9,15 @@ int PerftMGFactory::Enumerate(const Board& board, const int& maxdepth) {
     n               = 0;
     const int depth = 0;    
     
-    
+    found_moves_[0] = 1;
+
     Perft(board, depth);  
-
-
-
-     
-
-    return n;
+    return found_moves_;
 }
 
 void PerftMGFactory::Perft(const Board& board, const int& depth) {
     if(board.white_acts_) wmgen_.ParseLegalMoves(board, depth);
-    else bmgen_.ParseLegalMoves(board, depth);
-    
+    else bmgen_.ParseLegalMoves(board, depth);    
 }
 
 std::string PerftMGFactory::Result() const {
@@ -37,13 +32,9 @@ std::string PerftMGFactory::Result() const {
 
 void PerftMGFactory::OnInsert(const Board& board, const int& depth) {
     ++n;
-
     found_moves_[depth] += 1;
 
-    //std::cout << "depth : " << depth << " \t max : " << maxdepth_ << std::endl;
     if(depth < maxdepth_) {
-
-        perft_calls++;
         Perft(board, depth);
     }
 }

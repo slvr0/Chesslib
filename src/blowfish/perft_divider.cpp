@@ -22,17 +22,17 @@ void PerftDividerFactory::CountNodesAndLeafFrom(BoardNode* node, int & count) {
             CountNodesAndLeafFrom(child, count);   
         }        
     }  
-   
 }
 
-void PerftDividerFactory::Enumerate(const Board & board, const int & maxdepth) {   
+std::map<std::string, BoardNode*> PerftDividerFactory::Enumerate(const Board & board, const int & maxdepth) { 
+    std::map<std::string, BoardNode*> map_divider_entries;  
+
     max_depth_ = maxdepth;
 
     BoardNode* root = new BoardNode(board);
 
     std::vector<BoardNode*> curr_nodelist {root};
     next_nodelist_.clear();
-
 
     for(int i = 0 ; i < maxdepth; ++i) {
         for(auto & nodeptr : curr_nodelist) {   
@@ -48,18 +48,26 @@ void PerftDividerFactory::Enumerate(const Board & board, const int & maxdepth) {
         next_nodelist_.clear();
     }
   
-    int total_after_branchsplit = 0;   
-    for(auto & branch : root->branches_) {     
+    int total_after_branchsplit = 0;  
 
+    //take each entry, put it in map, count up subnodes and store for in branchnode info. 
+    for(auto & branch : root->branches_) {     
+        
         int subtree_size = 0;  
 
         CountNodesAndLeafFrom(branch, subtree_size);
+        branch->SetSubnodes(subtree_size);
+
         total_after_branchsplit += subtree_size;
-        std::cout << branch->tag_ << " : " << subtree_size << std::endl;             
+        //std::cout << branch->tag_ << " : " << subtree_size << std::endl;  
+
+        map_divider_entries[branch->tag_] = branch;           
         
     }
-    std::cout << "Number of branches from root node : " << root->branches_.size() << std::endl;
-    std::cout << "Total nodes summing up all branches (non terminal), head node not counted : " << total_after_branchsplit << std::endl;
+    //std::cout << "Number of branches from root node : " << root->branches_.size() << std::endl;
+    //std::cout << "Total nodes summing up all branches (non terminal), head node not counted : " << total_after_branchsplit << std::endl;
+
+    return map_divider_entries;
 }
 
 void PerftDividerFactory::Perft(const Board & board, const int & depth) {
@@ -70,7 +78,7 @@ void PerftDividerFactory::Perft(const Board & board, const int & depth) {
 void PerftDividerFactory::OnInsertDebug(const Board& b1, const Board& b2, const std::string & info) {   
     BoardNode* newNode = new BoardNode(b2);
     
-    newNode->depth_ = current_depth_;
+    newNode->depth_ = current_depth_; // where am i using this?
     newNode->tag_ = info.substr(0, 4);
 
     std::transform(newNode->tag_.begin(), newNode->tag_.begin() +4 , newNode->tag_.begin(), ::tolower); 

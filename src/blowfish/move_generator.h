@@ -3,7 +3,6 @@
 #include <memory>
 #include <functional>
 
-
 #include <iostream>
 #include <fstream>
 
@@ -32,11 +31,11 @@ public :
         wmgen_ = WhiteMoveGenerator(this); 
         bmgen_ = BlackMoveGenerator(this);
 
-        #ifdef _DEBUG
+/*         #ifdef _DEBUG
             dbug_file_.open("test_file.txt");
 
             dbug_file_.clear();
-        #endif 
+        #endif  */
     }
 
     ~MoveGeneratorHeader() {

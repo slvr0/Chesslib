@@ -553,7 +553,7 @@ void BlackMoveGenerator::GetCastlingMoves(const Board& board, MGSearchContextual
         parent_->OnInsert(nb, context.depth_ + 1);      
 
         #ifdef _DEBUG 
-            parent_->OnInsertDebug(board, nb, "Castle King Side");
+            parent_->OnInsertDebug(board, nb, "e8g8 oo");
         #endif
     }
 
@@ -563,7 +563,7 @@ void BlackMoveGenerator::GetCastlingMoves(const Board& board, MGSearchContextual
       
 
          #ifdef _DEBUG 
-            parent_->OnInsertDebug(board, nb, "Castle Queen Side");
+            parent_->OnInsertDebug(board, nb, "e8c8 ooo");
         #endif
     }
 }

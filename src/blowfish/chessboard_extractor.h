@@ -14,6 +14,50 @@ Intended to provide static functions to extract detailed position information fr
 //takes in a square (0-63 and a board and outputs what piece is on that position)
 char AtBoardPosition(const Square& square, const Board& brd);
 
+//getting the fen is computational heavy, so never use this as part of main performance heavy code, 
+//if we need unique identification implement a zobrist hash function
+inline std::string  BoardAsFen(const Board & board) {
+    std::string res = "";
+    //fen board index logic
+    //56 - 63
+    //48 - 55
+    //40 - 47
+    //32 - 39 
+    //24 - 31
+    //16 - 23
+    //8  - 15
+    //0  - 7
+    
+    //board content
+
+    for(int i = 7; i >= 0 ; --i) {
+        int voidsum = 0;
+        for(int k = 0; k < 8; ++k){
+            int index = i * 8 + k;
+            char fieldchar = AtBoardPosition(1ULL << index, board);
+            if(fieldchar == '.') voidsum++;
+            else {
+                if(voidsum) res += std::to_string(voidsum);
+                res += fieldchar;
+                voidsum = 0;
+            }
+        }
+        if(voidsum) res += std::to_string(voidsum);
+        if(i > 0) res += "/";
+    }
+
+    //meta data { //act, w00 / w000 /b00 / b000 , enp , half m full m }
+    res += board.white_acts_ ? " w " : " b ";
+    if(board.white_oo_)     res += "K";
+    if(board.white_ooo_)    res += "Q";
+    if(board.black_oo_)     res += "k";
+    if(board.black_ooo_)    res += "q";
+    res += board.enp_ != -1 ? " " + StringToLowerCase(notations[board.enp_]) : " -";
+    res += " " + std::to_string(board.half_move_) + " " + std::to_string(board.full_move_); 
+
+    return res;
+}
+
 //prints two boards side by side. argument 1 and 2 puts additionally masks if you want to see specific things only
 std::string PrintBoardsAndMask(uint64_t val1, uint64_t val2, const Board& val3, const Board& val4);
 

@@ -111,3 +111,14 @@ inline uint64_t InsertBits(Args ... args)
 
     return ret;
 }
+
+inline std::string StringToLowerCase(const std::string& str, int capped_lower = 0) {
+    std::string res = str.c_str();
+    std::for_each(res.begin(), res.end(), [](char& c) // modify in-place
+    {
+        c = std::tolower(static_cast<unsigned char>(c));
+    });
+
+
+    return res;
+}
