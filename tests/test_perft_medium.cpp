@@ -16,9 +16,9 @@
     ChesslibInterface chesslib_io;
 
     const int maxd = 6;
-    std::vector<int> result = chesslib_io.InitSearch(startpos, SearchType::PERFT, maxd);
+    std::vector<unsigned long long> result = chesslib_io.InitSearch(startpos, SearchType::PERFT, maxd);
 
-    std::vector<int> correct {
+    std::vector<unsigned long long> correct {
         1,
         20,
         400,
@@ -37,7 +37,7 @@ TEST(PerftFullTest, KiwiTestDepth5) {
     ChesslibInterface chesslib_io;
 
     const int maxd = 5;
-    std::vector<int> result = chesslib_io.InitSearch(startpos, SearchType::PERFT, maxd);
+    std::vector<unsigned long long> result = chesslib_io.InitSearch(startpos, SearchType::PERFT, maxd);
 
     std::vector<long long> correct {
         1,
@@ -60,9 +60,9 @@ TEST(PerftFullTest, PromotionBugDepth5) {
     ChesslibInterface chesslib_io;
 
     const int maxd = 5;
-    std::vector<int> result = chesslib_io.InitSearch(startpos, SearchType::PERFT, maxd);
+    std::vector<unsigned long long> result = chesslib_io.InitSearch(startpos, SearchType::PERFT, maxd);
 
-    std::vector<int> correct {
+    std::vector<unsigned long long> correct {
         1,
         24,
         496,

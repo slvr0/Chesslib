@@ -88,7 +88,7 @@ int main() {
 }
  */
 
-
+/* 
 { 
     std::vector<std::string> erroneous_positions {   
         "5q2/4p3/8/2KP4/8/3k4/8/8 b - - 0 1",
@@ -118,6 +118,13 @@ int main() {
     }
 
 }
+ */
+
+
+
+
+
+
 
     return 0;
 }

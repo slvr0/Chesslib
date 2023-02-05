@@ -9,7 +9,6 @@
 #include "../src/chess_interface/movegen_interface.h"
 #include "../src/blowfish/perft_divider_autotraverse.h"
 
-/* 
 TEST(PerftFullTest, OriginalChessPositionDepth7) { 
     Board startpos = ChessboardGenerator::CreateFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     ChesslibInterface chesslib_io;
@@ -50,7 +49,6 @@ TEST(PerftFullTest, KiwiTestDepth6) {
 
     ASSERT_EQ(result[6] , correct[6]);
 } 
- */
 
 TEST(PerftFullTest, PromotionBugDepth6) { 
     Board startpos = ChessboardGenerator::CreateFromFen("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1");
