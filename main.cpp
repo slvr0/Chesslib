@@ -47,10 +47,14 @@ int main() {
     Board perftdivide_follows3 = ChessboardGenerator::CreateFromFen("rnbqkbnr/1ppppppp/p7/6P1/8/8/PPPPPP1P/RNBQKBNR b KQkq - 0 2");
 
     Board perft_new3 = ChessboardGenerator::CreateFromFen("rnbqkbnr/pppp1ppp/8/4p3/7P/5P2/PPPPP1P1/RNBQKBNR b KQkq h5 0 2");
-    Board any_test1 = ChessboardGenerator::CreateFromFen("rnbqkbnr/1pppppp1/p7/6Pp/8/8/PPPPPP1P/RNBQKBNR w KQkq h6 0 3");
+    
     Board any_test2 = ChessboardGenerator::CreateFromFen("rnbqkbnr/1pppp1pp/p7/5pP1/8/8/PPPPPP1P/RNBQKBNR w KQkq f6 0 3");  
 
     ChesslibInterface chesslib_io;
+
+    Board any = ChessboardGenerator::CreateFromFen("5q2/1NP5/8/3Pp1rk/3K4/8/8/8 w - e6 0 1");
+
+    
 
 /*     
     {   //rigid autotraverse testscoping
@@ -84,9 +88,12 @@ int main() {
 }
  */
 
-/* 
+
 { 
-    std::vector<std::string> erroneous_positions {     
+    std::vector<std::string> erroneous_positions {   
+        "5q2/4p3/8/2KP4/8/3k4/8/8 b - - 0 1",
+        "8/8/8/4k3/KR1Pp3/8/5pn1/2Q5 b - d3 0 1" 
+        "5q2/1NP5/8/3Pp1rk/3K4/8/8/8 w - e6 0 1", 
         "rnbqkbnr/pppppppp/8/8/1P6/8/P1PPPPPP/RNBQKBNR b KQkq b3 0 1",
         "rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR b KQkq c3 0 1",
         "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1"
@@ -94,27 +101,23 @@ int main() {
 
     for(const auto & err : erroneous_positions) {
 
-        Board b = ChessboardGenerator::CreateFromFen("rnbqkbnr/2pppppp/8/Pp6/8/8/P1PPPPPP/RNBQKBNR w KQkq b6 0 1");
-         
-      PerftDividerAutotraverse perft_autotr;         
-        perft_autotr.EnumerateDivide(b, 5);  
- 
+        Board b = ChessboardGenerator::CreateFromFen(err);
+
+        PerftDividerAutotraverse perft_autotr;         
+        perft_autotr.EnumerateDivide(b, 4);  
+
         PerftDividerFactory perftdivider;
-        
-        std::map<std::string, BoardNode*> res = perftdivider.Enumerate(b, 2);
-        print(res.size());
+
+        std::map<std::string, BoardNode*> res = perftdivider.Enumerate(b, 1);  
 
         for(auto & v : res) {
             std::cout << v.first << ": " << v.second->GetSubnodes() << "\t" << BoardAsFen(v.second->board_) << std::endl;
-        }               
+        }  
+        exit(1);             
         
     }
 
 }
-*/
-
-
-
 
     return 0;
 }

@@ -10,13 +10,13 @@ public :
         
     }
 
-    std::vector<int>    Enumerate(const Board& board,   const int& maxdepth);
+    std::vector<unsigned long long>    Enumerate(const Board& board,   const int& maxdepth);
     void                Perft(const Board& board,       const int& depth);
     std::string         Result() const;
     void                OnInsert(const Board& board,    const int& depth) override;
 
 private:
-    int n = 0;
+    unsigned long long n = 0;
     int maxdepth_ = 0;
-    std::vector<int> found_moves_;
+    std::vector<unsigned long long> found_moves_;
 };

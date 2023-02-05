@@ -17,7 +17,7 @@ class ChesslibInterface {
 public : 
     ChesslibInterface() = default;   
 
-    std::vector<int> InitSearch(const Board &board, SearchType search_type, int maxdepth);
+    std::vector<unsigned long long> InitSearch(const Board &board, SearchType search_type, int maxdepth);
 
 private :     
 

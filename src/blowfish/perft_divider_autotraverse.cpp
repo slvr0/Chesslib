@@ -1,6 +1,6 @@
 #include "perft_divider_autotraverse.h"
 
-void PerftDividerAutotraverse::EnumerateDivide(const Board & board, const int & divide_depth) {
+bool PerftDividerAutotraverse::EnumerateDivide(const Board & board, const int & divide_depth) {
     PerftDividerFactory divider_fac;
 
     int     current_depth = divide_depth;
@@ -27,8 +27,7 @@ void PerftDividerAutotraverse::EnumerateDivide(const Board & board, const int & 
         PerftResultMap search_result_map = ConvertStockfishResult(search_result);
 
         if(current_depth == 1) {
-            CompareAny(node_map, search_result_map);
-            return;
+            return CompareAny(node_map, search_result_map);            
         }
         else {
             //we retrieve the issue and iterate the search
@@ -36,21 +35,21 @@ void PerftDividerAutotraverse::EnumerateDivide(const Board & board, const int & 
 
             if(res.first == SearchErrorType::kMoveNotAllowed || res.first == SearchErrorType::kMoveNotFound) {
                 std::cout << "Final result from position : " << board_fen << std::endl;
-                CompareAny(node_map, search_result_map);
-                return;
+                return CompareAny(node_map, search_result_map);             
             }
             else if (res.first == SearchErrorType::kNoError) {
                 print("The generator fully supports the position depth search");
                 std::cout << "concluded from position : " << board_fen << std::endl;
-                return;
+                return true;
             }
             else { 
-
                 current_board = (*node_map[res.second]).board_;
                 std::cout << "Make move : " << res.second << std::endl;
             }
         }
 
         --current_depth; 
-    }   
+    }
+
+      
 }

@@ -38,7 +38,7 @@ public :
         command_fstream_.close();
     }
 
-    void EnumerateDivide(const Board & board, const int & divide_depth);
+    bool EnumerateDivide(const Board & board, const int & divide_depth);
 
     inline bool InitFileRead() {
         command_fstream_.open(command_filename_);  
@@ -140,32 +140,33 @@ private:
     }
 
     //Displays all issues found, this occurs in depth 1 (meaning we iterated to the end of a problem branch)
-    void CompareAny(PerftNodeMap map1, PerftResultMap map2) {
-
+    bool CompareAny(PerftNodeMap map1, PerftResultMap map2) {
         print("\n|| Result ||");
         std::cout << "Blowfish entries : \t " << map1.size() << std::endl; 
         std::cout << "Stockfish entries : \t " << map1.size() << std::endl;   
 
         //case 1 we are not supporting all legal moves
-        bool found_issue = false;
+        bool position_supported = true;
         for(const auto & perftnode : map2) {
             auto match = map1.find(perftnode.first); 
 
             if(match == map1.end()) {
-                found_issue = true;
+                position_supported = false;
                 std::cout << "Move missing : " << perftnode.first << std::endl;
             }                   
         }
-        if(found_issue) return;
+        if(!position_supported) return position_supported;
 
         //case 2 we are allowing an illegal move
         for(const auto & perftnode : map1) {
             auto match = map2.find(perftnode.first); 
 
-            if(match == map2.end()) {                
+            if(match == map2.end()) {   
+                position_supported = true;             
                 std::cout << "Allowing illegal move : " << perftnode.first << std::endl;
             }                   
         } 
+        return position_supported;
     }
 
 private:

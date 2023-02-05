@@ -9,7 +9,9 @@
 #include "../src/chess_interface/movegen_interface.h"
 
 
-TEST(PerftFullTest, OriginalChessPositionDepth6) { 
+//can take some time with debugging on.
+
+ TEST(PerftFullTest, OriginalChessPositionDepth6) { 
     Board startpos = ChessboardGenerator::CreateFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     ChesslibInterface chesslib_io;
 
@@ -30,7 +32,6 @@ TEST(PerftFullTest, OriginalChessPositionDepth6) {
 } 
 
 
-
 TEST(PerftFullTest, KiwiTestDepth5) { 
     Board startpos = ChessboardGenerator::CreateFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
     ChesslibInterface chesslib_io;
@@ -49,7 +50,7 @@ TEST(PerftFullTest, KiwiTestDepth5) {
     }; 
 
     ASSERT_EQ(result[5] , correct[5]);
-}
+} 
 
 
 

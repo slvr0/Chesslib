@@ -1,6 +1,6 @@
 #include "perft_mgfac.h"
 
-std::vector<int> PerftMGFactory::Enumerate(const Board& board, const int& maxdepth) {
+std::vector<unsigned long long> PerftMGFactory::Enumerate(const Board& board, const int& maxdepth) {
     found_moves_.clear();
 
     for(int i = 0 ; i < maxdepth + 1 ; ++i) found_moves_.push_back(0);

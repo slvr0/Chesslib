@@ -186,8 +186,8 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
     Black_Pawns_PruneRight(pawn_capture_right,  context.bishop_pins_);
    
     if (context.enp_target_) {    
-        BBoard EPLpawn = pawns_lr  & (Black_Pawn_InvertLeft(context.enp_target_  & Pawns_NotLeft() & context.checkmask_) ); 
-        BBoard EPRpawn = pawns_lr  & (Black_Pawn_InvertRight(context.enp_target_ & Pawns_NotRight()  & context.checkmask_) );        
+        BBoard EPLpawn = pawns_lr  & (Black_Pawn_InvertLeft(context.enp_target_  & Pawns_NotLeft())     & context.checkmask_ << 1); 
+        BBoard EPRpawn = pawns_lr  & (Black_Pawn_InvertRight(context.enp_target_ & Pawns_NotRight())    & context.checkmask_ >> 1);   
 
         if (EPLpawn | EPRpawn)
         {

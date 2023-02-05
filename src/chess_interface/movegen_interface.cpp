@@ -5,8 +5,8 @@
 #include "../blowfish/perft_mgfac.h"
 #include "../blowfish/perft_divider.h"
 
-std::vector<int> ChesslibInterface::InitSearch(const Board &board, SearchType search_type, int maxdepth){
-    std::vector<int> search_result;
+std::vector<unsigned long long> ChesslibInterface::InitSearch(const Board &board, SearchType search_type, int maxdepth){
+    std::vector<unsigned long long> search_result;
 
     switch(search_type) {
         case SearchType::PERFT : {
