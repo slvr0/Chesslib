@@ -4,10 +4,9 @@
 #include "defs.h"
 
 struct MGSearchContextualObject {
-    int depth_ = 0; // this unfortunately has to be local call dependent
+    int depth_ = 0;
     size_t movecounter_ = 0;
 
-    //i mean so does everything, except for each 
     BBoard enemy_or_void_     = { 0x0 };
 
     BBoard checkmask_         = { 0xffffffffffffffffull };

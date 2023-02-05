@@ -52,7 +52,11 @@ inline std::string  BoardAsFen(const Board & board) {
     if(board.white_ooo_)    res += "Q";
     if(board.black_oo_)     res += "k";
     if(board.black_ooo_)    res += "q";
-    res += board.enp_ != -1 ? " " + StringToLowerCase(notations[board.enp_]) : " -";
+
+    if(board.white_oo_ || board.white_ooo_ || board.black_oo_ || board.black_ooo_) res += " ";
+    else res += "- ";
+
+    res += board.enp_ != -1 ? StringToLowerCase(notations[board.enp_]) : "-";
     res += " " + std::to_string(board.half_move_) + " " + std::to_string(board.full_move_); 
 
     return res;

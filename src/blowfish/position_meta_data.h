@@ -18,13 +18,6 @@ static constexpr uint64_t Rank7 = 0b00000000111111110000000000000000000000000000
 static constexpr uint64_t RankMid = 0x0000FFFFFFFF0000;
 static constexpr uint64_t Rank_18 = 0xFF000000000000FF;
 
-
-static constexpr uint64_t wRCastleInterferenceSquares = 0x60; //kingside castle, these squares needs to be free and not attacked
-static constexpr uint64_t wLCastleInterferenceSquares = 0xE;  // same , queen side
-
-static constexpr uint64_t bRCastleInterferenceSquares = 0x6000000000000000; //kingside castle, these squares needs to be free and not attacked
-static constexpr uint64_t bLCastleInterferenceSquares = 0xE00000000000000; // same , queen side
-
 static constexpr uint64_t w00_Rookmoves = 0xA0;
 static constexpr uint64_t w00_KingMoves = 0x50;
 static constexpr uint64_t w000_Rookmoves = 0x9;
@@ -34,6 +27,15 @@ static constexpr uint64_t b00_Rookmoves = 0xA000000000000000;
 static constexpr uint64_t b00_KingMoves = 0x5000000000000000;
 static constexpr uint64_t b000_Rookmoves = 0x900000000000000;
 static constexpr uint64_t b000_KingMoves = 0x1400000000000000;
+
+static constexpr BBoard WSCastleBlockedSquares = 0x60ULL;
+static constexpr BBoard WLCastleBlockedSquares = 0xCULL;
+static constexpr BBoard BSCastleBlockedSquares = 0x6000000000000000ULL;
+static constexpr BBoard BLCastleBlockedSquares = 0xC00000000000000ULL;
+
+static constexpr BBoard WLCastleNoOcc = 0xe;
+static constexpr BBoard BLCastleNoOcc = 0xe00000000000000;
+
 
 //imported
 static constexpr uint64_t WNotOccupiedL = 0b01110000ull;
@@ -53,10 +55,10 @@ static constexpr uint64_t BRookL_Change = 0b11111000ull << 56ull;
 static constexpr uint64_t WRookR_Change = 0b00001111ull;
 static constexpr uint64_t BRookR_Change = 0b00001111ull << 56ull;
 
-static constexpr uint64_t WRookL = 0b10000000ull;
-static constexpr uint64_t BRookL = 0b10000000ull << 56ull;
-static constexpr uint64_t WRookR = 0b00000001ull;
-static constexpr uint64_t BRookR = 0b00000001ull << 56ull;
+static const uint64_t WRookR = InsertBits(7);
+static constexpr uint64_t BRookR = 0b10000000ull << 56ull;
+static const uint64_t WRookL = InsertBits(0);
+static constexpr uint64_t BRookL = 0b00000001ull << 56ull;
 
 FORCEINL BBoard WhiteEPRank() {
     return 0xFFull << 32;

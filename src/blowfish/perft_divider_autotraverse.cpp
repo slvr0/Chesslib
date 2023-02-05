@@ -10,7 +10,9 @@ void PerftDividerAutotraverse::EnumerateDivide(const Board & board, const int & 
         //we start search from a position, we enter divider map depth
         PerftNodeMap node_map = divider_fac.Enumerate(current_board, current_depth);
 
-        auto board_fen = BoardAsFen(current_board);        
+        auto board_fen = BoardAsFen(current_board);     
+
+        std::cout << "Depth : " << current_depth << " Position : " << board_fen << " ";    
         
         InitFileRead();
         
@@ -25,7 +27,6 @@ void PerftDividerAutotraverse::EnumerateDivide(const Board & board, const int & 
         PerftResultMap search_result_map = ConvertStockfishResult(search_result);
 
         if(current_depth == 1) {
-            std::cout << "[Depth 1] Final result from position : " << board_fen << std::endl;
             CompareAny(node_map, search_result_map);
             return;
         }
@@ -38,9 +39,15 @@ void PerftDividerAutotraverse::EnumerateDivide(const Board & board, const int & 
                 CompareAny(node_map, search_result_map);
                 return;
             }
-            else {
+            else if (res.first == SearchErrorType::kNoError) {
+                print("The generator fully supports the position depth search");
+                std::cout << "concluded from position : " << board_fen << std::endl;
+                return;
+            }
+            else { 
 
                 current_board = (*node_map[res.second]).board_;
+                std::cout << "Make move : " << res.second << std::endl;
             }
         }
 
