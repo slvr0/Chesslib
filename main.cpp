@@ -34,26 +34,6 @@ int main() {
 
     std::string castle_01 = "2k4r/8/8/8/8/8/4PPP1/R3K2R w KQk - 0 1";
 
-    ChesslibInterface chesslib_io;
-
-    
-/* 
-
-    {   
-        Timer t0; 
-        int from = 3;
-        int to = 4;
-        for(int i = 0; i < 1e6 ; ++i) {
-                  
-   
-        }
-
-        print(t0.elapsed());
-    }  
-
-
- */
-
     Board fixme = ChessboardGenerator::CreateFromFen("rnbqkbnr/pppp1ppp/8/8/3Pp1P1/5P2/PPP1P2P/RNBQKBNR b KQkq d3 0 3");
     Board kiwipep = ChessboardGenerator::CreateFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
     Board promotionbugs = ChessboardGenerator::CreateFromFen("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1");
@@ -68,33 +48,73 @@ int main() {
 
     Board perft_new3 = ChessboardGenerator::CreateFromFen("rnbqkbnr/pppp1ppp/8/4p3/7P/5P2/PPPPP1P1/RNBQKBNR b KQkq h5 0 2");
     Board any_test1 = ChessboardGenerator::CreateFromFen("rnbqkbnr/1pppppp1/p7/6Pp/8/8/PPPPPP1P/RNBQKBNR w KQkq h6 0 3");
-    Board any_test2 = ChessboardGenerator::CreateFromFen("rnbqkbnr/1pppp1pp/p7/5pP1/8/8/PPPPPP1P/RNBQKBNR w KQkq f6 0 3");
+    Board any_test2 = ChessboardGenerator::CreateFromFen("rnbqkbnr/1pppp1pp/p7/5pP1/8/8/PPPPPP1P/RNBQKBNR w KQkq f6 0 3");  
 
+    ChesslibInterface chesslib_io;
 
-    auto l1 = ChessboardGenerator::CreateFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-    auto l3 = ChessboardGenerator::CreateFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-    auto l4 = ChessboardGenerator::CreateFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-    auto fin = ChessboardGenerator::CreateFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+/*     
+    {   //rigid autotraverse testscoping
+        PerftDividerAutotraverse perft_autotr; 
+        perft_autotr.EnumerateDivide(promotionbugs, 4) ;   
 
-    //auto ret = chesslib_io.InitSearch(any_test1, SearchType::PERFT_DIVIDE, 1);  
+        //add this to debug certain position closer
+        auto problem = ChessboardGenerator::CreateFromFen("r3k2N/p2pq1b1/1n2pnp1/1bpP4/1p2P3/2N2Q1p/PPPBBPPP/1R2K2R b Kq - 0 2");
 
-    //auto ret2 = chesslib_io.InitSearch(l1, SearchType::PERFT_DIVIDE, 2); 
+        PerftDividerFactory perftdivider;
+        std::map<std::string, BoardNode*> res = perftdivider.Enumerate(problem, 1);
 
-    //we have to make sure to capture the castle problems when possiblity to take castle rook or replace K rook with Q rook in weird ways.
+        for(auto & v : res) {
+            std::cout << v.first << ": " << v.second->GetSubnodes() << "\t" << BoardAsFen(v.second->board_) << std::endl;
+        }
+        print(res.size());  
+    }
+ */
 
-    PerftDividerAutotraverse perft_autotr; 
-    perft_autotr.EnumerateDivide(promotionbugs, 4) ;   
-
-    //add this to debug certain position closer
-    auto problem = ChessboardGenerator::CreateFromFen("r3k2N/p2pq1b1/1n2pnp1/1bpP4/1p2P3/2N2Q1p/PPPBBPPP/1R2K2R b Kq - 0 2");
-
+/*     
+{
+    const int maxd = 6;
     PerftDividerFactory perftdivider;
-    std::map<std::string, BoardNode*> res = perftdivider.Enumerate(problem, 1);
+    std::map<std::string, BoardNode*> res = perftdivider.Enumerate(startpos, 1);
 
     for(auto & v : res) {
-        std::cout << v.first << ": " << v.second->GetSubnodes() << "\t" << BoardAsFen(v.second->board_) << std::endl;
+        //std::cout << v.first << ": " << v.second->GetSubnodes() << "\t" << BoardAsFen(v.second->board_) << std::endl;
+        PerftDividerAutotraverse perft_autotr; 
+        perft_autotr.EnumerateDivide(v.second->board_, maxd - 1);
     }
-    print(res.size());  
+}
+ */
+
+/* 
+{ 
+    std::vector<std::string> erroneous_positions {     
+        "rnbqkbnr/pppppppp/8/8/1P6/8/P1PPPPPP/RNBQKBNR b KQkq b3 0 1",
+        "rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR b KQkq c3 0 1",
+        "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1"
+    };
+
+    for(const auto & err : erroneous_positions) {
+
+        Board b = ChessboardGenerator::CreateFromFen("rnbqkbnr/2pppppp/8/Pp6/8/8/P1PPPPPP/RNBQKBNR w KQkq b6 0 1");
+         
+      PerftDividerAutotraverse perft_autotr;         
+        perft_autotr.EnumerateDivide(b, 5);  
+ 
+        PerftDividerFactory perftdivider;
+        
+        std::map<std::string, BoardNode*> res = perftdivider.Enumerate(b, 2);
+        print(res.size());
+
+        for(auto & v : res) {
+            std::cout << v.first << ": " << v.second->GetSubnodes() << "\t" << BoardAsFen(v.second->board_) << std::endl;
+        }               
+        
+    }
+
+}
+*/
+
+
+
 
     return 0;
 }

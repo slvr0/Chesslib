@@ -126,10 +126,14 @@ FORCEINL Board UpdatePawnEnpassaint(const Board & board, const uint64_t & from, 
 
     const bool is_white = board.white_acts_;
     const BBoard move = (from | to);
-    const BBoard rem = ~(to | enemy );
+    const BBoard rem = ~(to | enemy);
 
-    if(is_white)    {nb.white_pawn_ ^= move;  nb.white_ ^= move; nb.black_ &= rem; nb.black_pawn_ &= rem; nb.black_knight_ &= rem; nb.black_bishop_ &= rem; nb.black_rook_ &= rem; nb.black_queen_ &= rem;}
-    else            {nb.black_pawn_ ^= move;  nb.black_ ^= move; nb.white_ &= rem; nb.white_pawn_ &= rem; nb.white_knight_ &= rem; nb.white_bishop_ &= rem; nb.white_rook_ &= rem; nb.white_queen_ &= rem;}
+    if(is_white)    {
+        nb.white_pawn_ ^= move;  nb.white_ ^= move; nb.black_ &= rem; nb.black_pawn_ &= rem; nb.black_knight_ &= rem; nb.black_bishop_ &= rem; nb.black_rook_ &= rem; nb.black_queen_ &= rem;
+    }
+    else            {
+        nb.black_pawn_ ^= move;  nb.black_ ^= move; nb.white_ &= rem; nb.white_pawn_ &= rem; nb.white_knight_ &= rem; nb.white_bishop_ &= rem; nb.white_rook_ &= rem; nb.white_queen_ &= rem;
+    }
     
     nb.occ_ = nb.white_ | nb.black_;
     

@@ -130,7 +130,7 @@ MGSearchContextualObject WhiteMoveGenerator::RefreshMetaDataInternal(const Board
     }
 
     context.kingban_ |= context.ekingmoves_;
-    
+
     return context;
 }
 
@@ -211,9 +211,9 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
 
             if(EPRpawn) {
                 const Bit pos = PopBit(EPRpawn); 
-                const Square to = White_Pawn_AttackLeft(pos); 
+                const Square to = White_Pawn_AttackRight(pos); 
                 
-                const Board epr_board = UpdatePawnEnpassaint(board, pos, to, context.enp_target_ );
+                const Board epr_board = UpdatePawnEnpassaint(board, pos, to, context.enp_target_ >> 8);
 
                 parent_->OnInsert(epr_board, context.depth_ + 1);
 

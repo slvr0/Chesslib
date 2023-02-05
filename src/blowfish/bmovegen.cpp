@@ -127,7 +127,7 @@ MGSearchContextualObject BlackMoveGenerator::RefreshMetaDataInternal(const Board
             context.kingban_ |= atk;
         }
     }
-    
+
     context.kingban_ |= context.ekingmoves_;
 
     return context;
@@ -209,7 +209,7 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
 
             if(EPRpawn) {
                 const Bit pos = PopBit(EPRpawn); 
-                const Square to = Black_Pawn_AttackLeft(pos); 
+                const Square to = Black_Pawn_AttackRight(pos); 
                 
                 const Board epr_board = UpdatePawnEnpassaint(board, pos, to, context.enp_target_ << 8);
 

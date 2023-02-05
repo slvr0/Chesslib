@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
-#include "test_perft_full.cpp"
+#include "test_perft_basic.cpp"   //instant
+#include "test_perft_medium.cpp"  //takes ~15-20 second
 #include "test_chessboard_fen.cpp"
 
 GTEST_API_ int main(int argc, char **argv) {

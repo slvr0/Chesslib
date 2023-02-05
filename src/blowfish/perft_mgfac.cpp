@@ -11,7 +11,10 @@ std::vector<int> PerftMGFactory::Enumerate(const Board& board, const int& maxdep
     
     found_moves_[0] = 1;
 
-    Perft(board, depth);  
+    Perft(board, depth); 
+
+    print(Result());
+
     return found_moves_;
 }
 

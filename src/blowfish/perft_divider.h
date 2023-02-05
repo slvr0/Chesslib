@@ -18,11 +18,11 @@ public :
     }
 
     inline void InsertNode(const Board& board) {
-        branches_.push_back(new BoardNode(board));
+        branches_.push_back(std::unique_ptr<BoardNode> (new BoardNode(board)));
     }
 
     inline void InsertNode(BoardNode* node) {
-        branches_.push_back(node);
+        branches_.push_back(std::unique_ptr<BoardNode> (std::move(node)));
     }
 
     inline bool IsLeaf() {
@@ -40,15 +40,23 @@ public :
     inline int GetSubnodes() const {
         return sub_nodes_;
     }
+    inline std::vector<BoardNode*> GetBranches() const {
+        std::vector<BoardNode*> ret;
+        for(const auto & branch : branches_) {
+            ret.push_back(branch.get());
+        }
+
+        return ret;
+    }
 
     inline size_t GetEntries() const { return branches_.size();}
 
-    Board                   board_;
-    std::string             tag_ = " ";
-    std::vector<BoardNode*> branches_;
-    int                     depth_ = 0;
-    bool                    terminal_ = false;
-    int                     sub_nodes_ = 0;
+    Board                                   board_;
+    std::string                             tag_ = " ";
+    std::vector<std::unique_ptr<BoardNode>> branches_;
+    int                                     depth_ = 0;
+    bool                                    terminal_ = false;
+    int                                     sub_nodes_ = 0;
 
 };
 
@@ -72,6 +80,7 @@ private:
     std::vector<BoardNode*> next_nodelist_;
     BoardNode* brdptr_ = nullptr;
     uint8_t    current_depth_ = 0;
+    std::unique_ptr<BoardNode> root_ = nullptr;
     
 
 };

@@ -1,18 +1,11 @@
 #include "perft_divider.h"
 #include "perft_mgfac.h"
 
-//if node->next == null return n
-//else return CountNodesAndLeafFrom(node->next, n + 1)
-
-bool TerminalNode(BoardNode* node) {
-    //TODO
-}
-
 void PerftDividerFactory::CountNodesAndLeafFrom(BoardNode* node, int & count) {     
     
     //trying to avoid terminal nodes
     
-    for(auto & child : node->branches_) {
+    for(auto & child : node->GetBranches()) {
 /*         In perft, nodes are only counted at the end after the last makemove. 
         Thus "higher" terminal nodes (e.g. mate or stalemate) are not counted, instead the number of move paths of a certain depth.  */
         if(child->IsLeaf() && !child->IsTerminal()) {
@@ -29,9 +22,10 @@ std::map<std::string, BoardNode*> PerftDividerFactory::Enumerate(const Board & b
 
     max_depth_ = maxdepth;
 
-    BoardNode* root = new BoardNode(board);
+    root_ = std::make_unique<BoardNode>(new BoardNode(board));
+    //auto root = new BoardNode(board);
 
-    std::vector<BoardNode*> curr_nodelist {root};
+    std::vector<BoardNode*> curr_nodelist {root_.get()};
     next_nodelist_.clear();
 
     for(int i = 0 ; i < maxdepth; ++i) {
@@ -51,20 +45,18 @@ std::map<std::string, BoardNode*> PerftDividerFactory::Enumerate(const Board & b
     int total_after_branchsplit = 0;  
 
     //take each entry, put it in map, count up subnodes and store for in branchnode info. 
-    for(auto & branch : root->branches_) {    
+    for(auto & branch : root_->GetBranches()) { 
         int subtree_size = 0;  
 
         CountNodesAndLeafFrom(branch, subtree_size);
         branch->SetSubnodes(subtree_size);
 
         total_after_branchsplit += subtree_size;
-        //std::cout << branch->tag_ << " : " << subtree_size << std::endl;  
 
         //assert we dont already have it(bug found right away!)
         m_assert((bool)map_divider_entries.count(branch->tag_) == false, "Position " + BoardAsFen(branch->board_) + " tries inserting " + branch->tag_ + " multiple times");
         
-        map_divider_entries[branch->tag_] = branch;           
-        
+        map_divider_entries[branch->tag_] = branch;          
     }
     
     //std::cout << "Number of branches from root node : " << root->branches_.size() << std::endl;

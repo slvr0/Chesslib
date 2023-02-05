@@ -25,5 +25,9 @@ TEST(ChessboardFenExtraction, GenerateFen) {
     ASSERT_EQ(BoardAsFen(b3) , fen3);
     ASSERT_EQ(BoardAsFen(b4) , fen4);
 
+    std::string fen_nocast1 = "n1n5/PPP5/8/1k6/8/3K4/5ppp/5N1N w - - 3 3";
+    Board b5 = ChessboardGenerator::CreateFromFen(fen_nocast1);
+
+    ASSERT_EQ(BoardAsFen(b5) , fen_nocast1);
 
 }
