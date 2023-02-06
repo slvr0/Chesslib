@@ -11,7 +11,6 @@
 #include "src/chess_interface/movegen_interface.h"
 #include "src/blowfish/perft_mg_thread.h"
 
-
 #define CREATE(string) ChessboardGenerator::CreateFromFen(string)
 
 int main() {
@@ -25,7 +24,7 @@ int main() {
     auto startposition  = CREATE(startpos_fen);
     auto kiwipep        = CREATE(kiwipep_fen);
     auto promoboard     = CREATE(promotion_fen);
- 
+/*  
     {
         Timer t0;
         const int d = 6;
@@ -53,6 +52,8 @@ int main() {
 
         std::cout << "Total nodes (threaded) : " << result << " NPS : " << (unsigned long long) result/delta_t << std::endl;
     }
+ */
+
 
     
     return 0;
