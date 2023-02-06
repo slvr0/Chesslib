@@ -39,13 +39,12 @@ public :
     }
 
     ~MoveGeneratorHeader() {
-        dbug_file_.close();
+        //dbug_file_.close();
     }
 
     //implement me
     inline virtual void OnInsert(const Board& board, const int& depth) {
-
-
+        
     }
 
     inline virtual void OnInsertDebug(const Board& b1, const Board& b2, const std::string & info) {
@@ -65,10 +64,5 @@ public :
 protected:    
     WhiteMoveGenerator              wmgen_;  
     BlackMoveGenerator              bmgen_; 
-
-    std::ofstream dbug_file_;
-
-
-   
 };
 

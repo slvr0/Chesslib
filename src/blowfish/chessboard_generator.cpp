@@ -62,17 +62,10 @@ Board ChessboardGenerator::CreateFromFen(const std::string& fen) {
             }
             ++i;
         }        
-    }
-    
-    //read space, then who is acting 
-
-   /*  print(fen.substr(spos, fen.size())); */
-  
+    }  
     char to_act = fen.at(spos++);
-    /* std::cout << to_act; */
     white_acts= to_act == 'w' ? true : false;    
 
-    //read space, then castling status
     ++spos;   
 
     auto update_castling = [&] (char w) { 
@@ -94,8 +87,6 @@ Board ChessboardGenerator::CreateFromFen(const std::string& fen) {
         }
     }    
 
-    //read space, then enpassant
-    
     if(fen.at(spos) != '-') {                
         std::string notation = fen.substr(spos + 1, 2);
         enp = notation_idx(notation);
@@ -104,18 +95,11 @@ Board ChessboardGenerator::CreateFromFen(const std::string& fen) {
     }
     else spos += 2;
 
-    //read nr of moves without captures (for some 50 rule no repeat context)
-    //can be 1 or 2 digits
-
     int rule50 = fen.at(spos + 1) == ' ' ? 
         static_cast<int> (fen.at(spos) - 48) :
         std::stoi(fen.substr(spos, 2));
 
-    //traverse two or three fields depending on digits
     spos += fen.at(spos + 1) == ' ' ? 2 : 3;
-
-    //read nr of total moves
-    //can be 1 or 2 digits (3?), just read to eof
 
     int totalmoves = std::stoi(fen.substr(spos, fen.size())); 
     Board b1 = Board(white_pawn, white_knight, white_bishop, white_rook, white_queen, white_king, 
@@ -124,7 +108,6 @@ Board ChessboardGenerator::CreateFromFen(const std::string& fen) {
                );
     b1.half_move_ = rule50;
     b1.full_move_ = totalmoves;
-
 
     return b1;
 }

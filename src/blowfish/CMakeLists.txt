@@ -4,9 +4,7 @@ add_library(blowfish_engine
     chessboard_extractor.h
     chessboard_extractor.cpp
     static_move_tables.h
-    static_move_tables.cpp
     position_meta_data.h
-    position_meta_data.cpp
     move_generator.h
     move_generator.cpp
     wmovegen.h
@@ -24,5 +22,8 @@ add_library(blowfish_engine
     perft_divider.cpp
     perft_divider_autotraverse.h
     perft_divider_autotraverse.cpp
+    perft_mg_thread.h
+    perft_mg_thread.cpp
+    
 )
 

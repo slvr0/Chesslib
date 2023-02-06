@@ -27,6 +27,8 @@ public :
 
     void ParseLegalMoves(const Board& board, const int& depth);  
 
+    double metadata_searchtime = 0; //remove later
+
 private:
 
     MoveGeneratorHeader* parent_ = nullptr;
@@ -60,5 +62,7 @@ private:
             context.bishop_pins_ |= pin_mask;
         }
     }
+
+    
      
 };

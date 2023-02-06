@@ -18,11 +18,10 @@ FORCEINL void UpdateBlackCastleStatusCheck(Board & board, const BBoard & to) {
 FORCEINL Board UpdatePawnMove(const Board & board, const BBoard & from, const BBoard & to) {
     Board nb = board;
 
-    const bool is_white = board.white_acts_;
     BBoard move = (from | to);
 
-    if(is_white)    {nb.white_pawn_      ^= move; nb.white_ ^= move;}
-    else            {nb.black_pawn_      ^= move; nb.black_ ^= move;}
+    if(board.white_acts_) {nb.white_pawn_      ^= move; nb.white_ ^= move;}
+    else                  {nb.black_pawn_      ^= move; nb.black_ ^= move;}
 
     nb.occ_ = nb.white_ | nb.black_;
 
@@ -36,10 +35,9 @@ FORCEINL Board UpdatePawnMove(const Board & board, const BBoard & from, const BB
 FORCEINL Board UpdatePawnPush(const Board & board, const BBoard & from, const BBoard & to) {
     Board nb = board;
 
-    const bool is_white = board.white_acts_;
     BBoard move = (from | to);
 
-    if(is_white)    {nb.white_pawn_ ^= move; nb.white_ ^= move;}
+    if(board.white_acts_)    {nb.white_pawn_ ^= move; nb.white_ ^= move;}
     else            {nb.black_pawn_ ^= move; nb.black_ ^= move;}
 
     nb.occ_ = nb.white_ | nb.black_;   
@@ -54,11 +52,10 @@ FORCEINL Board UpdatePawnPush(const Board & board, const BBoard & from, const BB
 FORCEINL Board UpdatePawnCapture(const Board & board, const BBoard & from, const BBoard & to) {
     Board nb = board;
 
-    const bool is_white = board.white_acts_;
     const BBoard move = (from | to);
     const BBoard rem = ~to;
 
-    if(is_white)    {
+    if(board.white_acts_)    {
         nb.white_pawn_ ^= move;  nb.white_ ^= move; nb.black_ &= rem; nb.black_pawn_ &= rem; nb.black_knight_ &= rem; nb.black_bishop_ &= rem; nb.black_rook_ &= rem; nb.black_queen_ &= rem;
         UpdateBlackCastleStatusCheck(nb, to);
     }
@@ -79,13 +76,12 @@ FORCEINL Board UpdatePawnCapture(const Board & board, const BBoard & from, const
 FORCEINL Board UpdatePawnPromotion(const Board & board, const PieceType& ptype, const BBoard & from, const BBoard & to) {
     Board nb = board;
 
-    const bool is_white = board.white_acts_;
     const bool is_capture = to & board.occ_;
 
     const BBoard move = (from | to);
     const BBoard rem = ~to;
     
-    if(is_white) {
+    if(board.white_acts_) {
         if(ptype == PieceType::KNIGHT) {nb.white_pawn_ ^= from; nb.white_knight_ ^= to;}
         if(ptype == PieceType::BISHOP) {nb.white_pawn_ ^= from; nb.white_bishop_ ^= to;}
         if(ptype == PieceType::ROOK)   {nb.white_pawn_ ^= from; nb.white_rook_   ^= to;}
@@ -124,11 +120,10 @@ FORCEINL Board UpdatePawnPromotion(const Board & board, const PieceType& ptype, 
 FORCEINL Board UpdatePawnEnpassaint(const Board & board, const uint64_t & from, const uint64_t & to, const uint64_t & enemy) {
     Board nb = board;
 
-    const bool is_white = board.white_acts_;
     const BBoard move = (from | to);
     const BBoard rem = ~(to | enemy);
 
-    if(is_white)    {
+    if(board.white_acts_)    {
         nb.white_pawn_ ^= move;  nb.white_ ^= move; nb.black_ &= rem; nb.black_pawn_ &= rem; nb.black_knight_ &= rem; nb.black_bishop_ &= rem; nb.black_rook_ &= rem; nb.black_queen_ &= rem;
     }
     else            {
@@ -147,13 +142,12 @@ FORCEINL Board UpdatePawnEnpassaint(const Board & board, const uint64_t & from, 
 FORCEINL Board UpdateKnightMove(const Board & board, const int & from, const BBoard & to) {
     Board nb = board;
 
-    const bool is_white = board.white_acts_;
     const bool is_capture = to & board.occ_;
 
     const BBoard move = (1ULL << from | to);
     const BBoard rem = ~to; 
 
-    if(is_white) {
+    if(board.white_acts_) {
         nb.white_knight_ ^= move;
         nb.white_ ^= move; 
 
@@ -184,13 +178,12 @@ FORCEINL Board UpdateKnightMove(const Board & board, const int & from, const BBo
 FORCEINL Board UpdateBishopMove(const Board & board, const int & from, const BBoard & to) {
     Board nb = board;
 
-    const bool is_white = board.white_acts_;
     const bool is_capture = to & board.occ_;
 
     const BBoard move = (1ULL << from | to);
     const BBoard rem = ~to; 
 
-    if(is_white) {
+    if(board.white_acts_) {
         nb.white_bishop_ ^= move;
         nb.white_ ^= move; 
 
@@ -221,7 +214,6 @@ FORCEINL Board UpdateBishopMove(const Board & board, const int & from, const BBo
 FORCEINL Board UpdateRookMove(const Board & board, const int & from, const BBoard & to) {
     Board nb = board;
 
-    const bool is_white = board.white_acts_;
     const bool is_capture = to & board.occ_;
 
     const BBoard move = (1ULL << from | to);
@@ -229,7 +221,7 @@ FORCEINL Board UpdateRookMove(const Board & board, const int & from, const BBoar
 
     const uint64_t from64 = 1ULL << from;
 
-    if(is_white) {
+    if(board.white_acts_) {
         nb.white_rook_ ^= move;
         nb.white_ ^= move; 
 
@@ -266,13 +258,12 @@ FORCEINL Board UpdateRookMove(const Board & board, const int & from, const BBoar
 FORCEINL Board UpdateQueenMove(const Board & board, const int & from, const BBoard & to) {
     Board nb = board;
 
-    const bool is_white = board.white_acts_;
     const bool is_capture = to & board.occ_;
 
     const BBoard move = (1ULL << from | to);
     const BBoard rem = ~to; 
 
-    if(is_white) {
+    if(board.white_acts_) {
         nb.white_queen_ ^= move;
         nb.white_ ^= move; 
 
@@ -303,13 +294,12 @@ FORCEINL Board UpdateQueenMove(const Board & board, const int & from, const BBoa
 FORCEINL Board UpdateKingMove(const Board & board, const int & from, const BBoard & to) {
     Board nb = board;
 
-    const bool is_white = board.white_acts_;
     const bool is_capture = to & board.occ_;
 
     const BBoard move = (1ULL << from | to);
     const BBoard rem = ~to; 
 
-    if(is_white) {
+    if(board.white_acts_) {
         nb.white_king_ ^= move;
         nb.white_ ^= move; 
 
@@ -346,9 +336,7 @@ FORCEINL Board UpdateKingMove(const Board & board, const int & from, const BBoar
 FORCEINL Board UpdateCastle00(const Board & board) {
     Board nb = board;
 
-    const bool is_white = board.white_acts_;
-
-    if(is_white) {
+    if(board.white_acts_) {
         nb.white_king_ ^= w00_KingMoves;
         nb.white_rook_ ^= w00_Rookmoves;
 
@@ -380,10 +368,8 @@ FORCEINL Board UpdateCastle00(const Board & board) {
 
 FORCEINL Board UpdateCastle000(const Board & board) {
     Board nb = board;
-
-    const bool is_white = board.white_acts_;
-    
-    if(is_white) {
+   
+    if(board.white_acts_) {
         nb.white_king_^= w000_KingMoves;
         nb.white_rook_^= w000_Rookmoves;
 

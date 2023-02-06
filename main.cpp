@@ -9,6 +9,8 @@
 #include "src/blowfish/position_meta_data.h"
 #include "src/blowfish/perft_divider_autotraverse.h"
 #include "src/chess_interface/movegen_interface.h"
+#include "src/blowfish/perft_mg_thread.h"
+
 
 #define CREATE(string) ChessboardGenerator::CreateFromFen(string)
 
@@ -23,21 +25,36 @@ int main() {
     auto startposition  = CREATE(startpos_fen);
     auto kiwipep        = CREATE(kiwipep_fen);
     auto promoboard     = CREATE(promotion_fen);
+ 
+    {
+        Timer t0;
+        const int d = 6;
+        //benchmarking
+        std::vector<unsigned long long> res = chesslib_io.InitSearch(startposition, SearchType::PERFT, d);
 
-    Timer t0;
-    const int d = 6;
-    //benchmarking
-    std::vector<unsigned long long> res = chesslib_io.InitSearch(startposition, SearchType::PERFT, d);
+        double t_delta = t0.elapsed();
+        std::cout << "search time : " << t_delta << std::endl;
 
-    std::cout << "search time : " << t0.elapsed() << std::endl;
+        unsigned long long total = 0;
+        for(const auto & dres : res) {
+            total += dres;
+            print(dres);
+        }
 
-    for(const auto & dres : res) {
-        print(dres);
+        std::cout << "Total nodes : " << total << " NPS : " << (unsigned long long) total/t_delta << std::endl;
+    }
+ 
+    {
+        const int maxd = 6;
+        MGenThreadManager mg_thread_manager;
+        Timer t0;
+        unsigned long long result = mg_thread_manager.Enumerate(startposition, maxd);
+        double delta_t = t0.elapsed();
+
+        std::cout << "Total nodes (threaded) : " << result << " NPS : " << (unsigned long long) result/delta_t << std::endl;
     }
 
-
     
-
     return 0;
 }
 

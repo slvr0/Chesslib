@@ -4,7 +4,6 @@
 #include "chessboard.h"
 #include "defs.h"
 
-
 struct Board;
 
 class ChessboardGenerator {

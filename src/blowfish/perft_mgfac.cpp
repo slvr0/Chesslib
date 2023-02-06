@@ -6,21 +6,15 @@ std::vector<unsigned long long> PerftMGFactory::Enumerate(const Board& board, co
     for(int i = 0 ; i < maxdepth + 1 ; ++i) found_moves_.push_back(0);
 
     maxdepth_       = maxdepth;
-    n               = 0;
-    const int depth = 0;    
-    
+
+    const int depth = 0; 
     found_moves_[0] = 1;
 
-    Perft(board, depth); 
+    Perft(board, depth);  
 
-    print(Result());
+    print(wmgen_.metadata_searchtime + bmgen_.metadata_searchtime);   
 
     return found_moves_;
-}
-
-void PerftMGFactory::Perft(const Board& board, const int& depth) {
-    if(board.white_acts_) wmgen_.ParseLegalMoves(board, depth);
-    else bmgen_.ParseLegalMoves(board, depth);    
 }
 
 std::string PerftMGFactory::Result() const {
@@ -31,13 +25,4 @@ std::string PerftMGFactory::Result() const {
     }
 
     return res;
-}
-
-void PerftMGFactory::OnInsert(const Board& board, const int& depth) {
-    ++n;
-    found_moves_[depth] += 1;
-
-    if(depth < maxdepth_) {
-        Perft(board, depth);
-    }
 }

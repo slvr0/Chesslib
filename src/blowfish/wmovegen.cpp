@@ -69,7 +69,7 @@ MGSearchContextualObject WhiteMoveGenerator::RefreshMetaDataInternal(const Board
 
             const BBoard pawns = board.white_pawn_;
             const BBoard enemy_rook_queens = board.black_rook_ | board.black_queen_;
-            const BBoard enp64 = 1ULL << board.enp_;
+          
 
             //Special Horizontal1 https://lichess.org/editor?fen=8%2F8%2F8%2F1K1pP1q1%2F8%2F8%2F8%2F8+w+-+-+0+1
             //Special Horizontal2 https://lichess.org/editor?fen=8%2F8%2F8%2F1K1pP1q1%2F8%2F8%2F8%2F8+w+-+-+0+1
@@ -80,8 +80,8 @@ MGSearchContextualObject WhiteMoveGenerator::RefreshMetaDataInternal(const Board
             //Quick check: We have king - Enemy Slider - Own Pawn - and enemy EP on the same rank!
             if ((WhiteEPRank() & king) && (WhiteEPRank() & enemy_rook_queens) && (WhiteEPRank() & pawns))
             {
-                BBoard EPLpawn = pawns & Pawns_NotLeft()  & (White_Pawn_InvertLeft(enp64)); //Pawn that can EPTake to the left - overflow will not matter because 'Notleft'
-                BBoard EPRpawn = pawns & Pawns_NotRight() & (White_Pawn_InvertRight(enp64));  //Pawn that can EPTake to the right - overflow will not matter because 'NotRight'
+                BBoard EPLpawn = pawns & Pawns_NotLeft()  & (White_Pawn_InvertLeft(context.enp_target_)); //Pawn that can EPTake to the left - overflow will not matter because 'Notleft'
+                BBoard EPRpawn = pawns & Pawns_NotRight() & (White_Pawn_InvertRight(context.enp_target_));  //Pawn that can EPTake to the right - overflow will not matter because 'NotRight'
 
                 //invalidates EP from both angles
                 if (EPLpawn) {
@@ -142,28 +142,28 @@ WhiteMoveGenerator::WhiteMoveGenerator(MoveGeneratorHeader* parent) :
 
 void WhiteMoveGenerator::ParseLegalMoves(const Board& board, const int& depth) {
 
+    Timer t0;
     MGSearchContextualObject context_object = RefreshMetaDataInternal(board);
+    metadata_searchtime += t0.elapsed();
 
     context_object.depth_ = depth;      
     context_object.enemy_or_void_ = ~board.white_;
     context_object.nocheck_ = (context_object.checkmask_ == 0xffffffffffffffffull); 
     context_object.moveable_squares_   = context_object.enemy_or_void_ & context_object.checkmask_;
 
-    //META DATA prepared.
-
-    //if n checkers > 1 only traverse this
     GetKingMoves(board, context_object);
 
-    //else proceed these/
-    GetPawnMoves(board, context_object);
-    GetKnightMoves(board, context_object);
-    GetBishopMoves(board, context_object);    
-    GetRookMoves(board, context_object); 
-    GetQueenMoves(board, context_object);
+    if(context_object.checkmask_) {      
+        GetPawnMoves(board, context_object);
+        GetKnightMoves(board, context_object);
+        GetBishopMoves(board, context_object);    
+        GetRookMoves(board, context_object); 
+        GetQueenMoves(board, context_object);
 
-    if(context_object.nocheck_) GetCastlingMoves(board, context_object);     
+        if(context_object.nocheck_) GetCastlingMoves(board, context_object);   
+    }  
 }
-
+ 
 void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObject & context) {  
     const BBoard pawns_lr = board.white_pawn_ &~ context.rook_pins_;
     const BBoard pawns_hv = board.white_pawn_ &~ context.bishop_pins_;
@@ -171,7 +171,6 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
     BBoard pawn_capture_left    = pawns_lr & White_Pawn_InvertLeft(board.black_ & Pawns_NotLeft() & context.checkmask_);
     BBoard pawn_capture_right   = pawns_lr & White_Pawn_InvertRight(board.black_ & Pawns_NotRight() & context.checkmask_);    
  
-    
     //forward
     BBoard pawn_forward_1 = pawns_hv & White_Pawn_Backward(~board.occ_); // no checkmask needed here? why? it comes later
 
@@ -223,8 +222,6 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             }
         }
     }
-
-    //Handle PROMOTION and make moves from all legal pawn moves pruned
 
     if ((pawn_capture_left | pawn_capture_right | pawn_forward_1) & White_Pawns_LastRank()) {
         uint64_t Promote_Left =  pawn_capture_left & White_Pawns_LastRank();  
@@ -368,7 +365,7 @@ void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
         }
     }    
 }
-
+ 
 void WhiteMoveGenerator::GetKnightMoves(const Board & board, MGSearchContextualObject & context) {
     BBoard knights = board.white_knight_ & (~ (context.rook_pins_ | context.bishop_pins_)); //a pinned knight can never move!
 
@@ -395,9 +392,9 @@ void WhiteMoveGenerator::GetBishopMoves(const Board & board, MGSearchContextualO
 
     BBoard queens = board.white_queen_; 
 
-    BBoard bishops = board.white_bishop_ &~ context.rook_pins_; //including non pinned bishops (HV) 
+    BBoard bishops = board.white_bishop_ &~ context.rook_pins_; 
     
-    BBoard pinned_bishops = (bishops | queens) & context.bishop_pins_; //including pinned queens diagonally here.
+    BBoard pinned_bishops = (bishops | queens) & context.bishop_pins_; 
     BBoard nopin_bishops = bishops & ~context.bishop_pins_; 
     
     LoopBits(pinned_bishops) {

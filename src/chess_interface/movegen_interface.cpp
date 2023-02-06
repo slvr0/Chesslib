@@ -20,7 +20,5 @@ std::vector<unsigned long long> ChesslibInterface::InitSearch(const Board &board
             return search_result;
         }
         
-    }
-    
-
+    }    
 }

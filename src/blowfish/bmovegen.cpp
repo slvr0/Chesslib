@@ -69,7 +69,7 @@ MGSearchContextualObject BlackMoveGenerator::RefreshMetaDataInternal(const Board
 
             const BBoard pawns = board.black_pawn_;
             const BBoard enemy_rook_queens = board.white_rook_ | board.white_queen_;
-            const BBoard enp64 = 1ULL << board.enp_;
+         
 
             //Special Horizontal1 https://lichess.org/editor?fen=8%2F8%2F8%2F1K1pP1q1%2F8%2F8%2F8%2F8+w+-+-+0+1
             //Special Horizontal2 https://lichess.org/editor?fen=8%2F8%2F8%2F1K1pP1q1%2F8%2F8%2F8%2F8+w+-+-+0+1
@@ -80,8 +80,8 @@ MGSearchContextualObject BlackMoveGenerator::RefreshMetaDataInternal(const Board
             //Quick check: We have king - Enemy Slider - Own Pawn - and enemy EP on the same rank!
             if ((BlackEPRank() & king) && (BlackEPRank() & enemy_rook_queens) && (BlackEPRank() & pawns))
             {
-                BBoard EPLpawn = pawns & Pawns_NotLeft()  & (Black_Pawn_InvertLeft(enp64)); //Pawn that can EPTake to the left - overflow will not matter because 'Notleft'
-                BBoard EPRpawn = pawns & Pawns_NotRight() & (Black_Pawn_InvertRight(enp64));  //Pawn that can EPTake to the right - overflow will not matter because 'NotRight'
+                BBoard EPLpawn = pawns & Pawns_NotLeft()  & (Black_Pawn_InvertLeft(context.enp_target_)); //Pawn that can EPTake to the left - overflow will not matter because 'Notleft'
+                BBoard EPRpawn = pawns & Pawns_NotRight() & (Black_Pawn_InvertRight(context.enp_target_));  //Pawn that can EPTake to the right - overflow will not matter because 'NotRight'
 
                 //invalidates EP from both angles
                 if (EPLpawn) {
@@ -141,26 +141,30 @@ BlackMoveGenerator::BlackMoveGenerator(MoveGeneratorHeader* parent) :
 
 //pondering whether the order matters in meta data statement, can we refresh moveable squares and nocheck after checkmask is settled? Or is it even necessary?
 void BlackMoveGenerator::ParseLegalMoves(const Board& board, const int& depth) {
-    RefreshMetaDataInternal(board);
+
+    Timer t0;
 
     MGSearchContextualObject context_object = RefreshMetaDataInternal(board);
+    metadata_searchtime += t0.elapsed();
 
     context_object.depth_ = depth;      
     context_object.enemy_or_void_ = ~board.black_;
     context_object.nocheck_ = (context_object.checkmask_ == 0xffffffffffffffffull); 
     context_object.moveable_squares_   = context_object.enemy_or_void_ & context_object.checkmask_;
 
-    //if checkmask something then disregard other legal moves right away
+    
+
     GetKingMoves(board, context_object);
 
-    //else proceed these/
-    GetPawnMoves(board,     context_object);
-    GetKnightMoves(board,   context_object);
-    GetBishopMoves(board,   context_object);    
-    GetRookMoves(board,     context_object); 
-    GetQueenMoves(board,    context_object);
+    if(context_object.checkmask_) {    
+        GetPawnMoves(board,     context_object);
+        GetKnightMoves(board,   context_object);
+        GetBishopMoves(board,   context_object);    
+        GetRookMoves(board,     context_object); 
+        GetQueenMoves(board,    context_object);
 
-    if(context_object.nocheck_) GetCastlingMoves(board, context_object);     
+        if(context_object.nocheck_) GetCastlingMoves(board, context_object);     
+    }
 }
 
 void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObject & context) {  
