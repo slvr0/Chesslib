@@ -2,14 +2,21 @@
 
 #include <vector>
 #include <random>
+#include<cstdlib>
 
 #include "src/blowfish/chessboard_generator.h"
 #include "src/blowfish/chessboard_extractor.h"
 #include "src/blowfish/move_generator.h"
 #include "src/blowfish/position_meta_data.h"
 #include "src/blowfish/perft_divider_autotraverse.h"
-#include "src/chess_interface/movegen_interface.h"
 #include "src/blowfish/perft_mg_thread.h"
+
+#include "src/chess_interface/movegen_interface.h"
+
+#include "src/monte_carlo/mc_node.h"
+#include "src/monte_carlo/mc_node_structure.h"
+#include "src/monte_carlo/mc_mainthread.h"
+#include "src/monte_carlo/mc_thread_factory.h"
 
 #define CREATE(string) ChessboardGenerator::CreateFromFen(string)
 
@@ -54,8 +61,42 @@ int main() {
     }
  */
 
-
+    srand((unsigned) time(NULL));
     
+   
+/* 
+    {
+        Timer t0;
+        //std::unique_ptr<Node> node = std::make_unique<Node> (startposition);
+
+        NodeTreeStructure nodetree(startposition);    
+
+        MCTS::MCThreadFactory mc_thread_fac(&nodetree);
+
+        size_t nthreads = 2;
+
+        mc_thread_fac.SpawnThreads(nthreads);
+
+
+        print(nodetree.GetTreeSize());
+
+        print(t0.elapsed());
+    }
+     */
+    
+
+
+
+    //non threaded test
+    {
+        NodeTreeStructure nodetree(startposition);  
+        MCTS::MCExpandSimulateThread mainthread(&nodetree);
+        mainthread.Ponder();
+
+        print(nodetree.GetTreeSize());
+
+    }
+
     return 0;
 }
 
