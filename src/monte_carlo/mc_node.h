@@ -4,6 +4,7 @@
 #include <memory>
 #include <list>
 #include <cmath>
+#include <algorithm>
 
 #include "../blowfish/chessboard.h"
 
@@ -52,7 +53,7 @@ public :
         if(!Available()) return -10000.f;
         else if(visits_ == 0) return 10000.f;
 
-        if(parent_ ) return ((float)(value_ / visits_) + std::log1p(parent_->visits_ / visits_)) - available_;
+        if(parent_ ) return (value_ / visits_) + (parent_->visits_ / visits_) - available_;
         else return -10000.f;
     }
 
@@ -76,11 +77,28 @@ public :
         return true; // in future compare board zobrist
     }
 
+    bool operator<(Node* node) {
+        return this->UpperConfidenceBound() < node->UpperConfidenceBound();
+    }
+
+/*     bool operator<(Node* n1, Node*n2) const {
+        return n1->UpperConfidenceBound() < n2->UpperConfidenceBound();
+    } */
+
+
     FORCEINL Node* GetUpperConfidenceBranch() const {
-        auto nodeiter = std::max_element(branches_.begin(), branches_.end(), 
+        return *std::max_element(branches_.begin(), branches_.end(), 
             [](Node* a, Node*b) { return a->UpperConfidenceBound() < b->UpperConfidenceBound();});
+
+        std::vector<int> v {1,2,3};
+        //std::max(branches_, [] (Node* n1, Node* n2) { return n1->UpperConfidenceBound() < n2->UpperConfidenceBound();});
+
+/*         return std::max(branches_); */
+        /* 
+        print(branches_.size());
+        auto nodeiter = 
         
-        return *nodeiter;
+        return *nodeiter; */
     }
 
     

@@ -3,8 +3,10 @@
 #include "../blowfish/move_generator.h"
 #include "../blowfish/defs.h"
 
-
 #include "mc_node.h"
+
+
+
 class MCMGenExpander : public MoveGeneratorHeader {
 public: 
     MCMGenExpander() {

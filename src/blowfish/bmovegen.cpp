@@ -140,7 +140,7 @@ BlackMoveGenerator::BlackMoveGenerator(MoveGeneratorHeader* parent) :
 }
 
 //pondering whether the order matters in meta data statement, can we refresh moveable squares and nocheck after checkmask is settled? Or is it even necessary?
-void BlackMoveGenerator::ParseLegalMoves(const Board& board, const int& depth) {
+bool BlackMoveGenerator::ParseLegalMoves(const Board& board, const int& depth) {
 
     Timer t0;
 
@@ -165,6 +165,7 @@ void BlackMoveGenerator::ParseLegalMoves(const Board& board, const int& depth) {
 
         if(context_object.nocheck_) GetCastlingMoves(board, context_object);     
     }
+    return context_object.nocheck_;
 }
 
 void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObject & context) {  

@@ -12,8 +12,6 @@ std::vector<unsigned long long> PerftMGFactory::Enumerate(const Board& board, co
 
     Perft(board, depth);  
 
-    print(wmgen_.metadata_searchtime + bmgen_.metadata_searchtime);   
-
     return found_moves_;
 }
 

@@ -51,6 +51,11 @@ public :
     int half_move_      = 0; //increases each players move , resets on pawn move
     int full_move_      = 1; //increases when both players make move, i.e. on black turn
 
+
+    Board() {
+
+    }
+    
     Board(
     BBoard white_pawn, BBoard white_knight, BBoard white_bishop, BBoard white_rook, BBoard white_queen, BBoard white_king,
     BBoard black_pawn, BBoard black_knight, BBoard black_bishop, BBoard black_rook, BBoard black_queen, BBoard black_king) :

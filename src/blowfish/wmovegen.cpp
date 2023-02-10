@@ -140,11 +140,8 @@ WhiteMoveGenerator::WhiteMoveGenerator(MoveGeneratorHeader* parent) :
    
 }
 
-void WhiteMoveGenerator::ParseLegalMoves(const Board& board, const int& depth) {
-
-    Timer t0;
+bool WhiteMoveGenerator::ParseLegalMoves(const Board& board, const int& depth) {
     MGSearchContextualObject context_object = RefreshMetaDataInternal(board);
-    metadata_searchtime += t0.elapsed();
 
     context_object.depth_ = depth;      
     context_object.enemy_or_void_ = ~board.white_;
@@ -162,6 +159,8 @@ void WhiteMoveGenerator::ParseLegalMoves(const Board& board, const int& depth) {
 
         if(context_object.nocheck_) GetCastlingMoves(board, context_object);   
     }  
+
+    return context_object.nocheck_;
 }
  
 void WhiteMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObject & context) {  
