@@ -7,17 +7,20 @@
 #include "../blowfish/move_generator.h"
 #include "../blowfish/defs.h"
 
+#include "mc_wmgenrollout.h"
+#include "mc_bmgenrollout.h"
+
 //creates threads for simulating random traversed chess games.
 //we will adapt the move generator specifically for this as was always the intentions
 
 struct SMGResult {
-    const bool in_check_ = false;
-    const bool terminal_ = false;
+    const bool  in_check_ = false;
+    const bool  terminal_ = false;
 
-    Board* selected_move_ = nullptr;
+    const Board selected_;
 
-    SMGResult(const bool& incheck, Board* select) : 
-        in_check_(incheck), selected_move_(select) {
+    SMGResult(const bool& terminal, const bool& incheck, const Board& selected) : 
+        terminal_(terminal), in_check_(incheck), selected_(selected) {
 
     }
 };
@@ -35,40 +38,51 @@ public:
 
     ~MCMGSimulatorMoveGenerator() {
  
-    }
+    }   
+
+    double movetime_parsing = 0;
+    double insertion_asserting = 0;    
 
     inline const SMGResult MakeMove(const Board & board, const int & random_select) { 
-        found_selected_ = false;
-        terminal_ = true;
+        Timer t0;
 
-        random_select_ = random_select;    
-        movecounter_ = 0;  
+        found_selected_     = false;
+        terminal_           = true;
 
-        bool incheck;
+        random_select_      = random_select;    
+        movecounter_        = 0;  
+
+        bool                incheck;
+
         if(board.white_acts_) incheck = wmgen_.ParseLegalMoves(board, 1);
         else incheck = bmgen_.ParseLegalMoves(board, 1);  
+
+        movetime_parsing += t0.elapsed();
         
         if(terminal_) {
-            return SMGResult(incheck, nullptr);
+            return SMGResult(terminal_, incheck, board);
         }
         else {
-            return SMGResult(incheck, found_selected_ ? select_.get() : any_.get());
+            return SMGResult(terminal_, incheck, found_selected_ ? select_ : any_);
         }
         
     }
 
     inline void OnInsert(const Board& board, const int& depth) override 
     { 
+        Timer t1;
         ++n;           
         if(random_select_ >= movecounter_++) {
-            *select_ = board;
+            select_ = board;
             found_selected_ = true;
         }
         else {
-            *any_ = board;
+            any_ = board;
         }
 
-        terminal_ = false;      
+        terminal_ = false;  
+
+        insertion_asserting += t1.elapsed();    
     }
 
 private :
@@ -77,8 +91,8 @@ private :
     bool        found_selected_;
     bool        terminal_;
 
-    std::unique_ptr<Board>  select_  = std::make_unique<Board> ();
-    std::unique_ptr<Board>  any_     = std::make_unique<Board> ();
+    Board select_;
+    Board any_; //any is maybe not the right expression, last / current is more appropriate
 };
 
 
@@ -88,14 +102,28 @@ public :
         srand((unsigned) time(NULL));
     }
 
-
     int Moves() const {
         return simulator_movegen_.n;
+    }
+
+    float MoveTime() const {
+        return simulator_movegen_.movetime_parsing;
+    }
+
+    float InsertAssert() const {
+        return simulator_movegen_.insertion_asserting;
     }
 
     float SimulateGame(const Board& board);
     
     double generator_time_= 0;
+    double rng_timer = 0;   
+    int n_decisive = 0;
+    
+
 private: 
-    MCMGSimulatorMoveGenerator simulator_movegen_;
+    MCMGSimulatorMoveGenerator  simulator_movegen_;
+
+    MCTS::WhiteRolloutMoveGenerator wrollout_mgen_;
+    MCTS::BlackRolloutMoveGenerator brollout_mgen_;
 };

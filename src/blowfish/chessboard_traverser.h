@@ -21,13 +21,15 @@ FORCEINL Board UpdatePawnMove(const Board & board, const BBoard & from, const BB
     BBoard move = (from | to);
 
     if(board.white_acts_) {nb.white_pawn_      ^= move; nb.white_ ^= move;}
-    else                  {nb.black_pawn_      ^= move; nb.black_ ^= move;}
+    else                  {nb.black_pawn_      ^= move; nb.black_ ^= move; ++nb.full_move_;}
 
     nb.occ_ = nb.white_ | nb.black_;
 
     nb.enp_ = -1;
 
     nb.white_acts_ = !nb.white_acts_;
+
+    nb.half_move_ = 0;
 
     return nb;
 }
@@ -38,13 +40,15 @@ FORCEINL Board UpdatePawnPush(const Board & board, const BBoard & from, const BB
     BBoard move = (from | to);
 
     if(board.white_acts_)    {nb.white_pawn_ ^= move; nb.white_ ^= move;}
-    else            {nb.black_pawn_ ^= move; nb.black_ ^= move;}
+    else            {nb.black_pawn_ ^= move; nb.black_ ^= move;++nb.full_move_;}
 
     nb.occ_ = nb.white_ | nb.black_;   
 
     nb.white_acts_ = !nb.white_acts_;
 
     nb.enp_ = nb.white_acts_ ? LSquare(to) + 8 :  LSquare(to) - 8;
+
+    nb.half_move_ = 0;
 
     return nb;
 }
@@ -62,6 +66,7 @@ FORCEINL Board UpdatePawnCapture(const Board & board, const BBoard & from, const
     else            {
         nb.black_pawn_ ^= move;  nb.black_ ^= move; nb.white_ &= rem; nb.white_pawn_ &= rem; nb.white_knight_ &= rem; nb.white_bishop_ &= rem; nb.white_rook_ &= rem; nb.white_queen_ &= rem;
         UpdateWhiteCastleStatusCheck(nb, to);
+        ++nb.full_move_;
     }
 
     nb.occ_ = nb.white_ | nb.black_;
@@ -69,6 +74,8 @@ FORCEINL Board UpdatePawnCapture(const Board & board, const BBoard & from, const
     nb.enp_ = -1;
 
     nb.white_acts_ = !nb.white_acts_;
+
+    nb.half_move_ = 0;
 
     return nb;
 }
@@ -101,7 +108,8 @@ FORCEINL Board UpdatePawnPromotion(const Board & board, const PieceType& ptype, 
         if(ptype == PieceType::QUEEN)  {nb.black_pawn_ ^= from; nb.black_queen_  ^= to;}
 
         nb.black_ ^= move;
-
+        ++nb.full_move_;
+        
         if(is_capture) {
             nb.white_ &= rem; nb.white_pawn_ &=rem; nb.white_knight_ &= rem; nb.white_bishop_ &= rem; nb.white_rook_ &= rem; nb.white_queen_ &= rem;
             UpdateWhiteCastleStatusCheck(nb, to);
@@ -113,6 +121,8 @@ FORCEINL Board UpdatePawnPromotion(const Board & board, const PieceType& ptype, 
     nb.enp_ = -1;
 
     nb.white_acts_ = !nb.white_acts_;
+
+    nb.half_move_ = 0;
 
     return nb;
 }
@@ -127,7 +137,9 @@ FORCEINL Board UpdatePawnEnpassaint(const Board & board, const uint64_t & from, 
         nb.white_pawn_ ^= move;  nb.white_ ^= move; nb.black_ &= rem; nb.black_pawn_ &= rem; nb.black_knight_ &= rem; nb.black_bishop_ &= rem; nb.black_rook_ &= rem; nb.black_queen_ &= rem;
     }
     else            {
-        nb.black_pawn_ ^= move;  nb.black_ ^= move; nb.white_ &= rem; nb.white_pawn_ &= rem; nb.white_knight_ &= rem; nb.white_bishop_ &= rem; nb.white_rook_ &= rem; nb.white_queen_ &= rem;
+        nb.black_pawn_ ^= move;  nb.black_ ^= move; nb.white_ &= rem; nb.white_pawn_ &= rem; 
+        nb.white_knight_ &= rem; nb.white_bishop_ &= rem; nb.white_rook_ &= rem; nb.white_queen_ &= rem;
+        ++nb.full_move_;
     }
     
     nb.occ_ = nb.white_ | nb.black_;
@@ -135,6 +147,8 @@ FORCEINL Board UpdatePawnEnpassaint(const Board & board, const uint64_t & from, 
     nb.enp_ = -1;
 
     nb.white_acts_ = !nb.white_acts_;
+
+    nb.half_move_ = 0;
 
     return nb;
 }
@@ -159,10 +173,11 @@ FORCEINL Board UpdateKnightMove(const Board & board, const int & from, const BBo
     else {
         nb.black_knight_ ^= move;
         nb.black_ ^= move;
+        ++nb.full_move_;
 
         if(is_capture) {
             nb.white_ &= rem; nb.white_pawn_ &= rem; nb.white_knight_ &= rem; nb.white_bishop_ &= rem; nb.white_rook_ &= rem; nb.white_queen_ &= rem;
-            UpdateWhiteCastleStatusCheck(nb, to);
+            UpdateWhiteCastleStatusCheck(nb, to);            
         }
     }
 
@@ -171,6 +186,8 @@ FORCEINL Board UpdateKnightMove(const Board & board, const int & from, const BBo
     nb.enp_ = -1;
 
     nb.white_acts_ = !nb.white_acts_;
+
+    ++nb.half_move_;
 
     return nb; 
 }
@@ -195,10 +212,11 @@ FORCEINL Board UpdateBishopMove(const Board & board, const int & from, const BBo
     else {
         nb.black_bishop_ ^= move;
         nb.black_ ^= move;
+        ++nb.full_move_;
 
         if(is_capture) {
             nb.white_ &= rem; nb.white_pawn_ &= rem; nb.white_knight_ &= rem; nb.white_bishop_ &= rem; nb.white_rook_ &= rem; nb.white_queen_ &= rem;
-            UpdateWhiteCastleStatusCheck(nb, to);
+            UpdateWhiteCastleStatusCheck(nb, to);            
         }
     }
 
@@ -207,6 +225,8 @@ FORCEINL Board UpdateBishopMove(const Board & board, const int & from, const BBo
     nb.enp_ = -1; 
 
     nb.white_acts_ = !nb.white_acts_;
+
+    ++nb.half_move_;
 
     return nb; 
 }
@@ -242,8 +262,9 @@ FORCEINL Board UpdateRookMove(const Board & board, const int & from, const BBoar
 
         if(is_capture) {
             nb.white_ &= rem; nb.white_pawn_ &= rem; nb.white_knight_ &= rem; nb.white_bishop_ &= rem; nb.white_rook_ &= rem; nb.white_queen_ &= rem;
-            UpdateWhiteCastleStatusCheck(nb, to);
+            UpdateWhiteCastleStatusCheck(nb, to);            
         }
+        ++nb.full_move_;
     }
 
     nb.occ_ = nb.white_ | nb.black_;
@@ -251,6 +272,8 @@ FORCEINL Board UpdateRookMove(const Board & board, const int & from, const BBoar
     nb.enp_ = -1;  
 
     nb.white_acts_ = !nb.white_acts_;
+
+    ++nb.half_move_;
 
     return nb;
 }
@@ -280,6 +303,7 @@ FORCEINL Board UpdateQueenMove(const Board & board, const int & from, const BBoa
             nb.white_ &= rem; nb.white_pawn_ &= rem; nb.white_knight_ &= rem; nb.white_bishop_ &= rem; nb.white_rook_ &= rem; nb.white_queen_ &= rem;
             UpdateWhiteCastleStatusCheck(nb, to);
         }
+        ++nb.full_move_;
     }
 
     nb.occ_ = nb.white_ | nb.black_;  
@@ -287,6 +311,8 @@ FORCEINL Board UpdateQueenMove(const Board & board, const int & from, const BBoa
     nb.enp_ = -1; 
 
     nb.white_acts_ = !nb.white_acts_;
+
+    ++nb.half_move_;
 
     return nb; 
 }
@@ -319,6 +345,8 @@ FORCEINL Board UpdateKingMove(const Board & board, const int & from, const BBoar
             nb.white_ &= rem; nb.white_pawn_ &= rem; nb.white_knight_ &= rem; nb.white_bishop_ &= rem; nb.white_rook_ &= rem; nb.white_queen_ &= rem;
             UpdateWhiteCastleStatusCheck(nb, to);
         }
+        
+        ++nb.full_move_;
 
         nb.black_oo_ = false;
         nb.black_ooo_ = false;
@@ -328,7 +356,9 @@ FORCEINL Board UpdateKingMove(const Board & board, const int & from, const BBoar
 
     nb.enp_ = -1; 
 
-    nb.white_acts_ = !nb.white_acts_;   
+    nb.white_acts_ = !nb.white_acts_; 
+
+    ++nb.half_move_;  
 
     return nb; 
 }
@@ -355,6 +385,7 @@ FORCEINL Board UpdateCastle00(const Board & board) {
 
         nb.black_oo_    = false;
         nb.black_ooo_   = false;
+        ++nb.full_move_;
     }
 
     nb.occ_ = nb.white_ | nb.black_;
@@ -362,6 +393,8 @@ FORCEINL Board UpdateCastle00(const Board & board) {
     nb.enp_ = -1;  
 
     nb.white_acts_ = !nb.white_acts_;
+
+    ++nb.half_move_;
 
     return nb; 
 }
@@ -388,6 +421,7 @@ FORCEINL Board UpdateCastle000(const Board & board) {
 
         nb.black_oo_    = false;
         nb.black_ooo_   = false;
+        ++nb.full_move_;
     }
 
     nb.occ_ = nb.white_ | nb.black_;  
@@ -395,6 +429,8 @@ FORCEINL Board UpdateCastle000(const Board & board) {
     nb.enp_ = -1; 
 
     nb.white_acts_ = !nb.white_acts_;
+
+    ++nb.half_move_;
 
     return nb;     
 }

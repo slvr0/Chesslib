@@ -95,10 +95,8 @@ int main()
          */
 
     Timer t0;
-
-    
     MCSimulator simulator;
-    for(int i = 0 ; i < 1e3; ++i) {
+    for(int i = 0 ; i < 1e4; ++i) {
         
         simulator.SimulateGame(startposition);
     }
@@ -106,8 +104,28 @@ int main()
     print(t0.elapsed());
     print(simulator.generator_time_);
     print(simulator.Moves());
+    print(simulator.MoveTime());
+    print(simulator.InsertAssert());
+    print(simulator.rng_timer);
+    print(simulator.n_decisive);
 
 
+/*     Board b1 (startposition);
 
+    std::unique_ptr<Board> b2 = std::make_unique<Board> ();
+    Board b3;
+
+    Timer t0;
+    for(int i = 0 ; i<1e6;++i) {
+        *b2 = b1;
+    }
+    print(t0.elapsed());
+
+    Timer t1;
+    for(int i = 0 ; i<1e6;++i) {
+        b3 = b1;
+    }
+    print(t1.elapsed());
+ */
     return 0;
 }

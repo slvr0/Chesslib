@@ -23,6 +23,11 @@ add_library(mcts
     mc_simulator.cpp
     mc_backprop.h
     mc_backprop.cpp
-)
+
+    mc_wmgenrollout.h
+    mc_wmgenrollout.cpp
+    mc_bmgenrollout.h
+    mc_bmgenrollout.cpp
+)   
 
 target_link_libraries(mcts PUBLIC blowfish_engine)

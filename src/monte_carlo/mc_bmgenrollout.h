@@ -1,37 +1,29 @@
-#pragma once 
+#pragma once
 
-#include "defs.h"
-#include "chessboard.h"
-#include "chessboard_traverser.h"
-#include "chessboard_extractor.h"
-#include "static_move_tables.h"
-#include "position_meta_data.h"
+//dirty , but we need to redo a movegenerator for rollout purposes without callbacks
 
-#include "mgdefs.h"
+#include "../blowfish/defs.h"
+#include "../blowfish/chessboard.h"
+#include "../blowfish/chessboard_traverser.h"
+#include "../blowfish/chessboard_extractor.h"
+#include "../blowfish/static_move_tables.h"
+#include "../blowfish/position_meta_data.h"
+#include "../blowfish/mgdefs.h"
+#include "mc_defs.h"
 
-class MoveGeneratorHeader;
+namespace MCTS {
 
-class BlackMoveGenerator {
+class BlackRolloutMoveGenerator {
 public : 
-    BlackMoveGenerator(MoveGeneratorHeader* parent = nullptr);
-
-    void GetPawnMoves(const Board & board,      MGSearchContextualObject & context);
-    void GetKnightMoves(const Board & board,    MGSearchContextualObject & context);
-    void GetBishopMoves(const Board & board,    MGSearchContextualObject & context);
-    void GetRookMoves(const Board & board,      MGSearchContextualObject & context);
-    void GetQueenMoves(const Board & board,     MGSearchContextualObject & context);
-    void GetKingMoves(const Board & board,      MGSearchContextualObject & context);
-    void GetCastlingMoves(const Board& board,   MGSearchContextualObject & context);
+    BlackRolloutMoveGenerator() {
+        
+    }
 
     MGSearchContextualObject RefreshMetaDataInternal(const Board& board);   
 
-    bool ParseLegalMoves(const Board& board, const int& depth);  
-
-    double metadata_searchtime = 0; //remove later 
+    RMGResult ParseLegalMoves(const Board& board, const int& select_id, MGSearchContextualObject* rerun = nullptr);     
 
 private:
-
-    MoveGeneratorHeader* parent_ = nullptr;
 
     FORCEINL void CheckBySlider(const Square& king,const Square& enemy, MGSearchContextualObject & context) {
         if (context.checkmask_ == 0xffffffffffffffffull)
@@ -63,5 +55,12 @@ private:
         }
     }
 
+    FORCEINL bool select_increment(const int& select_id, const int & N) {
+        return select_id == N;
+    }
+
+    
      
 };
+}
+
