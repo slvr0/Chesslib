@@ -40,6 +40,5 @@ private:
     std::vector<std::future<bool>> thread_evals_; //placeholder_1???
     NodeTreeStructure* nodetree_;
     
-    
 };
 }

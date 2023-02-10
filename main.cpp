@@ -63,7 +63,7 @@ int main()
         }
      */
 
-    /*
+    
         {
             Timer t0;
             //std::unique_ptr<Node> node = std::make_unique<Node> (startposition);
@@ -72,28 +72,27 @@ int main()
 
             MCTS::MCThreadFactory mc_thread_fac(&nodetree);
 
-            size_t nthreads = 2;
+            size_t nthreads = 6;
 
             mc_thread_fac.SpawnThreads(nthreads);
 
-
-            print(nodetree.GetTreeSize());
-
-            print(t0.elapsed());
         }
-         */
+         
 
     // non threaded test
-    /*     {
-            NodeTreeStructure nodetree(startposition);
-            MCTS::MCExpandSimulateThread mainthread(&nodetree);
-            mainthread.Ponder();
+/* 
 
-            print(nodetree.GetTreeSize());
+    {
+        NodeTreeStructure nodetree(startposition);
+        MCTS::MCExpandSimulateThread mainthread(&nodetree);
+        mainthread.Ponder();
 
-        }
-         */
+        print(nodetree.GetTreeSize());
 
+    }
+ */
+
+/* 
     Timer t0;
     MCSimulator simulator;
     for(int i = 0 ; i < 1e4; ++i) {
@@ -102,30 +101,7 @@ int main()
     }
 
     print(t0.elapsed());
-    print(simulator.generator_time_);
-    print(simulator.Moves());
-    print(simulator.MoveTime());
-    print(simulator.InsertAssert());
-    print(simulator.rng_timer);
-    print(simulator.n_decisive);
 
-
-/*     Board b1 (startposition);
-
-    std::unique_ptr<Board> b2 = std::make_unique<Board> ();
-    Board b3;
-
-    Timer t0;
-    for(int i = 0 ; i<1e6;++i) {
-        *b2 = b1;
-    }
-    print(t0.elapsed());
-
-    Timer t1;
-    for(int i = 0 ; i<1e6;++i) {
-        b3 = b1;
-    }
-    print(t1.elapsed());
  */
     return 0;
 }

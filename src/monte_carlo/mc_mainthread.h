@@ -31,7 +31,7 @@ private:
     MCSimulator         simulator_;
     MCMGenExpander      expander_;
     size_t              entries_ = 0;
-    size_t              max_entries_ = 1e6;
+    size_t              max_entries_ = 1e5;
 
     double delta_expansion = 0;
     double delta_nodecheckin = 0;

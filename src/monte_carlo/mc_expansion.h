@@ -5,8 +5,6 @@
 
 #include "mc_node.h"
 
-
-
 class MCMGenExpander : public MoveGeneratorHeader {
 public: 
     MCMGenExpander() {

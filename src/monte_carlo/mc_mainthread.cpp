@@ -7,6 +7,7 @@ using namespace MCTS;
 
 std::mutex expsim_lock;
 
+//since rollouts are the major bottleneck of the system, it needs to be considered to have a thread que for this
 bool MCExpandSimulateThread::Ponder() {
     m_assert(nodetree_, "node tree structure is not set in thread");
 
@@ -15,9 +16,12 @@ bool MCExpandSimulateThread::Ponder() {
     int nodelevel_searches_ = 0;
     int expansions = 0;
 
+    Node* nptr;
+
+    int iter = 0;
     while(entries_++ < max_entries_) {  
                 
-        Node* nptr = nodetree_->Reset();
+        nptr = nodetree_->Reset();
 
         Timer t0;
         int expand_depth = 0;
@@ -25,34 +29,45 @@ bool MCExpandSimulateThread::Ponder() {
             nptr = nptr->GetUpperConfidenceBranch();  
             ++nodelevel_searches_;                 
         }
-
-        ++expansions;
-        delta_expansion += t0.elapsed();
-
-        Timer t1;
-        { //attempt to acquire the nodelock
-            const std::lock_guard<std::mutex> lock(expsim_lock);            
-            if(!nodetree_->RequestNodeCheckIn(nptr)) {                              
+        {
+            const std::lock_guard<std::mutex> lock(expsim_lock);  
+            if(!nodetree_->RequestNodeCheckIn(nptr)) {
                 continue;
             }
         }
         
-        delta_nodecheckin += t1.elapsed();
+        ++expansions;
+        delta_expansion += t0.elapsed();
+
+        //attempt to acquire the nodelock
+        //const std::lock_guard<std::mutex> lock(expsim_lock);            
 
         Timer t3;
-        if(nptr->visits_ > 0) {  
-            expander_.Expand(nptr);
-            entries_ += nptr->branches_.size();
-            nptr = nptr->branches_[0]; //wops assert terminal first!
+        if(nptr->visits_ > 0) {             
+            
+            {
+                const std::lock_guard<std::mutex> lock(expsim_lock);  
+                expander_.Expand(nptr);
+                entries_ += nptr->branches_.size();
+
+                nodetree_->RequestNodeCheckOut(nptr);
+
+                nptr = nptr->branches_[0]; //wops assert terminal first!  
+                if(!nodetree_->RequestNodeCheckIn(nptr)) {
+                    continue;   
+                }
+            }
+
         }
-        delta_simul += t3.elapsed();
+
         const float res = simulator_.SimulateGame(nptr->board_);
+        delta_simul += t3.elapsed();
 
         Timer t4;
         { //we lock, backpropagate result and give back the node           
             const std::lock_guard<std::mutex> lock(expsim_lock);
-            nptr->Backpropagate(res);
-            nodetree_->RequestNodeCheckOut(nptr);
+            nptr->Backpropagate(res);   
+            nodetree_->RequestNodeCheckOut(nptr);  
         }
         delta_checkout += t4.elapsed();
     }
@@ -64,4 +79,6 @@ bool MCExpandSimulateThread::Ponder() {
     std::cout << "checkin : " << delta_nodecheckin << std::endl;
     std::cout << "expand/simul :  " << delta_simul << std::endl;
     std::cout << "checkout : " << delta_checkout << std::endl;
+    std::cout << "number of decisive games : " << simulator_.GetDecisiveGames() << std::endl;
+    
 }

@@ -12,7 +12,7 @@ float MCSimulator::SimulateGame(const Board &board)
     const int       random_selection_max = 25; // random number range, what happens if this is set low? certain moves like queen/castle will never be choosen
     const int       max_full_ply = 50;         // this is full move cycles (1 ply = 1 move white and 1 move black)
     const int       max_half_move = 50;        // without pushing a pawn
-
+    
     while (select.full_move_ < max_full_ply)
     {
         //https://en.wiktionary.org/wiki/fifty-move_rule#:~:text=Proper%20noun&text=(chess)%20A%20rule%20in%20professional,invoked%20during%20an%20inconclusive%20endgame.
