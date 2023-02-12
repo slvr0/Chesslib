@@ -140,7 +140,7 @@ BlackMoveGenerator::BlackMoveGenerator(MoveGeneratorHeader* parent) :
 }
 
 //pondering whether the order matters in meta data statement, can we refresh moveable squares and nocheck after checkmask is settled? Or is it even necessary?
-bool BlackMoveGenerator::ParseLegalMoves(const Board& board, const int& depth) {
+bool BlackMoveGenerator::ParseLegalMoves(const Board& board, const int& depth, const bool& debug) {
 
     Timer t0;
 
@@ -149,10 +149,12 @@ bool BlackMoveGenerator::ParseLegalMoves(const Board& board, const int& depth) {
 
     context_object.depth_ = depth;      
     context_object.enemy_or_void_ = ~board.black_;
-    context_object.nocheck_ = (context_object.checkmask_ == 0xffffffffffffffffull); 
-    context_object.moveable_squares_   = context_object.enemy_or_void_ & context_object.checkmask_;
+    context_object.nocheck_ = (bool)(context_object.checkmask_ == 0xffffffffffffffffull); 
 
     
+    context_object.moveable_squares_   = context_object.enemy_or_void_ & context_object.checkmask_;
+
+    context_object.debug_ = debug;    
 
     GetKingMoves(board, context_object);
 
@@ -207,9 +209,9 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
 
                 parent_->OnInsert(epl_board, context.depth_ + 1);
 
-                #ifdef _DEBUG 
+                if(context.debug_) 
                     parent_->OnInsertDebug(board, epl_board, notations[LSquare(pos)] + notations[LSquare(to)]);
-                #endif
+                
             }
 
             if(EPRpawn) {
@@ -220,9 +222,9 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
 
                 parent_->OnInsert(epr_board, context.depth_ + 1);
 
-                #ifdef _DEBUG 
+                if(context.debug_) 
                     parent_->OnInsertDebug(board, epr_board, notations[LSquare(pos)] + notations[LSquare(to)]);
-                #endif
+                
             }
         }
     }
@@ -251,12 +253,12 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             const Board nb4 = UpdatePawnPromotion(board, PieceType::QUEEN, pos, to);  
             parent_->OnInsert(nb4, context.depth_ + 1);          
              
-            #ifdef _DEBUG 
+            if(context.debug_) 
                 parent_->OnInsertDebug(board, nb1, notations[LSquare(pos)] + notations[LSquare(to)] + "n");
                 parent_->OnInsertDebug(board, nb2, notations[LSquare(pos)] + notations[LSquare(to)] + "b");
                 parent_->OnInsertDebug(board, nb3, notations[LSquare(pos)] + notations[LSquare(to)] + "r");
                 parent_->OnInsertDebug(board, nb4, notations[LSquare(pos)] + notations[LSquare(to)] + "q");       
-            #endif    
+                
         }
         while (Promote_Right)   { 
             const Bit pos = PopBit(Promote_Right);    const Square to = Black_Pawn_AttackRight(pos);
@@ -270,12 +272,12 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             const Board nb4 = UpdatePawnPromotion(board, PieceType::QUEEN, pos, to); 
             parent_->OnInsert(nb4, context.depth_ + 1);
             
-            #ifdef _DEBUG 
+            if(context.debug_) 
                 parent_->OnInsertDebug(board, nb1, notations[LSquare(pos)] + notations[LSquare(to)] + "n");
                 parent_->OnInsertDebug(board, nb2, notations[LSquare(pos)] + notations[LSquare(to)] + "b");
                 parent_->OnInsertDebug(board, nb3, notations[LSquare(pos)] + notations[LSquare(to)] + "r");
                 parent_->OnInsertDebug(board, nb4, notations[LSquare(pos)] + notations[LSquare(to)] + "q");       
-            #endif 
+             
         }
         while (Promote_Move)    { 
             const Bit pos = PopBit(Promote_Move);     const Square to = Black_Pawn_Forward(pos);
@@ -289,12 +291,12 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             const Board nb4 = UpdatePawnPromotion(board, PieceType::QUEEN, pos, to); 
             parent_->OnInsert(nb4, context.depth_ + 1);
             
-            #ifdef _DEBUG 
+            if(context.debug_) 
                 parent_->OnInsertDebug(board, nb1, notations[LSquare(pos)] + notations[LSquare(to)] + "n");
                 parent_->OnInsertDebug(board, nb2, notations[LSquare(pos)] + notations[LSquare(to)] + "b");
                 parent_->OnInsertDebug(board, nb3, notations[LSquare(pos)] + notations[LSquare(to)] + "r");
                 parent_->OnInsertDebug(board, nb4, notations[LSquare(pos)] + notations[LSquare(to)] + "q");        
-            #endif 
+             
         }
         while (NoPromote_Left)  { 
             const Bit pos = PopBit(NoPromote_Left);   const Square to = Black_Pawn_AttackLeft(pos);
@@ -302,9 +304,9 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             const Board nb = UpdatePawnCapture(board, pos, to);
             parent_->OnInsert(nb, context.depth_ + 1);
            
-            #ifdef _DEBUG 
+            if(context.debug_) 
                 parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + notations[LSquare(to)]);
-            #endif
+            
             
         }
         while (NoPromote_Right) { 
@@ -313,9 +315,9 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             const Board nb = UpdatePawnCapture(board, pos, to);
             parent_->OnInsert(nb, context.depth_ + 1);
             
-            #ifdef _DEBUG 
+            if(context.debug_) 
                 parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + notations[LSquare(to)]);
-            #endif
+            
         }
         while (NoPromote_Move)  { 
             const Bit pos = PopBit(NoPromote_Move);   const Square to = Black_Pawn_Forward(pos);
@@ -323,9 +325,9 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             const Board nb =UpdatePawnMove(board, pos, to);
             parent_->OnInsert(nb, context.depth_ + 1);
              
-            #ifdef _DEBUG 
+            if(context.debug_) 
                 parent_->OnInsertDebug(board, nb, notations[LSquare(pos)]+ notations[LSquare(to)]);
-            #endif            
+                        
             
         }
         while (pawn_forward_2)  { 
@@ -334,9 +336,9 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             const Board nb =UpdatePawnPush(board, pos, to);
             parent_->OnInsert(nb, context.depth_ + 1);
               
-            #ifdef _DEBUG 
+            if(context.debug_) 
                 parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + notations[LSquare(to)]);
-            #endif       
+                   
         }
     }
     else { 
@@ -346,9 +348,9 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             const Board nb =UpdatePawnCapture(board, pos, to);
             parent_->OnInsert(nb, context.depth_ + 1);
             
-            #ifdef _DEBUG 
+            if(context.debug_) 
                 parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + notations[LSquare(to)]);
-            #endif
+            
         }
         while (pawn_capture_right) { 
             const Bit pos = PopBit(pawn_capture_right); const Square to = Black_Pawn_AttackRight(pos);
@@ -356,9 +358,9 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             const Board nb =UpdatePawnCapture(board, pos, to);
             parent_->OnInsert(nb, context.depth_ + 1);
             
-            #ifdef _DEBUG 
+            if(context.debug_) 
                 parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + notations[LSquare(to)]);
-            #endif
+            
         }
         while (pawn_forward_1)     { 
             const Bit pos = PopBit(pawn_forward_1);     const Square to = Black_Pawn_Forward(pos);
@@ -366,9 +368,9 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             const Board nb = UpdatePawnMove(board, pos, to);
             parent_->OnInsert(nb, context.depth_ + 1);
         
-            #ifdef _DEBUG 
+            if(context.debug_) 
                 parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + notations[LSquare(to)]);
-            #endif 
+             
         }
         while (pawn_forward_2)     { 
             const Bit pos = PopBit(pawn_forward_2);     const Square to = Black_Pawn_Forward2(pos);
@@ -376,9 +378,9 @@ void BlackMoveGenerator::GetPawnMoves(const Board & board, MGSearchContextualObj
             const Board nb = UpdatePawnPush(board, pos, to);
             parent_->OnInsert(nb, context.depth_ + 1);
             
-            #ifdef _DEBUG 
+            if(context.debug_) 
                 parent_->OnInsertDebug(board, nb, notations[LSquare(pos)] + notations[LSquare(to)]);
-            #endif
+            
         }
     }    
 }
@@ -397,9 +399,9 @@ void BlackMoveGenerator::GetKnightMoves(const Board & board, MGSearchContextualO
             const Board nb = UpdateKnightMove(board, x, to);
             parent_->OnInsert(nb, context.depth_ + 1);
            
-            #ifdef _DEBUG 
+            if(context.debug_) 
                 parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)]);
-            #endif    
+                
         }
     } 
 }
@@ -426,9 +428,9 @@ void BlackMoveGenerator::GetBishopMoves(const Board & board, MGSearchContextualO
                 const Board nb = UpdateQueenMove(board, x, to);
                 parent_->OnInsert(nb, context.depth_ + 1);               
 
-                #ifdef _DEBUG 
+                if(context.debug_) 
                     parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)]);
-                #endif  
+                  
             }
         }
         else {
@@ -440,9 +442,9 @@ void BlackMoveGenerator::GetBishopMoves(const Board & board, MGSearchContextualO
                 const Board nb = UpdateBishopMove(board, x, to);
                 parent_->OnInsert(nb, context.depth_ + 1);                
 
-                #ifdef _DEBUG 
+                if(context.debug_) 
                     parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)]);
-                #endif  
+                  
             }          
         }     
     } 
@@ -460,9 +462,9 @@ void BlackMoveGenerator::GetBishopMoves(const Board & board, MGSearchContextualO
             const Board nb = UpdateBishopMove(board, x, to);
             parent_->OnInsert(nb, context.depth_ + 1);            
 
-            #ifdef _DEBUG 
+            if(context.debug_) 
                 parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)]);
-            #endif  
+              
         }
     }  
 }
@@ -476,7 +478,7 @@ void BlackMoveGenerator::GetRookMoves(const Board & board, MGSearchContextualObj
 
     LoopBits(pinned_rooks) {
         Square x = LSquare(pinned_rooks);
-        BBoard moves = Lookup::Rook(x, board.occ_) & context.moveable_squares_ & context.rook_pins_; 
+        BBoard moves = Lookup::Rook(x, board.occ_) & context.moveable_squares_ & context.rook_pins_;     
         
         while(moves) {
             const Square to = PopBit(moves);
@@ -484,17 +486,17 @@ void BlackMoveGenerator::GetRookMoves(const Board & board, MGSearchContextualObj
                 const Board nb = UpdateQueenMove(board, x, to);
                 parent_->OnInsert(nb, context.depth_ + 1); 
                  
-                #ifdef _DEBUG 
+                if(context.debug_) 
                     parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)]);
-                #endif    
+                    
             }
             else {
                 const Board nb = UpdateRookMove(board, x, to);
                 parent_->OnInsert(nb, context.depth_ + 1); 
 
-                #ifdef _DEBUG 
+                if(context.debug_) 
                     parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)]);
-                #endif       
+                       
             }
         }
     }
@@ -504,15 +506,15 @@ void BlackMoveGenerator::GetRookMoves(const Board & board, MGSearchContextualObj
 
         BBoard moves = Lookup::Rook(x, board.occ_) & context.moveable_squares_; 
 
-        while(moves) {            
+        while(moves) {                     
             const Square to = PopBit(moves); 
 
             const Board nb = UpdateRookMove(board, x, to);
             parent_->OnInsert(nb, context.depth_ + 1);            
 
-            #ifdef _DEBUG 
+            if(context.debug_) 
                 parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)]);
-            #endif            
+                        
         }
     } 
 }
@@ -520,9 +522,10 @@ void BlackMoveGenerator::GetRookMoves(const Board & board, MGSearchContextualObj
 void BlackMoveGenerator::GetQueenMoves(const Board & board, MGSearchContextualObject & context) {
     BBoard queens = board.black_queen_ & ~(context.rook_pins_ | context.bishop_pins_); 
 
+    
     LoopBits(queens) {
         Square x = LSquare(queens);
-        BBoard moves = Lookup::Queen(x, board.occ_) & context.moveable_squares_; 
+        BBoard moves = Lookup::Queen(x, board.occ_) & context.moveable_squares_;         
 
         while(moves) {            
             Square to = PopBit(moves);           
@@ -530,9 +533,9 @@ void BlackMoveGenerator::GetQueenMoves(const Board & board, MGSearchContextualOb
             const Board nb = UpdateQueenMove(board, x, to);
             parent_->OnInsert(nb, context.depth_ + 1);
             
-            #ifdef _DEBUG 
+            if(context.debug_) 
                 parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)]);
-            #endif 
+             
         } 
     } 
 }
@@ -547,9 +550,9 @@ void BlackMoveGenerator::GetKingMoves(const Board & board, MGSearchContextualObj
         const Board nb = UpdateKingMove(board, x, to);
         parent_->OnInsert(nb, context.depth_ + 1);
       
-        #ifdef _DEBUG 
+        if(context.debug_) 
             parent_->OnInsertDebug(board, nb, notations[x] + notations[LSquare(to)]);
-        #endif 
+         
     }
 }
 
@@ -561,9 +564,9 @@ void BlackMoveGenerator::GetCastlingMoves(const Board& board, MGSearchContextual
         const Board nb = UpdateCastle00(board);
         parent_->OnInsert(nb, context.depth_ + 1);      
 
-        #ifdef _DEBUG 
+        if(context.debug_) 
             parent_->OnInsertDebug(board, nb, "e8g8");
-        #endif
+        
     }
 
     if( board.black_ooo_ && 
@@ -573,8 +576,8 @@ void BlackMoveGenerator::GetCastlingMoves(const Board& board, MGSearchContextual
         parent_->OnInsert(nb, context.depth_ + 1);
       
 
-         #ifdef _DEBUG 
+         if(context.debug_) 
             parent_->OnInsertDebug(board, nb, "e8c8");
-        #endif
+        
     }
 }

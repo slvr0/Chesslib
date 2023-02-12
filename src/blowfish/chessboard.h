@@ -48,8 +48,8 @@ public :
     bool black_oo_      = true;
     bool black_ooo_     = true;
     int enp_            = -1;
-    int half_move_      = 0; //increases each players move , resets on pawn move
-    int full_move_      = 1; //increases when both players make move, i.e. on black turn
+    int half_move_      = 0; // increases each players move , resets on pawn move
+    int full_move_      = 1; // increases when both players make move, i.e. on black turn
 
 
     Board() {
@@ -86,7 +86,5 @@ public :
     {
 
     }
-
-    //white_acts, white_oo, white_ooo, black_oo, black_ooo, enp
 };
 

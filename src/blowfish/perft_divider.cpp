@@ -65,8 +65,8 @@ std::map<std::string, BoardNode*> PerftDividerFactory::Enumerate(const Board & b
 }
 
 void PerftDividerFactory::Perft(const Board & board, const int & depth) {
-    if(board.white_acts_) wmgen_.ParseLegalMoves(board, depth);
-    else bmgen_.ParseLegalMoves(board, depth);
+    if(board.white_acts_) wmgen_.ParseLegalMoves(board, depth, true);
+    else bmgen_.ParseLegalMoves(board, depth, true);
 }
 
 //promotion tags are 5 chars 

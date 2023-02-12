@@ -2,14 +2,15 @@
 
 #include "mc_functions.h"
 
-float MCSimulator::SimulateGame(const Board &board)
+using namespace MCTS;
+
+GameResult MCSimulator::SimulateGame(const Board &board)
 {
     Board           select = board;
-    MCTS::RMGResult res;
-    float           score = 0.0f;
+    MCTS::RMGResult res; 
 
     //these should be config params later
-    const int       random_selection_max = 25; // random number range, what happens if this is set low? certain moves like queen/castle will never be choosen
+    const int       random_selection_max = 30; // random number range, what happens if this is set low? certain moves like queen/castle will never be choosen
     const int       max_full_ply = 50;         // this is full move cycles (1 ply = 1 move white and 1 move black)
     const int       max_half_move = 50;        // without pushing a pawn
     
@@ -17,8 +18,8 @@ float MCSimulator::SimulateGame(const Board &board)
     {
         //https://en.wiktionary.org/wiki/fifty-move_rule#:~:text=Proper%20noun&text=(chess)%20A%20rule%20in%20professional,invoked%20during%20an%20inconclusive%20endgame.
         if(!HasMatingMaterial(select) || (select.half_move_ >= max_half_move)) {
-            score = 0.5f;
-            break;
+            std::cout << BoardAsFen(board) << std::endl;            
+            return GameResult::Draw;
         }
 
         int random_select = rand() % random_selection_max;  
@@ -27,18 +28,15 @@ float MCSimulator::SimulateGame(const Board &board)
                                    brollout_mgen_.ParseLegalMoves(select, random_select);
 
         if(res.terminal_) {
-            if(res.nocheck_) score  = 0.5f;        
-            else score              = board.white_acts_ ^ select.white_acts_;                 
-            break;
+            if(res.nocheck_) { 
+                return GameResult::Draw;                    
+            } else { 
+                return select.white_acts_ ? GameResult::BlackWin : GameResult::WhiteWin;
+            }             
         }
 
         select = res.selected_;       
     }
 
-    //debugging 
-    if(score == 1) {
-        ++n_decisive;
-    }
-
-    return score;
+    return GameResult::Undecisive;
 }

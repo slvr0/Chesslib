@@ -22,7 +22,7 @@ public :
 
     bool Ponder();
 
-    std::future<bool> SpawnThread() {     
+    std::future<bool> Start() {     
         return std::async(std::launch::async, [this] {return Ponder();});
     }
 
@@ -31,11 +31,11 @@ private:
     MCSimulator         simulator_;
     MCMGenExpander      expander_;
     size_t              entries_ = 0;
-    size_t              max_entries_ = 1e5;
-
+    
     double delta_expansion = 0;
     double delta_nodecheckin = 0;
     double delta_simul = 0;
     double delta_checkout = 0;
+    double num_ignores = 0;
 };
 }

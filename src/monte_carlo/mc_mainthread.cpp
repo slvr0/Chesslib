@@ -1,4 +1,5 @@
 #include "mc_mainthread.h"
+#include "mc_config.h"
 
 // https://ai.stackexchange.com/questions/2637/what-should-we-do-when-the-selection-step-selects-a-terminal-state
 // states behaviour in case of new expanded state is terminal 
@@ -15,63 +16,71 @@ bool MCExpandSimulateThread::Ponder() {
 
     int nodelevel_searches_ = 0;
     int expansions = 0;
-
-    Node* nptr;
+    int maxdepth = 0;
+    int entries = 0;
+    const int nmax_searches = MCTS::MCConfigurationParams::nmax_threadsearches;
+    
+    Node* current;
 
     int iter = 0;
-    while(entries_++ < max_entries_) {  
-                
-        nptr = nodetree_->Reset();
 
-        Timer t0;
-        int expand_depth = 0;
-        while(!nptr->IsLeaf()) {
-            nptr = nptr->GetUpperConfidenceBranch();  
-            ++nodelevel_searches_;                 
-        }
-        {
-            const std::lock_guard<std::mutex> lock(expsim_lock);  
-            if(!nodetree_->RequestNodeCheckIn(nptr)) {
-                continue;
-            }
-        }
-        
-        ++expansions;
-        delta_expansion += t0.elapsed();
+    while(entries < nmax_searches) {
+        current = nodetree_->Reset();
+        while(!current->IsLeaf()) current = current->GetBestPNode();
 
-        //attempt to acquire the nodelock
-        //const std::lock_guard<std::mutex> lock(expsim_lock);            
+/*         ++iter;
+        print(current->Debug());
+        if(iter == 20) exit(1); */
 
-        Timer t3;
-        if(nptr->visits_ > 0) {             
-            
-            {
-                const std::lock_guard<std::mutex> lock(expsim_lock);  
-                expander_.Expand(nptr);
-                entries_ += nptr->branches_.size();
+        if(current->N_ > 0) {
+            expander_.Expand(current);
+            entries += current->edges_.size();
+            if(current->IsLeaf()) { current->MakeTerminal(TerminalState::Terminal); continue;} // how do set which terminal state we're in, terminal should influence policy somehow
+            current = current->edges_[0];           
+        } 
 
-                nodetree_->RequestNodeCheckOut(nptr);
+        GameResult result = simulator_.SimulateGame(current->board_);
 
-                nptr = nptr->branches_[0]; //wops assert terminal first!  
-                if(!nodetree_->RequestNodeCheckIn(nptr)) {
-                    continue;   
-                }
-            }
-
-        }
-
-        const float res = simulator_.SimulateGame(nptr->board_);
-        delta_simul += t3.elapsed();
-
-        Timer t4;
-        { //we lock, backpropagate result and give back the node           
-            const std::lock_guard<std::mutex> lock(expsim_lock);
-            nptr->Backpropagate(res);   
-            nodetree_->RequestNodeCheckOut(nptr);  
-        }
-        delta_checkout += t4.elapsed();
+        current->Backpropagate(result);  
+               
+       
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+/*     
+    std::cout << "------THREAD INFO------" << std::endl;
+    std::cout << "Entries : " << entries_ << std::endl;
     std::cout << "Node level searches : " << nodelevel_searches_ << std::endl;
     std::cout << "Expansions (either simulation or grow tree) : " << expansions << std::endl;
     std::cout << "Average expansion depth : " << nodelevel_searches_ / expansions << std::endl;
@@ -80,5 +89,111 @@ bool MCExpandSimulateThread::Ponder() {
     std::cout << "expand/simul :  " << delta_simul << std::endl;
     std::cout << "checkout : " << delta_checkout << std::endl;
     std::cout << "number of decisive games : " << simulator_.GetDecisiveGames() << std::endl;
-    
+    std::cout << "number of times trying to access occupied node : " << num_ignores << std::endl;
+    std::cout << "max search depth : " << maxdepth << std::endl;
+    std::cout << "Root visits : "  << nodetree_->Reset()->visits_ << std::endl;
+    std::cout << "------------------------" << std::endl;
+  
 }
+
+   */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 
+
+    Node* nptr;
+
+    int iter = 0;
+    while(entries_++ < nmax_searches) {  
+                
+        nptr = nodetree_->Reset();
+
+        Timer t0;
+        int expand_depth = 0;
+        {
+            const std::lock_guard<std::mutex> lock(expsim_lock); 
+            while(!nptr->IsLeaf()) {
+                nptr = nptr->GetUpperConfidenceBranch();  
+                ++nodelevel_searches_;  
+                ++expand_depth;               
+            }
+        }
+
+        {
+            const std::lock_guard<std::mutex> lock(expsim_lock);  
+            if(!nodetree_->RequestNodeCheckIn(nptr)) {
+                ++num_ignores;
+                continue;
+            }
+        }
+        
+        if(expand_depth > maxdepth) maxdepth = expand_depth;
+
+        ++expansions;
+        delta_expansion += t0.elapsed();
+
+        //attempt to acquire the nodelock
+        //const std::lock_guard<std::mutex> lock(expsim_lock);            
+
+        Timer t3;
+        if(nptr->N_ > 0) { 
+            {
+                const std::lock_guard<std::mutex> lock(expsim_lock);  
+                expander_.Expand(nptr);
+                entries_ += nptr->branches_.size();
+
+                nodetree_->RequestNodeCheckOut(nptr);
+
+                if(nptr->IsLeaf()) continue;
+                else nptr = nptr->branches_[0]; //wops assert terminal first!  
+
+                if(!nodetree_->RequestNodeCheckIn(nptr)) {
+                    ++num_ignores;
+                    continue;   
+                }
+            }
+
+        } */

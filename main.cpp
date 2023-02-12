@@ -18,8 +18,58 @@
 #include "src/monte_carlo/mc_mainthread.h"
 #include "src/monte_carlo/mc_thread_factory.h"
 #include "src/monte_carlo/mc_simulator.h"
+#include "src/monte_carlo/mc_config.h"
 
 #define CREATE(string) ChessboardGenerator::CreateFromFen(string)
+
+void EvaluateMovesInPosition(std::string position) {        
+    PerftDividerFactory divider;
+    Board b = CREATE(position);
+    auto res = divider.Enumerate(b,1);
+    for(const auto r : res) {
+        print(r.first);
+    }
+}
+
+void PerformBenchmarkPerft() {
+    std::string startpos_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    std::string kiwipep_fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+    std::string promotion_fen = "n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1";
+
+    auto startposition  = CREATE(startpos_fen);
+    auto kiwipep        = CREATE(kiwipep_fen);
+    auto promoboard     = CREATE(promotion_fen);
+    
+    ChesslibInterface chesslib_io;
+
+    {
+        Timer t0;
+        const int d = 6;
+        //benchmarking
+        std::vector<unsigned long long> res = chesslib_io.InitSearch(startposition, SearchType::PERFT, d);
+
+        double t_delta = t0.elapsed();
+        std::cout << "search time : " << t_delta << std::endl;
+
+        unsigned long long total = 0;
+        for(const auto & dres : res) {
+            total += dres;
+            print(dres);
+        }
+
+        std::cout << "Total nodes : " << total << " NPS : " << (unsigned long long) total/t_delta << std::endl;
+    }
+
+    {
+        const int maxd = 6;
+        MGenThreadManager mg_thread_manager;
+        Timer t0;
+        unsigned long long result = mg_thread_manager.Enumerate(startposition, maxd);
+        double delta_t = t0.elapsed();
+
+        std::cout << "Total nodes (threaded) : " << result << " NPS : " << (unsigned long long) result/delta_t << std::endl;
+    }     
+}
 
 int main()
 {
@@ -30,54 +80,24 @@ int main()
 
     ChesslibInterface chesslib_io;
 
-    auto startposition = CREATE(startpos_fen);
-    auto kiwipep = CREATE(kiwipep_fen);
-    auto promoboard = CREATE(promotion_fen);
-    /*
-        {
-            Timer t0;
-            const int d = 6;
-            //benchmarking
-            std::vector<unsigned long long> res = chesslib_io.InitSearch(startposition, SearchType::PERFT, d);
+    //three typical evaluating positions in chess engine theory
+    auto startposition  = CREATE(startpos_fen);
+    auto kiwipep        = CREATE(kiwipep_fen);
+    auto promoboard     = CREATE(promotion_fen);
 
-            double t_delta = t0.elapsed();
-            std::cout << "search time : " << t_delta << std::endl;
+    Timer t0;
 
-            unsigned long long total = 0;
-            for(const auto & dres : res) {
-                total += dres;
-                print(dres);
-            }
+    MCTS::NodeTreeStructure nodetree(kiwipep);
+    nodetree.CreateBranches();
 
-            std::cout << "Total nodes : " << total << " NPS : " << (unsigned long long) total/t_delta << std::endl;
-        }
-
-        {
-            const int maxd = 6;
-            MGenThreadManager mg_thread_manager;
-            Timer t0;
-            unsigned long long result = mg_thread_manager.Enumerate(startposition, maxd);
-            double delta_t = t0.elapsed();
-
-            std::cout << "Total nodes (threaded) : " << result << " NPS : " << (unsigned long long) result/delta_t << std::endl;
-        }
-     */
-
+    MCTS::MCThreadFactory   mc_thread_fac(&nodetree);
     
-        {
-            Timer t0;
-            //std::unique_ptr<Node> node = std::make_unique<Node> (startposition);
 
-            NodeTreeStructure nodetree(startposition);
+/*     print( MCTS::MCConfigurationParams::exploration_factor * std::sqrt((std::log(1) / 1))); */
+   
 
-            MCTS::MCThreadFactory mc_thread_fac(&nodetree);
 
-            size_t nthreads = 6;
-
-            mc_thread_fac.SpawnThreads(nthreads);
-
-        }
-         
+    mc_thread_fac.SpawnThreads(MCTS::MCConfigurationParams::number_of_mcthreads);
 
     // non threaded test
 /* 
@@ -92,16 +112,9 @@ int main()
     }
  */
 
-/* 
-    Timer t0;
-    MCSimulator simulator;
-    for(int i = 0 ; i < 1e4; ++i) {
-        
-        simulator.SimulateGame(startposition);
-    }
+    //EvaluateMovesInPosition("r4r2/8/3p2pb/2pP3n/p1K5/PpP1N2p/BP1Q3P/2R4k b - - 18 35");;
 
-    print(t0.elapsed());
-
- */
+ 
+ 
     return 0;
 }

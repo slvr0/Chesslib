@@ -7,6 +7,12 @@
 
 //creates and manages the threads for insertion/expansion and simulation/backpropagation.
 
+
+//another idea is to Start a thread on each branch and they return the root score , 
+//this would solve alot of concurrency issues (we'd split the tree completly)
+//the more i think about this idea i realize its superior
+
+
 namespace MCTS {
 class MCThreadFactory {
 public:  
@@ -19,21 +25,15 @@ public:
     bool SpawnThreads(const size_t& nthreads) {
         for(int i = 0 ; i < nthreads ; ++i ) {
             MCExpandSimulateThread* main_thread = new MCExpandSimulateThread(nodetree_);
-            thread_evals_.push_back(main_thread->SpawnThread());
+            thread_evals_.push_back(main_thread->Start());
             main_threads_.push_back(main_thread);
+        }    
+
+        for(auto & future_thread: thread_evals_) {
+            future_thread.wait();
         }
+        nodetree_->Evaluate();   
     }
-/* 
-    bool CreateExpandSimulateThread()
-            std::vector<std::future<unsigned long long>>        thread_res;
-        std::vector<std::unique_ptr<MGThreadedEnumerator>>  mg_threads_;
-        
-        for(int i = 0 ; i < branches.size(); ++i) {
-            MGThreadedEnumerator* mg_thread = new MGThreadedEnumerator();
-            const Board board = branches[i];
-            thread_res.push_back(mg_thread->SpawnThread(board, maxdepth));
-            mg_threads_.push_back(std::unique_ptr<MGThreadedEnumerator> (std::move(mg_thread)));
-        } */
 
 private:
     std::vector<MCExpandSimulateThread*> main_threads_;

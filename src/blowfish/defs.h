@@ -10,7 +10,7 @@
 #include <immintrin.h>
 
 
-#define ENABLEDBG 0
+#define ENABLEDBG 1
 
 #if ENABLEDBG
     #define _DEBUG

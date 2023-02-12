@@ -168,7 +168,9 @@ FORCEINL Board UpdateKnightMove(const Board & board, const int & from, const BBo
         if(is_capture) {
             nb.black_ &= rem; nb.black_pawn_ &= rem; nb.black_knight_ &= rem; nb.black_bishop_ &= rem; nb.black_rook_ &= rem; nb.black_queen_ &= rem;
             UpdateBlackCastleStatusCheck(nb, to);
+            nb.half_move_ = 0;
         }
+        
     }
     else {
         nb.black_knight_ ^= move;
@@ -177,7 +179,7 @@ FORCEINL Board UpdateKnightMove(const Board & board, const int & from, const BBo
 
         if(is_capture) {
             nb.white_ &= rem; nb.white_pawn_ &= rem; nb.white_knight_ &= rem; nb.white_bishop_ &= rem; nb.white_rook_ &= rem; nb.white_queen_ &= rem;
-            UpdateWhiteCastleStatusCheck(nb, to);            
+            UpdateWhiteCastleStatusCheck(nb, to);          
         }
     }
 
@@ -187,7 +189,9 @@ FORCEINL Board UpdateKnightMove(const Board & board, const int & from, const BBo
 
     nb.white_acts_ = !nb.white_acts_;
 
-    ++nb.half_move_;
+    if(is_capture) nb.half_move_ = 0;
+    else ++nb.half_move_;
+    
 
     return nb; 
 }
@@ -226,7 +230,8 @@ FORCEINL Board UpdateBishopMove(const Board & board, const int & from, const BBo
 
     nb.white_acts_ = !nb.white_acts_;
 
-    ++nb.half_move_;
+    if(is_capture) nb.half_move_ = 0;
+    else ++nb.half_move_;
 
     return nb; 
 }
@@ -273,7 +278,8 @@ FORCEINL Board UpdateRookMove(const Board & board, const int & from, const BBoar
 
     nb.white_acts_ = !nb.white_acts_;
 
-    ++nb.half_move_;
+    if(is_capture) nb.half_move_ = 0;
+    else ++nb.half_move_;
 
     return nb;
 }
@@ -312,7 +318,8 @@ FORCEINL Board UpdateQueenMove(const Board & board, const int & from, const BBoa
 
     nb.white_acts_ = !nb.white_acts_;
 
-    ++nb.half_move_;
+    if(is_capture) nb.half_move_ = 0;
+    else ++nb.half_move_;
 
     return nb; 
 }
@@ -358,7 +365,8 @@ FORCEINL Board UpdateKingMove(const Board & board, const int & from, const BBoar
 
     nb.white_acts_ = !nb.white_acts_; 
 
-    ++nb.half_move_;  
+    if(is_capture) nb.half_move_ = 0;
+    else ++nb.half_move_; 
 
     return nb; 
 }

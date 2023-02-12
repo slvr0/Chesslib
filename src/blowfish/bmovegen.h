@@ -25,7 +25,7 @@ public :
 
     MGSearchContextualObject RefreshMetaDataInternal(const Board& board);   
 
-    bool ParseLegalMoves(const Board& board, const int& depth);  
+    bool ParseLegalMoves(const Board& board, const int& depth, const bool& debug = false);  
 
     double metadata_searchtime = 0; //remove later 
 

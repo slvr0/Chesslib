@@ -18,6 +18,8 @@ struct MGSearchContextualObject {
     BBoard  kingmoves_          = { 0x0 };
     BBoard  ekingmoves_         = { 0x0 };
     BBoard  check_status_       = { 0x0 };
-    BBoard  nocheck_            = { 0x0 }; 
+    bool    nocheck_            = false; 
+
+    bool    debug_              = false;
 
 };

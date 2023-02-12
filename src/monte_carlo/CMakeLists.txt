@@ -10,7 +10,7 @@ add_library(mcts
     mc_node_structure.h
     mc_node_structure.cpp
 
-    config.h
+    mc_config.h
 
     mc_thread_factory.h
     mc_thread_factory.cpp
