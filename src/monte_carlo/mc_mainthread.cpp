@@ -25,55 +25,37 @@ bool MCExpandSimulateThread::Ponder() {
     int iter = 0;
 
     while(entries < nmax_searches) {
-        current = nodetree_->Reset();
-        while(!current->IsLeaf()) current = current->GetBestPNode();
-
-/*         ++iter;
-        print(current->Debug());
-        if(iter == 20) exit(1); */
+        current = nodetree_->Reset();     
+        
+        while(!current->IsLeaf()) {
+            current = current->GetBestPNode();
+        }
 
         if(current->N_ > 0) {
             expander_.Expand(current);
-            entries += current->edges_.size();
-            if(current->IsLeaf()) { current->MakeTerminal(TerminalState::Terminal); continue;} // how do set which terminal state we're in, terminal should influence policy somehow
-            current = current->edges_[0];           
+            entries += current->edges_.size();   
+            if(!current->IsLeaf()) {
+              current = current->edges_[0];  
+            }      
         } 
+        else {
+            simulator_.SetNodeMetaData(current);
+            if(current->GetTerminal() == MCTS::TerminalState::Terminal) {
+                current->PropagateTerminal(MCTS::MCConfigurationParams::terminal_loss, 0, 0);
+            } else if (current->GetTerminal() == MCTS::TerminalState::StaleMateRule2) {
+                current->PropagateTerminal(0, MCTS::MCConfigurationParams::terminal_loss, 0);
+            }
+        }
 
-        GameResult result = simulator_.SimulateGame(current->board_);
-
-        current->Backpropagate(result);  
+        if(current->GetTerminal() == MCTS::TerminalState::NonTerminal) {
+            GameResult result = simulator_.SimulateGame(current->board_);
+            current->Backpropagate(result);  
+        }
                
        
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    nodetree_->Reset()->PrintChildPolicies();
 }
 
 

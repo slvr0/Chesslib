@@ -2,114 +2,104 @@
 
 using namespace MCTS;
 
-MGSearchContextualObject WhiteRolloutMoveGenerator::RefreshMetaDataInternal(const Board &board)
-{
+MGSearchContextualObject WhiteRolloutMoveGenerator::RefreshMetaDataInternal(const Board& board) {
     MGSearchContextualObject context;
-
-    context.kingmoves_ = Lookup::King(LSquare(board.white_king_));
+    
+    context.kingmoves_ =  Lookup::King(LSquare(board.white_king_)); 
     context.ekingmoves_ = Lookup::King(LSquare(board.black_king_));
 
-    // Pawn checks
+    //Pawn checks
     {
         const BBoard pl = Black_Pawn_AttackLeft(board.black_pawn_ & Pawns_NotRight());
         const BBoard pr = Black_Pawn_AttackRight(board.black_pawn_ & Pawns_NotLeft());
 
         context.kingban_ |= (pl | pr);
 
-        if (pl & board.white_king_)
-            context.check_status_ = White_Pawn_AttackRight(board.white_king_);
-        else if (pr & board.white_king_)
-            context.check_status_ = White_Pawn_AttackLeft(board.white_king_);
-        else
-            context.check_status_ = 0xffffffffffffffffull;
+        if (pl & board.white_king_) context.check_status_ = White_Pawn_AttackRight(board.white_king_);
+        else if (pr & board.white_king_) context.check_status_ = White_Pawn_AttackLeft(board.white_king_);
+        else context.check_status_ = 0xffffffffffffffffull;
     }
 
-    // Knight checks
+    //Knight checks
     {
         BBoard knightcheck = Lookup::Knight(LSquare(board.white_king_)) & board.black_knight_;
-        if (knightcheck)
-            context.check_status_ = knightcheck;
+        if (knightcheck) context.check_status_ = knightcheck;
     }
 
     context.checkmask_ = context.check_status_;
 
-    const BBoard king = board.white_king_;
-    const BBoard eking = board.black_king_;
+    const BBoard king   = board.white_king_;
+    const BBoard eking  = board.black_king_;
     const BBoard kingsq = LSquare(king);
 
-    // evaluate pinned pieces and checks from sliders
+    //evaluate pinned pieces and checks from sliders
     {
-        context.rook_pins_ = 0;
+        context.rook_pins_ = 0; 
         context.bishop_pins_ = 0;
-
+        
         if (Chess_Lookup::RookMask[kingsq] & (board.black_rook_ | board.black_queen_))
         {
             BBoard atkHV = Lookup::Rook(kingsq, board.occ_) & (board.black_rook_ | board.black_queen_);
-            LoopBits(atkHV)
-            {
+            LoopBits(atkHV) {
                 Square sq = LSquare(atkHV);
                 CheckBySlider(kingsq, sq, context);
             }
 
             BBoard pinnersHV = Lookup::Rook_Xray(kingsq, board.occ_) & (board.black_rook_ | board.black_queen_);
             LoopBits(pinnersHV)
-            {
+            {                
                 RegisterPinHorisontalVertical(kingsq, LSquare(pinnersHV), board, context);
             }
         }
-        if (Chess_Lookup::BishopMask[kingsq] & (board.black_bishop_ | board.black_queen_))
-        {
+        if (Chess_Lookup::BishopMask[kingsq] & (board.black_bishop_ | board.black_queen_)) {
             BBoard atkD12 = Lookup::Bishop(kingsq, board.occ_) & (board.black_bishop_ | board.black_queen_);
-            LoopBits(atkD12)
-            {
+            LoopBits(atkD12) {
                 Square sq = LSquare(atkD12);
                 CheckBySlider(kingsq, sq, context);
             }
 
             BBoard pinnersD12 = Lookup::Bishop_Xray(kingsq, board.occ_) & (board.black_bishop_ | board.black_queen_);
             LoopBits(pinnersD12)
-            {
+            {               
                 RegisterPinDiagonal(kingsq, LSquare(pinnersD12), board, context);
             }
-        }
-
-        if (board.enp_ != -1)
-        {
+        } 
+      
+        if(board.enp_ != -1) {     
             context.enp_target_ = 1ULL << board.enp_; // enp_target == enp64
 
             const BBoard pawns = board.white_pawn_;
             const BBoard enemy_rook_queens = board.black_rook_ | board.black_queen_;
+          
 
-            // Special Horizontal1 https://lichess.org/editor?fen=8%2F8%2F8%2F1K1pP1q1%2F8%2F8%2F8%2F8+w+-+-+0+1
-            // Special Horizontal2 https://lichess.org/editor?fen=8%2F8%2F8%2F1K1pP1q1%2F8%2F8%2F8%2F8+w+-+-+0+1
+            //Special Horizontal1 https://lichess.org/editor?fen=8%2F8%2F8%2F1K1pP1q1%2F8%2F8%2F8%2F8+w+-+-+0+1
+            //Special Horizontal2 https://lichess.org/editor?fen=8%2F8%2F8%2F1K1pP1q1%2F8%2F8%2F8%2F8+w+-+-+0+1
 
-            // King is on EP rank and enemy HV walker is on same rank
+            //King is on EP rank and enemy HV walker is on same rank
 
-            // Remove enemy EP and own EP Candidate from OCC and check if Horizontal path to enemy Slider is open
-            // Quick check: We have king - Enemy Slider - Own Pawn - and enemy EP on the same rank!
+            //Remove enemy EP and own EP Candidate from OCC and check if Horizontal path to enemy Slider is open
+            //Quick check: We have king - Enemy Slider - Own Pawn - and enemy EP on the same rank!
             if ((WhiteEPRank() & king) && (WhiteEPRank() & enemy_rook_queens) && (WhiteEPRank() & pawns))
             {
-                BBoard EPLpawn = pawns & Pawns_NotLeft() & (White_Pawn_InvertLeft(context.enp_target_));   // Pawn that can EPTake to the left - overflow will not matter because 'Notleft'
-                BBoard EPRpawn = pawns & Pawns_NotRight() & (White_Pawn_InvertRight(context.enp_target_)); // Pawn that can EPTake to the right - overflow will not matter because 'NotRight'
+                BBoard EPLpawn = pawns & Pawns_NotLeft()  & (White_Pawn_InvertLeft(context.enp_target_)); //Pawn that can EPTake to the left - overflow will not matter because 'Notleft'
+                BBoard EPRpawn = pawns & Pawns_NotRight() & (White_Pawn_InvertRight(context.enp_target_));  //Pawn that can EPTake to the right - overflow will not matter because 'NotRight'
 
-                // invalidates EP from both angles
-                if (EPLpawn)
-                {
+                //invalidates EP from both angles
+                if (EPLpawn) {
                     BBoard AfterEPocc = board.occ_ & ~((context.enp_target_ >> 8) | EPLpawn);
-                    if ((Lookup::Rook(kingsq, AfterEPocc) & WhiteEPRank()) & enemy_rook_queens)
+                    if ((Lookup::Rook(kingsq, AfterEPocc) & WhiteEPRank()) & enemy_rook_queens) 
                         context.enp_target_ = 0x0;
                 }
-                if (EPRpawn)
-                {
-                    BBoard AfterEPocc = board.occ_ & ~((context.enp_target_ >> 8) | EPRpawn);
-                    if ((Lookup::Rook(kingsq, AfterEPocc) & WhiteEPRank()) & enemy_rook_queens)
+                if (EPRpawn) {
+                    BBoard AfterEPocc = board.occ_ & ~((context.enp_target_ >> 8) | EPRpawn);                    
+                    if ((Lookup::Rook(kingsq, AfterEPocc) & WhiteEPRank()) & enemy_rook_queens) 
                         context.enp_target_ = 0x0;
-                }
-            }
+                }  
+            }                     
         }
-    }
-
-    {
+    } 
+       
+    {        
         BBoard knights = board.black_knight_;
         LoopBits(knights)
         {
@@ -122,7 +112,7 @@ MGSearchContextualObject WhiteRolloutMoveGenerator::RefreshMetaDataInternal(cons
         BBoard bishops = board.black_bishop_ | board.black_queen_;
         LoopBits(bishops)
         {
-            const Square sq = LSquare(bishops);
+            const Square sq = LSquare(bishops);                
             BBoard atk = Lookup::Bishop(sq, board.occ_);
             context.kingban_ |= atk;
         }
@@ -145,17 +135,19 @@ MGSearchContextualObject WhiteRolloutMoveGenerator::RefreshMetaDataInternal(cons
     return context;
 }
 
-RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const int &select_id, MGSearchContextualObject* rerun)
+RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const int &select_id, MGSearchContextualObject *rerun)
 {
     MGSearchContextualObject context;
-    if(rerun) { //incase no option was choosen, reruns with previous context info and picks first move
+    if (rerun)
+    {
         context = *rerun;
-        delete(rerun);
+        delete (rerun);
     }
-    else {
+    else
+    {
         context = RefreshMetaDataInternal(board);
     }
-     
+
     context.enemy_or_void_ = ~board.white_;
     context.nocheck_ = (context.checkmask_ == 0xffffffffffffffffull);
     context.moveable_squares_ = context.enemy_or_void_ & context.checkmask_;
@@ -165,7 +157,6 @@ RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const i
     { // king
         Square x = LSquare(board.white_king_);
         BBoard moves = Lookup::King(x) & ~(context.kingban_ | board.white_);
-
         while (moves)
         {
             Square to = PopBit(moves);
@@ -174,10 +165,10 @@ RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const i
                 return MCTS::RMGResult(false, context.nocheck_, UpdateKingMove(board, x, to));
             }
         }
-    } // eof king
-
+    }
     if(context.checkmask_) {
-        { // pawns
+        {
+            // pawns
             const BBoard pawns_lr = board.white_pawn_ & ~context.rook_pins_;
             const BBoard pawns_hv = board.white_pawn_ & ~context.bishop_pins_;
 
@@ -213,6 +204,7 @@ RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const i
                     {
                         const Bit pos = PopBit(EPLpawn);
                         const Square to = White_Pawn_AttackLeft(pos);
+
                         if (select_increment(select_id, N++))
                         {
                             return MCTS::RMGResult(false, context.nocheck_, UpdatePawnEnpassaint(board, pos, to, context.enp_target_ >> 8));
@@ -223,6 +215,7 @@ RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const i
                     {
                         const Bit pos = PopBit(EPRpawn);
                         const Square to = White_Pawn_AttackRight(pos);
+
                         if (select_increment(select_id, N++))
                         {
                             return MCTS::RMGResult(false, context.nocheck_, UpdatePawnEnpassaint(board, pos, to, context.enp_target_ >> 8));
@@ -246,7 +239,7 @@ RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const i
                 {
                     const Bit pos = PopBit(Promote_Left);
                     const Square to = White_Pawn_AttackLeft(pos);
-        
+
                     if (select_increment(select_id, N++))
                     {
                         return MCTS::RMGResult(false, context.nocheck_, UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to));
@@ -258,7 +251,7 @@ RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const i
                     if (select_increment(select_id, N++))
                     {
                         return MCTS::RMGResult(false, context.nocheck_, UpdatePawnPromotion(board, PieceType::ROOK, pos, to));
-                    }          
+                    }
                     if (select_increment(select_id, N++))
                     {
                         return MCTS::RMGResult(false, context.nocheck_, UpdatePawnPromotion(board, PieceType::QUEEN, pos, to));
@@ -268,19 +261,19 @@ RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const i
                 {
                     const Bit pos = PopBit(Promote_Right);
                     const Square to = White_Pawn_AttackRight(pos);
-        
+
                     if (select_increment(select_id, N++))
                     {
                         return MCTS::RMGResult(false, context.nocheck_, UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to));
-                    }           
+                    }
                     if (select_increment(select_id, N++))
                     {
                         return MCTS::RMGResult(false, context.nocheck_, UpdatePawnPromotion(board, PieceType::BISHOP, pos, to));
-                    }        
+                    }
                     if (select_increment(select_id, N++))
                     {
                         return MCTS::RMGResult(false, context.nocheck_, UpdatePawnPromotion(board, PieceType::ROOK, pos, to));
-                    }              
+                    }
                     if (select_increment(select_id, N++))
                     {
                         return MCTS::RMGResult(false, context.nocheck_, UpdatePawnPromotion(board, PieceType::QUEEN, pos, to));
@@ -290,11 +283,11 @@ RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const i
                 {
                     const Bit pos = PopBit(Promote_Move);
                     const Square to = White_Pawn_Forward(pos);
-        
+
                     if (select_increment(select_id, N++))
                     {
                         return MCTS::RMGResult(false, context.nocheck_, UpdatePawnPromotion(board, PieceType::KNIGHT, pos, to));
-                    }  
+                    }
                     if (select_increment(select_id, N++))
                     {
                         return MCTS::RMGResult(false, context.nocheck_, UpdatePawnPromotion(board, PieceType::BISHOP, pos, to));
@@ -383,15 +376,17 @@ RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const i
                         return MCTS::RMGResult(false, context.nocheck_, UpdatePawnPush(board, pos, to));
                     }
                 }
-            }
-        } // eof pawns
+            }   
+        }
+        { // knight
+            BBoard knights = board.white_knight_ & (~(context.rook_pins_ | context.bishop_pins_)); // a pinned knight can never move!
 
-        { // knights
-            BBoard knights = board.white_knight_ & (~(context.rook_pins_ | context.bishop_pins_));
             LoopBits(knights)
             {
                 Square x = LSquare(knights);
+
                 BBoard moves = Lookup::Knight(x) & context.moveable_squares_;
+
                 while (moves)
                 {
                     Square to = PopBit(moves);
@@ -401,25 +396,29 @@ RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const i
                     }
                 }
             }
+        }
 
-        } // eof knights
+        { //bishops
 
-        { // bishops
             BBoard queens = board.white_queen_;
+
             BBoard bishops = board.white_bishop_ & ~context.rook_pins_;
+
             BBoard pinned_bishops = (bishops | queens) & context.bishop_pins_;
             BBoard nopin_bishops = bishops & ~context.bishop_pins_;
 
             LoopBits(pinned_bishops)
             {
                 Square x = LSquare(pinned_bishops);
+
                 BBoard moves = Lookup::Bishop(x, board.occ_) & context.moveable_squares_ & context.bishop_pins_;
 
                 if ((1ULL << x) & queens)
                 {
+
                     while (moves)
                     {
-                        Square to = PopBit(moves);                   
+                        Square to = PopBit(moves);
                         if (select_increment(select_id, N++))
                         {
                             return MCTS::RMGResult(false, context.nocheck_, UpdateQueenMove(board, x, to));
@@ -428,9 +427,12 @@ RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const i
                 }
                 else
                 {
+
                     while (moves)
                     {
-                        Square to = PopBit(moves);                   
+
+                        Square to = PopBit(moves);
+
                         if (select_increment(select_id, N++))
                         {
                             return MCTS::RMGResult(false, context.nocheck_, UpdateBishopMove(board, x, to));
@@ -438,26 +440,30 @@ RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const i
                     }
                 }
             }
+
             LoopBits(nopin_bishops)
             {
+
                 Square x = LSquare(nopin_bishops);
+
                 BBoard moves = Lookup::Bishop(x, board.occ_) & context.moveable_squares_;
 
                 while (moves)
                 {
                     Square to = PopBit(moves);
+
                     if (select_increment(select_id, N++))
                     {
                         return MCTS::RMGResult(false, context.nocheck_, UpdateBishopMove(board, x, to));
                     }
                 }
             }
+        }
 
-        } // eof bishops
-
-        { // rooks
+        { //rooks
             BBoard queens = board.white_queen_;
             BBoard rooks = board.white_rook_ & ~context.bishop_pins_;
+
             BBoard pinned_rooks = (rooks | queens) & context.rook_pins_;
             BBoard nopin_rooks = rooks & ~context.rook_pins_;
 
@@ -470,7 +476,7 @@ RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const i
                 {
                     const Square to = PopBit(moves);
                     if (1ULL << x & board.white_queen_)
-                    {                   
+                    {
                         if (select_increment(select_id, N++))
                         {
                             return MCTS::RMGResult(false, context.nocheck_, UpdateQueenMove(board, x, to));
@@ -485,25 +491,28 @@ RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const i
                     }
                 }
             }
+
             LoopBits(nopin_rooks)
             {
                 Square x = LSquare(nopin_rooks);
+
                 BBoard moves = Lookup::Rook(x, board.occ_) & context.moveable_squares_;
 
                 while (moves)
                 {
                     const Square to = PopBit(moves);
+
                     if (select_increment(select_id, N++))
                     {
                         return MCTS::RMGResult(false, context.nocheck_, UpdateRookMove(board, x, to));
                     }
                 }
             }
-
-        } // eof rooks
+        }
 
         { // queens
             BBoard queens = board.white_queen_ & ~(context.rook_pins_ | context.bishop_pins_);
+
             LoopBits(queens)
             {
                 Square x = LSquare(queens);
@@ -512,19 +521,20 @@ RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const i
                 while (moves)
                 {
                     Square to = PopBit(moves);
+
                     if (select_increment(select_id, N++))
                     {
                         return MCTS::RMGResult(false, context.nocheck_, UpdateQueenMove(board, x, to));
                     }
                 }
             }
-        } // eof queens
-    }
-    if(context.nocheck_) {
-        { // castle
+        }
+        if (context.nocheck_)
+        {
             if (board.white_oo_ &&
                 !((board.occ_ | context.kingban_) & WSCastleBlockedSquares))
-            {            
+            {
+
                 if (select_increment(select_id, N++))
                 {
                     return MCTS::RMGResult(false, context.nocheck_, UpdateCastle00(board));
@@ -535,21 +545,20 @@ RMGResult WhiteRolloutMoveGenerator::ParseLegalMoves(const Board &board, const i
                 !(context.kingban_ & WLCastleBlockedSquares) &&
                 !(board.occ_ & WLCastleNoOcc))
             {
+
                 if (select_increment(select_id, N++))
                 {
                     return MCTS::RMGResult(false, context.nocheck_, UpdateCastle000(board));
                 }
             }
-        } // eof castle
-    }
-    if(select_id > N) { //we missed it, re run and take first available move
-        return ParseLegalMoves(board, 0, new MGSearchContextualObject(context));
-
-    }
-    else if(N == 0) { // false state
-
-        return MCTS::RMGResult(true, context.nocheck_, board);
-
+        }
     }
     
+
+    if (N == 0)
+        return MCTS::RMGResult(true, context.nocheck_, board);
+    if (select_id > N)
+    { // we missed it, re run and take random in interval
+        return ParseLegalMoves(board, (int) rand() %  N / 2, new MGSearchContextualObject(context));
+    }
 }

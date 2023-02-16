@@ -5,6 +5,7 @@
 #include <list>
 #include <cmath>
 #include <algorithm>
+#include <iomanip>
 
 #include "../blowfish/chessboard.h"
 #include "mc_config.h"
@@ -25,8 +26,6 @@
 //We should borrow logic : Policy update on demand, Make nodes terminal, separate storage of w/l and d, to start with
 //also, they have a templated is_const bool Iterator for going through edges that is friended in Node, not exactly sure what this accomplishes but there is probably a smart reason
 
-
-
 //make a debug string
 
 namespace MCTS {
@@ -42,11 +41,14 @@ public :
     //metrics
     float                   quality_    = 0.f; //Quality factor, could just get this as its fetched in the end?
     float                   policy_     = 0.f;
-    uint32_t                wl_         = 0;
-    uint32_t                d_          = 0;
-    uint32_t                N_          = 0;
+    int                     wl_         = 0;
+    int                     d_          = 0;
+    int                     N_          = 0;
 
     TerminalState           terminal_   = TerminalState::NonTerminal;
+
+    Bounds                  bounds_;
+    bool                    solid_ = false; 
 
     Node(const Board & board, Node* parent = nullptr);
     Node(const Board & board, std::string verbose, Node* parent = nullptr); 
@@ -56,6 +58,7 @@ public :
     void        Insert(const Board& board, const std::string & verbose);
     
     void        Backpropagate(GameResult result); 
+    void        PropagateTerminal(const int& update_wl, const int&update_d, const int & distance);
 
     void        CheckIn();
     void        CheckOut();
@@ -69,7 +72,28 @@ public :
     Node*       GetBestQNode(QualityFactorMethods qfmethod) const;
     Node*       GetBestPNode() const;
 
-    void        MakeTerminal(TerminalState terminal);
+    void        SetTerminal(TerminalState terminal);
+    void        SetBounds(Bounds bounds);
+    void        SetSolid();
+
+    Bounds      GetBounds() const;
+    TerminalState GetTerminal() const;
+    bool        IsSolid() const;
+
+    double GetScore();
+
+    void PrintChildPolicies() {
+            std::cout << std::fixed;
+            std::cout << std::setprecision(2) << verbose_ << "(HEAD):" << this->GetScore() << " |N:"<<N_<<std::endl;      
+        for(auto & n : edges_ ) {
+            double pol = n->GetScore();
+            std::cout << std::fixed;
+            std::cout << std::setprecision(2) << verbose_ << ":" << pol << " |N:"<< n->N_<< std::endl;
+    
+        }
+
+    }
+
 };
 }
 

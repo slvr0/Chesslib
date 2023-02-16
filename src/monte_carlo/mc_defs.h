@@ -28,10 +28,9 @@ namespace MCTS {
     };
 
     enum class TerminalState{ 
-    NonTerminal = 0,
-    Terminal    = 1,
-    checkmate   = 2,
-    Rule2       = 3
+    NonTerminal     = 0,
+    Terminal        = 1,
+    StaleMateRule2  = 2
     };
 
     enum class GameResult {
@@ -40,4 +39,6 @@ namespace MCTS {
     BlackWin   = 2,
     Draw       = 3
     };
+
+    typedef std::pair<GameResult, GameResult> Bounds;
 }

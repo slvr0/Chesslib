@@ -6,9 +6,16 @@ void NodeTreeStructure::Evaluate() {
 
     std::cout << "ID\tN\tV\tV/N\n";
 
-    for(const auto & node : root_node_->edges_) {
+    double norm = 0 ;
+    for(auto & node : root_node_->edges_) {
+        node->UpdateNodePolicy();
+        norm += node->policy_;
+    }
+    for(auto & node : root_node_->edges_) {
 
         node->UpdateQFactor();
-        std::cout << node->verbose_ << "\t" << node->N_ << "\t" << node->wl_  <<   std::endl;
+        
+        std::cout << node->verbose_ << "\t" << node->N_ << "\t" << node->wl_ << "\t" << 
+        (float) node->wl_ / node->N_ <<"\t"<< node->d_<< "\t"<< node->policy_ << std::endl;
     }
 }

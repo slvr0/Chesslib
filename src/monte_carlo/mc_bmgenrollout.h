@@ -23,6 +23,7 @@ public :
 
     RMGResult ParseLegalMoves(const Board& board, const int& select_id, MGSearchContextualObject* rerun = nullptr);     
 
+
 private:
 
     FORCEINL void CheckBySlider(const Square& king,const Square& enemy, MGSearchContextualObject & context) {

@@ -22,7 +22,8 @@ public :
 
     MGSearchContextualObject RefreshMetaDataInternal(const Board& board);   
 
-    RMGResult ParseLegalMoves(const Board& board, const int& select_id, MGSearchContextualObject* rerun = nullptr);     
+    RMGResult ParseLegalMoves(const Board& board, const int& select_id, MGSearchContextualObject* rerun = nullptr);    
+
 
 private:   
 

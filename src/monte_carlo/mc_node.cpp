@@ -47,18 +47,22 @@ void Node::Backpropagate(GameResult result) {
     if(parent_) parent_->Backpropagate(result);
 }
 
-void Node::CheckIn() {    
-    checkin_ = 0xFF; 
-    UpdateNodePolicy();   
-}
+void Node::PropagateTerminal(const int& update_wl, const int&update_d, const int & distance) {
 
-void Node::CheckOut() {
-    checkin_ = 0x0;
+    if(distance % 2 == 0) {
+        wl_ -= update_wl;        
+    }
+    else {
+        wl_ += update_wl;       
+    }
+
+    d_  += update_d;
+
     UpdateNodePolicy();
-}
 
-bool Node::IsLocked() const {  
-    return static_cast<bool> (checkin_);
+    if(parent_)
+        parent_->PropagateTerminal(std::clamp(update_wl - MCConfigurationParams::terminal_decay,0, MCConfigurationParams::terminal_loss), 
+                                   std::clamp(update_d  - MCConfigurationParams::terminal_decay,0, MCConfigurationParams::terminal_loss), distance +1);
 }
 
 bool Node::IsLeaf() const {
@@ -83,16 +87,12 @@ void Node::UpdateQFactor() {
 }
 
 void Node::UpdateNodePolicy(const bool& add_dirichlet_noise) {
-    if(this->IsLocked())    {policy_ = static_cast<float> (-1e5 ); return;}
     if(N_ == 0)             {policy_ = static_cast<float> ( 1e5 ); return;}
 
     policy_ = parent_ ? 
-        MCConfigurationParams::nwbias * ((float)wl_ / N_) + 
-        MCConfigurationParams::ndbias * ((float)d_  / N_) + 
-        MCConfigurationParams::exploration_factor * std::sqrt((std::log(parent_->N_) / N_)) :
+        (wl_ + (.5f * d_)) / (float)N_ * std::sqrt((std::log(parent_->N_) / (float)N_)) :
 
-        MCConfigurationParams::nwbias * ((float)wl_ / N_) + 
-        MCConfigurationParams::ndbias * ((float)d_  / N_);    
+        static_cast<float>(MCConfigurationParams::nwbias * wl_ + MCConfigurationParams::ndbias * d_) / (float)N_;
 }
 
 Node* Node::GetBestQNode(QualityFactorMethods qfmethod) const {
@@ -117,11 +117,42 @@ Node* Node::GetBestQNode(QualityFactorMethods qfmethod) const {
     return *std::max_element(edges_.begin(), edges_.end(), qfuncptr);        
 }
 
-Node* Node::GetBestPNode() const {
-    return *std::max_element(edges_.begin(), edges_.end(), 
-        [](Node* a, Node*b) { return (*a).policy_ < (*b).policy_;});    
+double Node::GetScore() {
+    if(N_ == 0 ) return 1e5;
+    if(parent_) return ((wl_ + (.5f * d_)) / (float)N_) * std::sqrt((std::log(parent_->N_) / (float)N_));
+    else return (wl_ + (.5f * d_)) / (float)N_;
+
 }
 
-void Node::MakeTerminal(TerminalState terminal) {
+Node* Node::GetBestPNode() const {
+    if(edges_.size() == 1) return edges_[0];
 
+    return *std::max_element(edges_.begin(), edges_.end(), 
+        [](Node* a, Node*b) { return a->GetScore() < b->GetScore(); } );       
+}
+
+void Node::SetTerminal(TerminalState terminal) {
+    terminal_ = terminal;
+    UpdateNodePolicy();
+}
+
+//still only describing game rules, but we give it a slight heuristic touch to steer policy towards stable choices
+void Node::SetBounds(Bounds bounds) {
+    bounds_ = bounds;
+}
+
+void Node::SetSolid() {
+    solid_ = true;
+}
+
+Bounds Node::GetBounds() const {
+    return bounds_;
+}
+
+TerminalState Node::GetTerminal() const {   
+    return terminal_;
+}
+
+bool Node::IsSolid() const {
+    return  solid_;
 }

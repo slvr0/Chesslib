@@ -39,7 +39,7 @@ public:
     void Evaluate();
 
     //checks if Node is available, else returns pointer to root
-    //the thread needs to aquire a lock guard mutex when doing this.
+    //the thread needs to aquire a lock guard mutex when doing this. This method is really bad and loops threads back to root 40 % of searchtime
     FORCEINL bool RequestNodeCheckIn(Node* node) {
         if(!node->IsLocked()) {            
             node->CheckIn();           
