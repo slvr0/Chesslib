@@ -149,6 +149,8 @@ int main()
 
     MCTSSimulationEnvironment sim_env;
 
+    srand (time(NULL));
+
     tree = sim_env.Search(tree, params);
 
     

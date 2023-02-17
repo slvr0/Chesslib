@@ -29,6 +29,6 @@ int  MCTSNodeTree::GetTreeSize() const {
 }
 
 void MCTSNodeTree::DebugDisplayTree() const {
-    root_->DebugDisplay(0, true);
+    //root_->DebugDisplay(0, true);
     root_->DebugDisplay(0, false);
 }

@@ -31,6 +31,7 @@ private:
 //hyperparams
 class OptionsDict {
 public:
+    static constexpr uint16_t kMaxSimulationPly = 150; 
 
 
 };

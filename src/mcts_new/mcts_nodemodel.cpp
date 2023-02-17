@@ -15,7 +15,7 @@ int             NodeInfo::GetId() const { return id_; }
 std::string     NodeInfo::GetMove() const { return verbose_; }
 
 MCTSNodeModel::MCTSNodeModel(const Board& board, const NodeInfo& ninfo, MCTSNodeModel* parent) :
-    board_(board), info_(ninfo),parent_(parent)
+    board_(board), info_(ninfo), parent_(parent)
 {
 
 }

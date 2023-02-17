@@ -20,6 +20,11 @@ public:
 private:
     std::unique_ptr<MCTSNodeTree>   simulation_tree_;
     OptionsDict                     params_;
+
+    int undecisive  = 0;
+    int whitewins   = 0;
+    int blackwins   = 0;
+    int draws       = 0;
 };
 
 

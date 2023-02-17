@@ -12,6 +12,8 @@ add_library(mcts_new
     mcts_simulation_env.cpp
     mcts_node_expander.h
     mcts_node_expander.cpp
+    mcts_evaluationtool.h
+    mcts_evaluationtool.cpp
 )   
 
 

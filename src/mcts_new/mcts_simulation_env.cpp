@@ -1,6 +1,7 @@
 #include "mcts_simulation_env.h"
 
 #include "mcts_node_expander.h"
+#include "mcts_evaluationtool.h"
 
 MCTSSimulationEnvironment::MCTSSimulationEnvironment() {
     
@@ -11,12 +12,13 @@ std::unique_ptr<MCTSNodeTree> MCTSSimulationEnvironment::Search(std::unique_ptr<
     params_ = opt;
 
     int         entries = 0;
-    const int   maxentries = 30;
+    const int   maxentries = 20000;
 
     MCTSNodeModel *nodeptr;
 
     MCTSNodeExpansion           nexp(simulation_tree_->GetNodeInserter());
     MCTSVerboseNodeExpansion    verbose_nexp(simulation_tree_->GetNodeInserter());
+    MCTS_SIM::MCTSModelEvaluation model_eval;
 
     while(simulation_tree_->GetTreeSize() < maxentries) {
         nodeptr = simulation_tree_->Reset();
@@ -31,12 +33,25 @@ std::unique_ptr<MCTSNodeTree> MCTSSimulationEnvironment::Search(std::unique_ptr<
             nodeptr = nodeptr->GetEdges()[0];
         }
 
-        auto randres = rand() % 4; //replace this with a real evaluation
-        nodeptr->BackpropagateScoreUpdate(SimulationResult(randres));
+        SimulationResult result = model_eval.SimulateGameplay(nodeptr->GetBoard(), params_);
+        if(result == SimulationResult::UNDECISIVE) undecisive++;
+        else if(result == SimulationResult::WHITEWIN) whitewins++;
+        else if(result == SimulationResult::BLACKWIN) blackwins++;
+        else if(result == SimulationResult::DRAW)     draws++;
+
+        nodeptr->BackpropagateScoreUpdate(SimulationResult(result));
+
+      
+
     }
     
     std::cout << simulation_tree_->GetNodeTreeStatistics() << std::endl;
-    simulation_tree_->DebugDisplayTree();
+    //simulation_tree_->DebugDisplayTree();
+
+
+    std::cout << "W: " << std::to_string(whitewins) << " B: " << 
+    std::to_string(blackwins) << " D: "<<std::to_string(draws) << " U: " << 
+    std::to_string(undecisive) << std::endl;
 
     return std::move(simulation_tree_);    
 }

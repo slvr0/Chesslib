@@ -15,7 +15,7 @@ void MCTSNodeExpansion::Expand(MCTSNodeModel* from) {
 }
 
 void MCTSNodeExpansion::OnInsert(const Board& board, const int& depth) {  
-    node_inserter_->CreateNodeModel(depth, board, expansion_node_);
+    node_inserter_->CreateNodeModel(expansion_node_->GetInfo().GetDepth() + 1, board, expansion_node_);
 }
 
 MCTSVerboseNodeExpansion::MCTSVerboseNodeExpansion(MCTSNodeInserter* node_inserter) :
