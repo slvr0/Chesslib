@@ -1,22 +1,26 @@
-#pragma once
+/* #pragma once
 
 #include <iostream>
 #include <memory>
 #include <vector>
 
-enum class SimResult {
-    UNDECISIVE = 0, 
-    WHITEWIN = 1,
-    BLACKWIN = 2,
-    DRAW = 3
-};
+
+#include "../blowfish/chessboard.h"
+#include "../blowfish/chessboard_generator.h"
+
+
+
+//MCTSNodeModel(Board, Meta, parent = NULL)
+//MCTSNodeModel == (MCTSNodeModel other) return this.board.z = other.board.z
+//MCTSNodeModel::iterator<const bool> defines forward iterating ?
+
 
 class NodeSimple {
 public:
-    NodeSimple(const int &depth, const int &id, const int &value = 0, NodeSimple* parent = nullptr);
+    NodeSimple(const int &depth, const int &id, const Board& board, NodeSimple* parent = nullptr);
 
     void InsertNode(NodeSimple* node);
-    void InsertNode(const int &depth, const int & id, const int &value = 0, NodeSimple* parent = nullptr);
+    void InsertNode(const int &depth, const int & id, const Board& board, NodeSimple* parent = nullptr);
 
     void UpdateResult(const SimResult& result);
    
@@ -40,6 +44,7 @@ public:
 
 private:
     NodeSimple*                 parent_ = nullptr;
+    Board                       board_;
     int                         Q_ = 0;
     int                         N_ = 0;
     std::vector<NodeSimple*>    edges_;
@@ -59,7 +64,7 @@ public:
 
     void PrintTreeStructure() const;
 
-    NodeSimple* CreateEdgeNode(NodeSimple* from, const int &depth, const int&value = 0);
+    NodeSimple* CreateEdgeNode(NodeSimple* from, const int &depth, const Board& board);
     void IncrementRoot();
 
 private:
@@ -70,14 +75,14 @@ private:
 
 class NodeTree {
 public:
-    NodeTree(const int & rootval); 
+    NodeTree(const Board& board); 
 
     std::string DebugTree() const;
 
     
     NodeSimple* Reset() const;
 
-    NodeSimple* CreateNode(NodeSimple* from, const int& depth,  const int& value = 0);
+    NodeSimple* CreateNode(NodeSimple* from, const int& depth,  const Board& board);
     inline void PrintTreeStructure() const {
         nexp_.PrintTreeStructure();
     }
@@ -91,6 +96,14 @@ private:
   
 };
 
+class MCTSNodeModelWorker {
+    friend class NodeTree;
+public:
+    MCTSNodeModelWorker()
+    SimResult SendForRolloutEval(NodeSimple* node);
+    bool SendForNeuralEval(NodeSimple* node);
+
+};
 
 class NodeSelect {
 public:
@@ -110,14 +123,14 @@ public :
         srand((unsigned)time(NULL));
     }
 
-    void CreateTreeFormationSimple();
+    void CreateTreeFormationSimple(std::string position);
 
 private:
     std::unique_ptr<NodeTree> tree_ = nullptr;
     NodeExpander expander_;
 };
 
-
+ */
 
 
 

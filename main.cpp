@@ -20,10 +20,8 @@
 #include "src/monte_carlo/mc_simulator.h"
 #include "src/monte_carlo/mc_config.h"
 
-#include "src/tree_simple/node_simple.h"
 
-
-#define CREATE(string) ChessboardGenerator::CreateFromFen(string)
+#include "src/mcts_new/mcts_simulation_env.h"
 
 void VisualizeUCB(int range) {
 
@@ -142,10 +140,18 @@ void PerformBenchmarkPerft() {
 int main()
 {
 
+    std::string startpos_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    Board startposition = CREATE(startpos_fen);
 
-    NodeTreeToolbox nodetree_workspace;
+    std::unique_ptr<MCTSNodeTree> tree = std::make_unique<MCTSNodeTree> (startposition);
 
-    nodetree_workspace.CreateTreeFormationSimple();
+    OptionsDict params;
+
+    MCTSSimulationEnvironment sim_env;
+
+    tree = sim_env.Search(tree, params);
+
+    
  
     return 0;
 }

@@ -3,9 +3,9 @@
 #include <iomanip>
 #include <cmath>
 #include <sstream>
-
-NodeSimple::NodeSimple(const int &depth, const int &id, const int &value, NodeSimple* parent) : 
-    depth_(depth), id_(id), Q_(value), is_white_(depth % 2 == 0), parent_(parent)
+/* 
+NodeSimple::NodeSimple(const int &depth, const int &id, const Board& board, NodeSimple* parent) : 
+    depth_(depth), id_(id), board_(board), is_white_(depth % 2 == 0), parent_(parent)
 {
 
 }
@@ -14,8 +14,8 @@ void NodeSimple::InsertNode(NodeSimple* node) {
     edges_.push_back(node);
 }
 
-void NodeSimple::InsertNode(const int &depth, const int &id, const int &value, NodeSimple* parent) {
-    this->InsertNode(new NodeSimple(depth, id, value, parent));
+void NodeSimple::InsertNode(const int &depth, const int &id, const Board& board, NodeSimple* parent) {
+    this->InsertNode(new NodeSimple(depth, id, board, parent));
 }
 
 int NodeSimple::GetW() const {
@@ -103,12 +103,12 @@ void NodeSimple::Display(const int& indent, const bool& display_simple) const {
 
 }
 
-NodeTree::NodeTree(const int & rootval) {   
-    root_ = std::unique_ptr<NodeSimple> (nexp_.CreateEdgeNode(nullptr, 0, 0));
+NodeTree::NodeTree(const Board& board) {   
+    root_ = std::unique_ptr<NodeSimple> (nexp_.CreateEdgeNode(nullptr, 0, board));
 }
 
-NodeSimple* NodeTree::CreateNode(NodeSimple* from, const int& depth, const int& value) {
-    return nexp_.CreateEdgeNode(from, depth, value);
+NodeSimple* NodeTree::CreateNode(NodeSimple* from, const int& depth, const Board& board) {
+    return nexp_.CreateEdgeNode(from, depth, board);
 }
 
 void NodeExpander::PrintTreeStructure() const {
@@ -123,8 +123,8 @@ NodeSimple* NodeTree::Reset() const {
     return root_.get();
 }
 
-NodeSimple* NodeExpander::CreateEdgeNode(NodeSimple* from, const int &depth, const int&value) {
-    NodeSimple* node = new NodeSimple(depth, ids_++, value, from);
+NodeSimple* NodeExpander::CreateEdgeNode(NodeSimple* from, const int &depth, const Board& board) {
+    NodeSimple* node = new NodeSimple(depth, ids_++, board, from);
     if(from) from->InsertNode(node);        
     levelentries_[depth] += 1;
     return node;
@@ -161,16 +161,10 @@ SimResult NodeRollout::SimulateRandom(NodeSimple* node) {
 
 }
 
-void NodeTreeToolbox::CreateTreeFormationSimple() {
+void NodeTreeToolbox::CreateTreeFormationSimple(std::string position) {
+
     const int roolval   = 0;
     tree_               = std::make_unique<NodeTree> (0);
-
-    NodeSimple* n1 = tree_->CreateNode(tree_->Reset(), 1, 0);
-    NodeSimple* n2 = tree_->CreateNode(tree_->Reset(), 1, 0);
-    NodeSimple* n3 = tree_->CreateNode(tree_->Reset(), 1, 0);
-    NodeSimple* n4 = tree_->CreateNode(tree_->Reset(), 1, 0);
-    NodeSimple* n5 = tree_->CreateNode(tree_->Reset(), 1, 0);
-    NodeSimple* n6 = tree_->CreateNode(tree_->Reset(), 1, 0);
     
     NodeSelect ntree_search;
     int         entries = 0;
@@ -193,19 +187,20 @@ void NodeTreeToolbox::CreateTreeFormationSimple() {
             nptr = nptr->GetEdges()[0];
         }
 
-        auto randres = rand() % 4;
+        auto randres = rand() % 4; //replace this with a real evaluation
+
+
         nptr->UpdateResult(SimResult(randres));
     }
     
     //NodeSelect::GetId(tree_->Reset(), 3)->UpdateResult(SimResult::WHITEWIN);
 
     tree_->PrintTreeStructure();
-
     tree_->PrintTree(true);
 
 }
 
-
+ */
 
 /* 
     NodeSimple* n1 = expander_.CreateEdgeNode(tree_->Reset(), 1, 0);
