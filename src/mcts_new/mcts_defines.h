@@ -32,6 +32,7 @@ private:
 class OptionsDict {
 public:
     static constexpr uint16_t kMaxSimulationPly = 150; 
+    static constexpr int      kRandSelectionUpperbound = 30;
 
 
 };

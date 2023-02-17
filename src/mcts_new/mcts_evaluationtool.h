@@ -29,18 +29,30 @@ namespace MCTS_SIM {
     return lq_at || dq_at;
     }
 
+    struct PositionStatus {
+        PositionStatus(const bool& terminal, const bool& undercheck) : 
+            terminal_(terminal), undercheck_(undercheck) {
+
+        }
+
+        bool terminal_;
+        bool undercheck_;        
+    };
 
 class MCTSSimulationStateGenerator : public MoveGeneratorHeader {
 public:
     MCTSSimulationStateGenerator();
 
     
-    std::pair<MoveList, bool> GetTransitions(const Board& board); //possible moves, and if we're under check
+    std::pair<Board, PositionStatus> GetTransitions(const Board& board, const int& select); //possible moves, and if we're under check
 
     void OnInsert(const Board& board, const int& depth) override;
 
 private:
-    MoveList movelist_;
+    Board   selected_;
+    Board   any_;
+    int     rselect_;   
+    int     entries_;  
 };
 
 
@@ -50,8 +62,8 @@ public:
     MCTSModelEvaluation(); //random seed
 
     SimulationResult                SimulateGameplay(const Board& board, const OptionsDict& params);
-    std::pair<MoveList, bool>       GetPossibleTransitions(const Board& board);
-    Board                           PickStochasticState(MoveList movelist);
+    std::pair<Board, PositionStatus>          GenerateStochasticTransition(const Board& board, const int& rselect);
+    
 
 private:
     MCTSSimulationStateGenerator state_generator_;

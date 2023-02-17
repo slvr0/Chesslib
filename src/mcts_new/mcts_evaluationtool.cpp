@@ -8,20 +8,20 @@ MCTSSimulationStateGenerator::MCTSSimulationStateGenerator() {
 
 }
 
-std::pair<MoveList, bool>  MCTSSimulationStateGenerator::GetTransitions(const Board& board) {
-    movelist_.clear();
+std::pair<Board, PositionStatus>  MCTSSimulationStateGenerator::GetTransitions(const Board& board, const int& rselect) {
+    rselect_ = rselect;
+    entries_ = 0;
     bool undercheck;
     if(board.white_acts_) undercheck = wmgen_.ParseLegalMoves(board, 0);
     else undercheck = bmgen_.ParseLegalMoves(board, 0);
 
-    return std::make_pair(movelist_, undercheck);
+    return std::make_pair(rselect > entries_ ? any_ : selected_, PositionStatus(entries_ == 0 ? true : false, undercheck));
 }
 
 //random insertion
 void MCTSSimulationStateGenerator::OnInsert(const Board& board, const int& depth) {
-    int randominsert = movelist_.empty() ? 0 : rand() % movelist_.size();
-    movelist_.insert(movelist_.begin() + randominsert, board);
-    
+    if(rselect_ == entries_++) selected_ = board;
+    else any_ = board;    
 }
 
 MCTSModelEvaluation::MCTSModelEvaluation() {
@@ -36,27 +36,23 @@ SimulationResult MCTSModelEvaluation::SimulateGameplay(const Board& board, const
             return SimulationResult::DRAW;
         }
 
-        std::pair<MoveList,bool> s_t = GetPossibleTransitions(current_state);
+        std::pair<Board, PositionStatus> s_t = GenerateStochasticTransition(current_state, rand() % params.kRandSelectionUpperbound);
 
-        if(s_t.first.empty()) {
-            if(s_t.second) return SimulationResult::DRAW;
+        if(s_t.second.terminal_) {
+            if(s_t.second.undercheck_) return SimulationResult::DRAW;
             else {
                 if(current_state.white_acts_) return SimulationResult::BLACKWIN;
                 else return SimulationResult::WHITEWIN;
             }
         }
 
-        current_state = PickStochasticState(s_t.first);
+        current_state = s_t.first;
     }
 
     return SimulationResult::UNDECISIVE;
 }
 
-std::pair<MoveList, bool>       MCTSModelEvaluation::GetPossibleTransitions(const Board& board) {
-    return state_generator_.GetTransitions(board);
+std::pair<Board, PositionStatus>       MCTSModelEvaluation::GenerateStochasticTransition(const Board& board, const int &rselect) {
+    return state_generator_.GetTransitions(board, rselect);
 }
 
-//random choice
-Board                           MCTSModelEvaluation::PickStochasticState(MoveList movelist) {
-    return movelist[rand() % movelist.size()];
-}

@@ -141,9 +141,14 @@ int main()
 {
 
     std::string startpos_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    Board startposition = CREATE(startpos_fen);
+    std::string kiwipep_fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+    std::string fen4 = "5k2/6b1/P2p1p2/1b6/2N5/8/Pq3PPP/4RK1R w - - 2 29";
+    auto rookup = "1nbqkbn1/pppppppp/8/8/8/8/PPPPPPPP/1NBQKBNR w K - 0 1";
+    auto fen3 = "2rq1bk1/1p3ppp/pNn2n2/2Ppr3/1P6/P3B3/1Q2NPPP/R4RK1 w - - 1 19";
 
-    std::unique_ptr<MCTSNodeTree> tree = std::make_unique<MCTSNodeTree> (startposition);
+    Board position = CREATE(startpos_fen);
+
+    std::unique_ptr<MCTSNodeTree> tree = std::make_unique<MCTSNodeTree> (position);
 
     OptionsDict params;
 

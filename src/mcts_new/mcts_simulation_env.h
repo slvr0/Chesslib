@@ -4,6 +4,8 @@
 #include <future>
 #include <memory>
 
+#include "../blowfish/defs.h"
+
 #include "mcts_defines.h"
 #include "mcts_nodetree.h"
 
@@ -25,6 +27,10 @@ private:
     int whitewins   = 0;
     int blackwins   = 0;
     int draws       = 0;
+
+    double delta_choose = 0;
+    double delta_expand = 0;
+    double delta_evaluate = 0;
 };
 
 
