@@ -1,5 +1,7 @@
 #pragma once
 #include <vector>
+#include <random>
+#include <iostream> // remove later
 
 #include "defs.h"
 #include "chessboard.h"
@@ -13,7 +15,7 @@ Intended to provide static functions to extract detailed position information fr
 
 //takes in a square (0-63 and a board and outputs what piece is on that position)
 char AtBoardPosition(const Square& square, const Board& brd);
-
+int  AtBoardEnumerated(const Square& square, const Board& brd);
 //getting the fen is computational heavy, so never use this as part of main performance heavy code, 
 //if we need unique identification implement a zobrist hash function
 inline std::string  BoardAsFen(const Board & board) {
@@ -144,6 +146,44 @@ FORCEINL BBoard GetEnemyBishopQueen(const Board& board) {
 }
 
 
+FORCEINL void GenerateRandomZobristTables(unsigned long long int keys[][12]) {
+    std::mt19937 mt(01234567);
+    std::uniform_int_distribution<unsigned long long int>
+                                 dist(0, UINT64_MAX);
+
+    for(int i = 0 ; i < 64; ++i) {
+        for(int k = 0 ; k < 12 ; ++k) {
+            keys[i][k] = dist(mt);
+        }
+    }
+}
+
+struct ZHash {
+
+private:
+        ZHash()  {
+        GenerateRandomZobristTables(keys_);
+    }
+    unsigned long long int keys_ [64][12];
+
+public:
+    static ZHash& GetInstance()
+    {
+        static ZHash    instance;                                
+        return instance;
+    }
+
+    ZHash(ZHash const&)             = delete;
+    void operator=(ZHash const&)    = delete;
+
+    void GenerateNewZobristKey(Board& board) const;
+
+    //manually xors with certain hash key, up to user to determine which switches should be done
+    void UpdateZobristKey(Board& board, const int& piecetype, const int& at) const;
+
+    static ZHash* singleton_;
+};
+
 //helps to visualize the board graphically in console
 class BoardConsoleGUI {
 public : 
@@ -156,6 +196,7 @@ public :
 private:
     static std::vector<char> CopyBoardContent(const Board & board);    
 };
+
 
 
 

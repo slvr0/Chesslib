@@ -14,6 +14,7 @@ add_library(mcts_new
     mcts_node_expander.cpp
     mcts_evaluationtool.h
     mcts_evaluationtool.cpp
+    mcts_jobqueue.h
 )   
 
 

@@ -16,6 +16,12 @@ public :
     MCTSNodeTreeStatistics(const int& max_eval_depth) {
         for(int k = 0 ; k < max_eval_depth; ++k) nentries_per_d_.push_back(0);
     }
+    MCTSNodeTreeStatistics(const int& max_eval_depth, std::vector<int> subtree_nodes) {
+        for(int k = 0 ; k < max_eval_depth; ++k) nentries_per_d_.push_back(0);
+
+        int i = 0;
+        for(auto & subtree_level : subtree_nodes)   nentries_per_d_[i++] = subtree_level;     
+    }
 
     void UpdateWithInsertion(const int& at_depth);
     void UpdateAfterSlicing();
@@ -32,8 +38,9 @@ private:
 class OptionsDict {
 public:
     static constexpr uint16_t kMaxSimulationPly = 150; 
-    static constexpr int      kRandSelectionUpperbound = 30;
-
+    static constexpr int      kRandSelectionUpperbound = 35;
+    static constexpr int      kSimulationEntries = 10000;
+    static constexpr double   kSimulationTimeout = 15.f;
 
 };
 

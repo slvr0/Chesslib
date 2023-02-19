@@ -23,3 +23,20 @@ struct MGSearchContextualObject {
     bool    debug_              = false;
 
 };
+
+struct PositionStatus {
+
+    PositionStatus(const bool& terminal, const bool& nocheck) : 
+        terminal_(terminal), nocheck_(nocheck) {
+
+    }
+
+    PositionStatus(const bool& terminal, const bool& nocheck, const int& nmoves) : 
+        terminal_(terminal), nocheck_(nocheck), nmoves_(nmoves) {
+
+    }
+
+    bool    terminal_;
+    bool    nocheck_;   
+    int     nmoves_;     
+};

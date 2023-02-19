@@ -5,6 +5,8 @@
 
 #include "../blowfish/chessboard.h"
 #include "../blowfish/move_generator.h"
+#include "../blowfish/wmgen_randselect.h"
+#include "../blowfish/bmgen_randselect.h"
 
 #include "mcts_defines.h"
 
@@ -29,22 +31,12 @@ namespace MCTS_SIM {
     return lq_at || dq_at;
     }
 
-    struct PositionStatus {
-        PositionStatus(const bool& terminal, const bool& undercheck) : 
-            terminal_(terminal), undercheck_(undercheck) {
-
-        }
-
-        bool terminal_;
-        bool undercheck_;        
-    };
-
 class MCTSSimulationStateGenerator : public MoveGeneratorHeader {
 public:
     MCTSSimulationStateGenerator();
 
     
-    std::pair<Board, PositionStatus> GetTransitions(const Board& board, const int& select); //possible moves, and if we're under check
+    std::pair<PositionStatus, Board> GetTransitions(const Board& board, const int& select); //possible moves, and if we're under check
 
     void OnInsert(const Board& board, const int& depth) override;
 
@@ -55,18 +47,21 @@ private:
     int     entries_;  
 };
 
-
 //updates nodemodel metrics based on DNN input or random simulation 
 class MCTSModelEvaluation {
 public:
-    MCTSModelEvaluation(); //random seed
+    MCTSModelEvaluation(); 
+    ~MCTSModelEvaluation() {
+    }
 
-    SimulationResult                SimulateGameplay(const Board& board, const OptionsDict& params);
-    std::pair<Board, PositionStatus>          GenerateStochasticTransition(const Board& board, const int& rselect);
+    SimulationResult                    SimulateGameplay(const Board& board, const OptionsDict& params);
+    std::pair<PositionStatus, Board>    GenerateStochasticTransition(const Board& board, const int& rselect);
     
 
 private:
     MCTSSimulationStateGenerator state_generator_;
+    WhiteRolloutMoveGenerator    white_state_generator_;
+    BlackRolloutMoveGenerator    black_state_generator_;
 };
 }
 

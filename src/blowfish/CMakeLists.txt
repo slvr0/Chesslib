@@ -24,6 +24,10 @@ add_library(blowfish_engine
     perft_divider_autotraverse.cpp
     perft_mg_thread.h
     perft_mg_thread.cpp
-    
+
+    wmgen_randselect.h
+    wmgen_randselect.cpp
+    bmgen_randselect.h
+    bmgen_randselect.cpp    
 )
 

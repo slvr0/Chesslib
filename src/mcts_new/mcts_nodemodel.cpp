@@ -57,7 +57,7 @@ MCTSNodeModel* MCTSNodeModel::GetBestPolicy() const {
 
 float   MCTSNodeModel::GetPolicyNonExpl() const {
     if(N_ == 0) return 100.f;
-    return static_cast<float>(WL_) / N_ + static_cast<float>(D_*.5f) / N_;
+    return static_cast<float>(WL_) / N_ + static_cast<float>(D_*.05f) / N_;
 }
 
 float   MCTSNodeModel::GetPolicy() const {
@@ -95,6 +95,32 @@ bool    MCTSNodeModel::IsWhite() const {
 
 Board   MCTSNodeModel::GetBoard() const {
     return board_;
+}
+
+int     MCTSNodeModel::GetW()                          const {
+    return WL_;
+}
+
+int     MCTSNodeModel::GetD()                          const {
+    return D_;
+}
+
+MCTSNodeModel* MCTSNodeModel::GetParent()                  const {
+    return parent_;
+}
+
+bool    MCTSNodeModel::RemoveParent() {
+    bool detached = parent_->Detach(this);
+    parent_ = nullptr;
+    return detached;
+}
+
+bool    MCTSNodeModel::Detach(MCTSNodeModel* node) {
+    auto it = std::find(edges_.begin(), edges_.end(), node);
+    if ( it  != edges_.end()) {
+        edges_.erase(it);
+        return true;
+    } return false;
 }
 
 //Debugging functions, visibility of node structure

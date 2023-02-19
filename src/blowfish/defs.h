@@ -49,6 +49,21 @@ inline static Bit PopBit(uint64_t& val)
     return lsb;
 }
 
+enum class Pieces {
+    WHITEPAWN = 0 ,
+    WHITEKNIGHT = 1,
+    WHITEBISHOP = 2, 
+    WHITEROOK = 3,
+    WHITEQUEEN = 4,
+    WHITEKING = 5,
+    BLACKPAWN = 6,
+    BLACKKNIGHT = 7,
+    BLACKBISHOP = 8,
+    BLACKROOK = 9,
+    BLACKQUEEN = 10,
+    BLACKKING = 11
+};
+
 static const std::string notations[] =
 { 
   "A1","B1","C1","D1","E1","F1","G1","H1",

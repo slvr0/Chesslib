@@ -43,10 +43,17 @@ public:
     bool        IsLeaf()                        const;  
     bool        IsWhite()                       const;
     Board       GetBoard()                      const;
+    int         GetW()                          const;
+    int         GetD()                          const;
+    MCTSNodeModel* GetParent()                  const;
+    bool        RemoveParent();
+    bool        Detach(MCTSNodeModel* node);
 
     void        DebugDisplay(const int& indent, const bool& display_simple = false) const;
     std::string NodeDisplaySimple() const;
     std::string NodeDisplayFull()   const;
+
+    
 
 private:
     const Board                 board_;

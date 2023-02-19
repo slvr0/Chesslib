@@ -9,22 +9,25 @@
 #include "../blowfish/static_move_tables.h"
 #include "../blowfish/position_meta_data.h"
 #include "../blowfish/mgdefs.h"
-#include "mc_defs.h"
 
-namespace MCTS {
-
-class BlackRolloutMoveGenerator {
+class WhiteRolloutMoveGenerator {
 public : 
-    BlackRolloutMoveGenerator() {
+    WhiteRolloutMoveGenerator() {
         
     }
 
     MGSearchContextualObject RefreshMetaDataInternal(const Board& board);   
 
-    RMGResult ParseLegalMoves(const Board& board, const int& select_id, MGSearchContextualObject* rerun = nullptr);     
+    std::pair<PositionStatus, Board> ParseLegalMoves(const Board& board, const int& select_id, MGSearchContextualObject context);  
+    std::pair<PositionStatus, Board> ParseLegalMoves(const Board &board, const int &select_id);
+
+    int nrequests = 0;
+    int rnumbers_rerun = 0;  
+
+    MGSearchContextualObject meta;
 
 
-private:
+private:   
 
     FORCEINL void CheckBySlider(const Square& king,const Square& enemy, MGSearchContextualObject & context) {
         if (context.checkmask_ == 0xffffffffffffffffull)
@@ -35,10 +38,10 @@ private:
         context.kingban_ |= Chess_Lookup::CheckBetween[king * 64 + enemy]; //King cannot go to square opposite to slider 
     }
 
-    FORCEINL void RegisterPinHorisontalVertical(const Square & king, const Square & enemy, const Board& board, MGSearchContextualObject & context) {
+    FORCEINL void RegisterPinHorisontalVertical(const Square & king, const Square & enemy, const Board& board , MGSearchContextualObject & context) {
         const BBoard pin_mask = Chess_Lookup::PinBetween[king * 64 + enemy];
 
-        if (pin_mask & board.black_) {
+        if (pin_mask & board.white_) {
             context.rook_pins_ |= pin_mask;
         }
     }
@@ -51,7 +54,7 @@ private:
             if (pin_mask & (1ULL << board.enp_)) context.enp_target_ = 0;
         }
 
-        if (pin_mask & board.black_) {
+        if (pin_mask & board.white_) {
             context.bishop_pins_ |= pin_mask;
         }
     }
@@ -63,5 +66,3 @@ private:
     
      
 };
-}
-

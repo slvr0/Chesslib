@@ -32,6 +32,38 @@ char AtBoardPosition(const Square &square, const Board &brd)
         return '.';
 }
 
+int AtBoardEnumerated(const Square &square, const Board &brd)
+{
+
+    if (1ull << square & brd.white_pawn_)
+        return 0;
+    else if (1ull << square & brd.white_knight_)
+        return 1;
+    else if (1ull << square & brd.white_bishop_)
+        return 2;
+    else if (1ull << square & brd.white_rook_)
+        return 3;
+    else if (1ull << square & brd.white_queen_)
+        return 4;
+    else if (1ull << square & brd.white_king_)
+        return 5;
+    else if (1ull << square & brd.black_pawn_)
+        return 6;
+    else if (1ull << square & brd.black_knight_)
+        return 7;
+    else if (1ull << square & brd.black_bishop_)
+        return 8;
+    else if (1ull << square & brd.black_rook_)
+        return 9;
+    else if (1ull << square & brd.black_queen_)
+        return 10;
+    else if (1ull << square & brd.black_king_)
+        return 11;
+
+    else
+        return -1;
+}
+
 std::string PrintBoardsAndMask(uint64_t val1, uint64_t val2, const Board &val3, const Board &val4)
 {
 
@@ -168,6 +200,53 @@ std::string BoardConsoleGUI::BoardAsString(const Board &board)
 
     ret += "___A__B__C__D__E__F__G__H__\n";
     return ret;
+}
+
+void ZHash::GenerateNewZobristKey(Board& board) const {
+    unsigned long long int z = 0;
+
+    auto assign_pindexes = [this, &z](const int & ptype_idx, BBoard pieces) {
+        while(pieces) {
+            Square at = LSquare(pieces) ; PopBit(pieces);             
+            z ^= this->keys_[at][ptype_idx];
+        } 
+    }; 
+
+    assign_pindexes(0, board.white_pawn_ );
+    assign_pindexes(1, board.white_knight_);
+    assign_pindexes(2, board.white_bishop_);
+    assign_pindexes(3, board.white_rook_);
+    assign_pindexes(4, board.white_queen_);
+    assign_pindexes(5, board.white_king_);
+    assign_pindexes(6, board.black_pawn_);
+    assign_pindexes(7, board.black_knight_);
+    assign_pindexes(8, board.black_bishop_);
+    assign_pindexes(9, board.black_rook_);
+    assign_pindexes(10, board.black_queen_);
+    assign_pindexes(11, board.black_king_ );
+
+    board.z_ = z;
+}
+
+void ZHash::UpdateZobristKey(Board& board, const int& piecetype, const int& at) const {
+    auto assign_pindexes = [this, &board, at](const int & ptype_idx) {        
+        board.z_ ^= this->keys_[at][ptype_idx];        
+    }; 
+
+    switch(piecetype) {
+        case 0 :  assign_pindexes(0);break;
+        case 1 :  assign_pindexes(1);break;
+        case 2 :  assign_pindexes(2);break;
+        case 3 :  assign_pindexes(3);break;
+        case 4 :  assign_pindexes(4);break;
+        case 5 :  assign_pindexes(5);break;
+        case 6 :  assign_pindexes(6);break;
+        case 7 :  assign_pindexes(7);break;
+        case 8 :  assign_pindexes(8);break;
+        case 9 :  assign_pindexes(9);break;
+        case 10 : assign_pindexes(10);break;
+        case 11 : assign_pindexes(11);break;
+    }
 }
 
 std::vector<char> BoardConsoleGUI::CopyBoardContent(const Board &board)

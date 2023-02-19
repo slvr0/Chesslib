@@ -13,15 +13,9 @@
 
 #include "src/chess_interface/movegen_interface.h"
 
-#include "src/monte_carlo/mc_node.h"
-#include "src/monte_carlo/mc_node_structure.h"
-#include "src/monte_carlo/mc_mainthread.h"
-#include "src/monte_carlo/mc_thread_factory.h"
-#include "src/monte_carlo/mc_simulator.h"
-#include "src/monte_carlo/mc_config.h"
-
 
 #include "src/mcts_new/mcts_simulation_env.h"
+#include "src/mcts_new/mcts_jobqueue.h"
 
 void VisualizeUCB(int range) {
 
@@ -32,61 +26,6 @@ void VisualizeUCB(int range) {
     }
     
 }
-
-
-void SimulatePosition(const std::string & fen, const int & simulations) {
-    int ww = 0;
-    int bw = 0;
-    int d  = 0;
-    int u  = 0;
-
-    Board board = CREATE(fen);
-    MCTS::MCSimulator simulator;
-    for(int i = 0; i < simulations; ++i) {
-        MCTS::GameResult result = simulator.SimulateGame(board);
-
-        if(result == MCTS::GameResult::WhiteWin) ++ww;
-        else if(result == MCTS::GameResult::BlackWin) ++bw;
-        else if(result == MCTS::GameResult::Draw) ++d;
-        else ++u;
-    }
-
-    std::cout << " P:" << BoardAsFen(board)<< std::endl;
-    std::cout <<" T:"<<simulations<<" W:"<<ww<<" B:"<<bw<<" D:"<<d<<" U:"<<u<< " RNG: "<< (float)simulator.randomnrtotal/simulator.ngens 
-    << " RW:"<< (float)simulator.rwhite / simulator.nwhites<<" RB:"<<(float)simulator.rblack/simulator.nblacks<< std::endl;
-
-   
-    print(simulator.nwhites);
-    print(simulator.nblacks);   
-}
-
-void SimulatePositionOld(const std::string & fen, const int & simulations) {
-    int ww = 0;
-    int bw = 0;
-    int d  = 0;
-    int u  = 0;
-
-    Board board = CREATE(fen);
-    MCTS::MCSimulator simulator;
-    for(int i = 0; i < simulations; ++i) {
-        MCTS::GameResult result = simulator.SimulateGameOld(board);
-
-        if(result == MCTS::GameResult::WhiteWin) ++ww;
-        else if(result == MCTS::GameResult::BlackWin) ++bw;
-        else if(result == MCTS::GameResult::Draw) ++d;
-        else ++u;
-    }
-
-    std::cout << " (old)P:" << BoardAsFen(board)<< std::endl;
-    std::cout <<" T:"<<simulations<<" W:"<<ww<<" B:"<<bw<<" D:"<<d<<" U:"<<u<< " RNG: "<< (float)simulator.randomnrtotal/simulator.ngens 
-    << " RW:"<< (float)simulator.rwhite / simulator.nwhites<<" RB:"<<(float)simulator.rblack/simulator.nblacks<< std::endl;
-
-   
-    print(simulator.nwhites);
-    print(simulator.nblacks);   
-}
-
-
 
 void EvaluateMovesInPosition(std::string position) {        
     PerftDividerFactory divider;
@@ -139,27 +78,55 @@ void PerformBenchmarkPerft() {
 
 int main()
 {
+    srand (time(NULL));
+
+    ZHash::GetInstance(); // trigger init on ZHash singleton
 
     std::string startpos_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     std::string kiwipep_fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
-    std::string fen4 = "5k2/6b1/P2p1p2/1b6/2N5/8/Pq3PPP/4RK1R w - - 2 29";
+    
     auto rookup = "1nbqkbn1/pppppppp/8/8/8/8/PPPPPPPP/1NBQKBNR w K - 0 1";
     auto fen3 = "2rq1bk1/1p3ppp/pNn2n2/2Ppr3/1P6/P3B3/1Q2NPPP/R4RK1 w - - 1 19";
+    auto fen4 = "5k2/6b1/P2p1p2/1b6/2N5/8/Pq3PPP/4RK1R w - - 2 29";
+    auto fen5 = "8/1Pq4B/7k/1KNn4/8/8/8/8 b - - 5 66";
+    std::string promotion_fen = "n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1";
 
     Board position = CREATE(startpos_fen);
+    OptionsDict params;
 
     std::unique_ptr<MCTSNodeTree> tree = std::make_unique<MCTSNodeTree> (position);
 
-    OptionsDict params;
+    tree->MaybeExpandRoot();
 
-    MCTSSimulationEnvironment sim_env;
-
-    srand (time(NULL));
-
-    tree = sim_env.Search(tree, params);
-
+/*     MCTSSimulationEnvironment sim_env;
+    sim_env.Search(tree.get(), params);
+    tree->DebugMetrics(); 
     
- 
+    */
+/* 
+    auto rptr = tree->Reset();
+    auto threadbranches = tree->DisjointAllBranchesL1();    
+    ThreadPool tpool;    
+    tpool.AddJob(tree.get(), threadbranches);
+    tree->DebugMetrics(); 
+
+ */
+    ZHash::GetInstance().GenerateNewZobristKey(position);
+
+    auto p1 = "rnbqkbnr/pppppppp/8/8/8/N7/PPPPPPPP/R1BQKBNR b KQkq - 1 1";
+    auto p1b = CREATE(p1);
+
+    ZHash::GetInstance().GenerateNewZobristKey(p1b);
+    //from position -> 1 has moved to 16, white knight which is ptype 1
+
+    print(position.z_);
+
+    ZHash::GetInstance().UpdateZobristKey(position, 1,  1);
+    ZHash::GetInstance().UpdateZobristKey(position, 1,  16);
+
+    print(position.z_);
+    print(p1b.z_);
+
     return 0;
 }
 

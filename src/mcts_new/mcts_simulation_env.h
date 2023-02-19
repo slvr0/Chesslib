@@ -16,12 +16,12 @@ public:
     MCTSSimulationEnvironment();
 
     //gives back the ownership when finished
-    std::unique_ptr<MCTSNodeTree> Search(std::unique_ptr<MCTSNodeTree>&    simulation_tree, const OptionsDict& opt);
+    void Search(MCTSNodeTree*   simulation_tree, const OptionsDict& opt);
 
 
 private:
-    std::unique_ptr<MCTSNodeTree>   simulation_tree_;
-    OptionsDict                     params_;
+    MCTSNodeTree*   simulation_tree_;
+    OptionsDict     params_;
 
     int undecisive  = 0;
     int whitewins   = 0;

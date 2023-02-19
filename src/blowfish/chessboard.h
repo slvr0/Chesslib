@@ -50,7 +50,7 @@ public :
     int enp_            = -1;
     int half_move_      = 0; // increases each players move , resets on pawn move
     int full_move_      = 1; // increases when both players make move, i.e. on black turn
-
+    unsigned long long int z_ = 0;
 
     Board() {
 

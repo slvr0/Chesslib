@@ -25,3 +25,10 @@
        
         return node;
     }
+
+    void MCTSNodeInserter::InsertExistingNode(MCTSNodeModel* node, MCTSNodeModel* parent) {
+        m_assert(parent, "Trying to insert a Node in Tree without parent");
+
+        parent->InsertNode(node);
+        if(tree_stats_) tree_stats_->UpdateWithInsertion(node->GetInfo().GetDepth()); //update tree statistics  
+    } 

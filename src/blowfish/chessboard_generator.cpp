@@ -1,5 +1,6 @@
 #include "chessboard_generator.h"
 
+#include "chessboard_extractor.h"
 
 Board ChessboardGenerator::CreateFromFen(const std::string& fen) {
      BBoard white_pawn = 0x0;
@@ -109,5 +110,6 @@ Board ChessboardGenerator::CreateFromFen(const std::string& fen) {
     b1.half_move_ = rule50;
     b1.full_move_ = totalmoves;
 
+    ZHash::GetInstance().GenerateNewZobristKey(b1);
     return b1;
 }
