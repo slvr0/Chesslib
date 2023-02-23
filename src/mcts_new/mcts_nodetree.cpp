@@ -2,22 +2,32 @@
 
 #include "../blowfish/defs.h"
 
-MCTSNodeTree::MCTSNodeTree(const Board &rootposition) : tree_stats_(std::make_unique<MCTSNodeTreeStatistics>(20))
+MCTSNodeTree::MCTSNodeTree(const Board &rootposition) : 
+    node_inserter_(std::make_shared<MCTSNodeInserter> (tree_stats_))    
 {
-    node_inserter_ = std::make_unique<MCTSNodeInserter>(tree_stats_.get());
+    
     root_ = std::unique_ptr<MCTSNodeModel>(node_inserter_->CreateNodeModel(0, rootposition, nullptr));
+    SetNodeInserter(node_inserter_.get());
 
-    nexp_ = std::make_unique<MCTSNodeExpansion>(node_inserter_.get());
-    verbose_nexp_ = std::make_unique<MCTSVerboseNodeExpansion>(node_inserter_.get());
 }
 
-MCTSNodeTree::MCTSNodeTree(MCTSNodeModel *node) : tree_stats_(std::make_unique<MCTSNodeTreeStatistics>(20))
-{
-    node_inserter_ = std::make_unique<MCTSNodeInserter>(tree_stats_.get());
+MCTSNodeTree::MCTSNodeTree(MCTSNodeModel *node) :  
+    node_inserter_(std::make_shared<MCTSNodeInserter> (tree_stats_))  
+{   
     root_ = std::unique_ptr<MCTSNodeModel>(node);
+    SetNodeInserter(node_inserter_.get());
+}
 
-    nexp_ = std::make_unique<MCTSNodeExpansion>(node_inserter_.get());
-    verbose_nexp_ = std::make_unique<MCTSVerboseNodeExpansion>(node_inserter_.get());
+MCTSNodeTree::~MCTSNodeTree() {
+    //release inserter ( or not needed with shared ptr ? )
+    
+    //delete root tree
+    auto rmn_ptr = root_.release();
+    this->DeleteNodeModelChain(rmn_ptr);   
+}
+
+void MCTSNodeTree::SetNodeInserter(MCTSNodeInserter* inserter) {
+    node_exp_header_.SetInserter(inserter);
 }
 
 // dont need to pass depth just check parent depth + 1
@@ -28,7 +38,7 @@ MCTSNodeModel *MCTSNodeTree::InsertNode(const int &depth, const Board &board, MC
 
 std::string MCTSNodeTree::GetNodeTreeStatistics() const
 {
-    return tree_stats_->CurrentTree();
+    return tree_stats_.CurrentTree();
 }
 
 MCTSNodeModel *MCTSNodeTree::Reset() const
@@ -43,17 +53,11 @@ MCTSNodeInserter *MCTSNodeTree::GetNodeInserter() const
 
 int MCTSNodeTree::GetTreeSize() const
 {
-    return tree_stats_->GetEntries();
+    return tree_stats_.GetEntries();
 }
 
-void MCTSNodeTree::ExpandVerbose(MCTSNodeModel *from )
-{
-    verbose_nexp_->Expand(from);
-}
-
-void MCTSNodeTree::ExpandNormal(MCTSNodeModel *from)
-{
-    nexp_->Expand(from);
+void MCTSNodeTree::ExpandNode(MCTSNodeModel* from, bool verbose) {
+    node_exp_header_.ExpandNodeFull(from, verbose);
 }
 
 void MCTSNodeTree::MaybeExpandRoot()
@@ -61,7 +65,7 @@ void MCTSNodeTree::MaybeExpandRoot()
     if (!root_->IsLeaf())
         return;
 
-    ExpandVerbose(root_.get());
+    ExpandNode(root_.get(), true);
 }
 
 void MCTSNodeTree::DebugDisplayTree() const
@@ -69,7 +73,7 @@ void MCTSNodeTree::DebugDisplayTree() const
     root_->DebugDisplay(0, false);
 }
 
-std::string MCTSNodeTree::DebugMetrics() const
+void MCTSNodeTree::DebugMetrics() const
 {
     std::cout << "M\tW/L/R\tD\tN \tWLRD/N" << std::endl;
     for (auto &edge : root_->GetEdges())
@@ -86,7 +90,6 @@ MCTSNodeModel* MCTSNodeTree::Slice(MCTSNodeModel *at)
     bool is_detached = at->RemoveParent();
 
     return at;
-
 }
 
 MCTSNodeModel* MCTSNodeTree::ReleaseHead() {
@@ -102,6 +105,8 @@ std::vector<MCTSNodeTree*> MCTSNodeTree::DisjointAllBranchesL1() {
 
 void MCTSNodeTree::AttachSubTree(MCTSNodeTree* nodetree, const bool & atroot) {
         if(atroot) node_inserter_->InsertExistingNode(nodetree->ReleaseHead(), this->root_.get());  
+
+        //if we release head then this will trigger a delete on nullptr
         delete(nodetree);  
 }
 
@@ -109,4 +114,14 @@ void MCTSNodeTree::AttachSubTrees(std::vector<MCTSNodeTree*> nodetrees, const bo
     for(auto & branch : nodetrees) {
         AttachSubTree(branch, atroot);
     }
+}
+
+void MCTSNodeTree::DeleteNodeModelChain(MCTSNodeModel* node) {
+    if(!node) return;
+    
+    for(auto & branch : node->GetEdges()) {
+        DeleteNodeModelChain(branch);
+    }
+
+    delete(node);
 }

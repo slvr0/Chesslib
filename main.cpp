@@ -23,8 +23,7 @@ void VisualizeUCB(int range) {
         if(i % 100 == 0) {
             print(std::sqrt((std::log(20*i) / i)));
         }
-    }
-    
+    }    
 }
 
 void EvaluateMovesInPosition(std::string position) {        
@@ -97,62 +96,12 @@ int main()
     std::unique_ptr<MCTSNodeTree> tree = std::make_unique<MCTSNodeTree> (position);
 
     tree->MaybeExpandRoot();
-
-/*     MCTSSimulationEnvironment sim_env;
-    sim_env.Search(tree.get(), params);
-    tree->DebugMetrics(); 
-    
-    */
-/* 
-    auto rptr = tree->Reset();
     auto threadbranches = tree->DisjointAllBranchesL1();    
     ThreadPool tpool;    
     tpool.AddJob(tree.get(), threadbranches);
     tree->DebugMetrics(); 
 
- */
-    ZHash::GetInstance().GenerateNewZobristKey(position);
 
-    auto p1 = "rnbqkbnr/pppppppp/8/8/8/N7/PPPPPPPP/R1BQKBNR b KQkq - 1 1";
-    auto p1b = CREATE(p1);
-
-    ZHash::GetInstance().GenerateNewZobristKey(p1b);
-    //from position -> 1 has moved to 16, white knight which is ptype 1
-
-    print(position.z_);
-
-    ZHash::GetInstance().UpdateZobristKey(position, 1,  1);
-    ZHash::GetInstance().UpdateZobristKey(position, 1,  16);
-
-    print(position.z_);
-    print(p1b.z_);
 
     return 0;
 }
-
-
-
-/* 
-    std::string startpos_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    std::string kiwipep_fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
-    std::string promotion_fen = "n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1";
-
-    ChesslibInterface chesslib_io;
-
-    //three typical evaluating positions in chess engine theory
-    auto startposition  = CREATE(startpos_fen);
-    auto kiwipep        = CREATE(kiwipep_fen);
-    auto promoboard     = CREATE(promotion_fen);
-
-    Timer t0;
-
-    MCTS::NodeTreeStructure nodetree(kiwipep);
-
-    MCTS::MCThreadFactory   mc_thread_fac(&nodetree);
-
-    auto fen1 = "r4r1k/1b2b2p/pq6/5P2/2B5/1P2n3/P3Q1PP/3R1R1K b - - 7 24";
-    auto fen2 = "2rq1bk1/1p3ppp/pNn2n2/2Ppr3/1P6/P3B3/2Q1NPPP/R4RK1 w - - 0 19"; // better for white
-    auto fen3 = "2rq1bk1/1p3ppp/pNn2n2/2Ppr3/1P6/P3B3/1Q2NPPP/R4RK1 w - - 1 19";
-    auto fen4 = "5k2/6b1/P2p1p2/1b6/2N5/8/Pq3PPP/4RK1R w - - 2 29";
-    auto position = "1nbqkbn1/pppppppp/8/8/8/8/PPPPPPPP/1NBQKBNR w K - 0 1";
- */

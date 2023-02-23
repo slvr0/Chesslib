@@ -25,7 +25,7 @@ void MCTSSimulationEnvironment::Search(MCTSNodeTree*   simulation_tree, const Op
         while(!nodeptr->IsLeaf()) { nodeptr = nodeptr->GetBestPolicy(); d++; }         
 
         if(nodeptr->GetVisits() > 0) {
-            simulation_tree_->ExpandNormal(nodeptr);           
+            simulation_tree_->ExpandNode(nodeptr, d == 1 ? true : false);           
 
             if(nodeptr->IsLeaf()) { // still havent encountered yet for some reason
                 print("found leaf, handle");

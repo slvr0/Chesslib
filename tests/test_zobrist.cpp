@@ -28,11 +28,10 @@ TEST(ZobristFullScope, ZobristStartPositionFindAll) {
 
     //easiest tool to use is the mcts nodemodel creation
     MCTSNodeModel* n1 = new MCTSNodeModel(startpos, NodeInfo(0,0));
-    MCTSNodeInserter* ninsert = new MCTSNodeInserter(new MCTSNodeTreeStatistics(10));
+    MCTSNodeInserter* ninsert = new MCTSNodeInserter();
+    MCTSNodeExpansionHeader expander (ninsert);
 
-    MCTSNodeExpansion expander(ninsert);
-
-    expander.Expand(n1);
+    expander.ExpandNodeFull(n1);
 
     //make a list of zobrists in expanded position
     //assert that b123 keys are found in this list
@@ -74,8 +73,12 @@ TEST(ZobristFullScope, ZobristStartPositionFindAll) {
 TEST(ZobristFullScope, ZobristComplexFullTest) {
     //test more compllicated stuff
 
-    MCTSNodeInserter* ninsert = new MCTSNodeInserter(new MCTSNodeTreeStatistics(10));
-    MCTSNodeExpansion expander(ninsert);
+    //easiest tool to use is the mcts nodemodel creation
+
+    //easiest tool to use is the mcts nodemodel creation
+    MCTSNodeInserter* ninsert = new MCTSNodeInserter();
+    MCTSNodeExpansionHeader expander (ninsert);
+
 
     std::string kiwipep_fen_wenp_b = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/Pp2P3/2N2Q1p/1PPBBPPP/R3K2R b KQkq a3 0 1";
 
@@ -95,7 +98,7 @@ TEST(ZobristFullScope, ZobristComplexFullTest) {
 
     auto kiwinew = CREATE(kiwipep_fen_wenp_b);
     MCTSNodeModel* n2 = new MCTSNodeModel(kiwinew, NodeInfo(0,0));
-    expander.Expand(n2);
+    expander.ExpandNodeFull(n2);
 
     std::vector<unsigned long long int> zkeys2;
     for(auto & edge : n2->GetEdges()) {
@@ -139,8 +142,12 @@ TEST(ZobristFullScope, ZobristComplexFullTest) {
 TEST(ZobristFullScope, ZobristPromotionTest) {
     //test more compllicated stuff
 
-    MCTSNodeInserter* ninsert = new MCTSNodeInserter(new MCTSNodeTreeStatistics(10));
-    MCTSNodeExpansion expander(ninsert);
+    //easiest tool to use is the mcts nodemodel creation
+
+    //easiest tool to use is the mcts nodemodel creation
+    MCTSNodeInserter* ninsert = new MCTSNodeInserter();
+    MCTSNodeExpansionHeader expander (ninsert);
+
 
     std::string promotion_fen = "n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1";
 
@@ -154,7 +161,7 @@ TEST(ZobristFullScope, ZobristPromotionTest) {
 
     auto position = CREATE(promotion_fen);
     MCTSNodeModel* n3 = new MCTSNodeModel(position, NodeInfo(0,0));
-    expander.Expand(n3);
+    expander.ExpandNodeFull(n3);
 
     std::vector<unsigned long long int> zkeys2;
     for(auto & edge : n3->GetEdges()) {

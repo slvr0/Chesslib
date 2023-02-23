@@ -7,7 +7,8 @@
 
 class MCTSNodeInserter {
 public:
-    MCTSNodeInserter(MCTSNodeTreeStatistics* tree_stats = nullptr);   
+    MCTSNodeInserter(MCTSNodeTreeStatistics& tree_stats);   
+    MCTSNodeInserter(); 
 
     MCTSNodeModel* CreateNodeModel(const int& depth, const Board& board, MCTSNodeModel* parent = nullptr);   
     MCTSNodeModel* CreateNodeModel(const int& depth, const Board& board, std::string verbose, MCTSNodeModel* parent = nullptr);  

@@ -53,8 +53,6 @@ public:
     std::string NodeDisplaySimple() const;
     std::string NodeDisplayFull()   const;
 
-    
-
 private:
     const Board                 board_;
     const NodeInfo              info_;

@@ -15,7 +15,7 @@ class MCTSNodeTree {
 public:
     MCTSNodeTree(const Board& rootposition);
     MCTSNodeTree(MCTSNodeModel* node);
-    ~MCTSNodeTree() = default;
+    ~MCTSNodeTree(); 
 
     MCTSNodeModel* InsertNode(const int& depth, const Board& board, MCTSNodeModel* parent = nullptr);
     std::string    GetNodeTreeStatistics() const;
@@ -31,11 +31,11 @@ public:
     MCTSNodeModel* ReleaseHead();
 
     void MaybeExpandRoot();
+    void ExpandNode(MCTSNodeModel* from, bool verbose = false);
 
-    void ExpandVerbose(MCTSNodeModel* from);
-    void ExpandNormal(MCTSNodeModel* from);
 
-    std::string DebugMetrics() const;
+    void SetNodeInserter(MCTSNodeInserter* inserter);
+    void DebugMetrics() const;
 
     MCTSNodeModel* Slice(MCTSNodeModel* at);
     std::vector<MCTSNodeTree*> DisjointAllBranchesL1();
@@ -43,11 +43,14 @@ public:
     void AttachSubTrees(std::vector<MCTSNodeTree*> nodetress, const bool& atroot=true);
 
 private:
+    OptionsDict                                 params_;
     std::unique_ptr<MCTSNodeModel>              root_           = nullptr;
-    std::unique_ptr<MCTSNodeTreeStatistics>     tree_stats_     = nullptr;
-    std::unique_ptr<MCTSNodeInserter>           node_inserter_  = nullptr;
-    std::unique_ptr<MCTSNodeExpansion>          nexp_           = nullptr;
-    std::unique_ptr<MCTSVerboseNodeExpansion>   verbose_nexp_   = nullptr;
+    MCTSNodeTreeStatistics                      tree_stats_     { params_.kTreeStatisticPlyDepth };
+    std::shared_ptr<MCTSNodeInserter>           node_inserter_  = nullptr;
+    MCTSNodeExpansionHeader                     node_exp_header_ { nullptr };
+
+    //deletes entire tree including head node
+    void DeleteNodeModelChain(MCTSNodeModel* node);
 };
 
 #endif

@@ -1,8 +1,12 @@
 #include "mcts_nodeinserter.h"
 
-    MCTSNodeInserter::MCTSNodeInserter(MCTSNodeTreeStatistics* tree_stats) : 
-        tree_stats_(tree_stats)
+    MCTSNodeInserter::MCTSNodeInserter(MCTSNodeTreeStatistics& tree_stats) : 
+        tree_stats_(&tree_stats)
     {
+
+    }
+
+    MCTSNodeInserter::MCTSNodeInserter() {
 
     }
 

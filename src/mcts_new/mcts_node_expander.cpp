@@ -1,12 +1,7 @@
 #include "mcts_node_expander.h"
 
-MCTSNodeExpansion::MCTSNodeExpansion(MCTSNodeInserter* node_inserter) :
-    node_inserter_(node_inserter)
-{
-
-}
-
 void MCTSNodeExpansion::Expand(MCTSNodeModel* from) {
+    m_assert(node_inserter_, "Node Expander have no Insertion tool attached");
     expansion_node_     = from;
     const Board board   = expansion_node_->GetBoard();
     
@@ -18,13 +13,8 @@ void MCTSNodeExpansion::OnInsert(const Board& board, const int& depth) {
     node_inserter_->CreateNodeModel(expansion_node_->GetInfo().GetDepth() + 1, board, expansion_node_);
 }
 
-MCTSVerboseNodeExpansion::MCTSVerboseNodeExpansion(MCTSNodeInserter* node_inserter) :
-    node_inserter_(node_inserter)
-{
-
-}
-
 void MCTSVerboseNodeExpansion::Expand(MCTSNodeModel* from) {
+    m_assert(node_inserter_, "Verbose Node Expander have no Insertion tool attached");
     expansion_node_     = from;
     const Board board   = expansion_node_->GetBoard();
     
@@ -35,4 +25,9 @@ void MCTSVerboseNodeExpansion::Expand(MCTSNodeModel* from) {
 void MCTSVerboseNodeExpansion::OnInsertDebug(const Board& b1, const Board& b2, const std::string & info) {
        
     node_inserter_->CreateNodeModel(expansion_node_->GetInfo().GetDepth() + 1, b2, info, expansion_node_);
+}
+
+void MCTSNodeExpansionHeader::ExpandNodeFull(MCTSNodeModel* from, bool verbose) {
+    if(verbose) verbose_expander_.Expand(from);
+    else expander_.Expand(from);
 }

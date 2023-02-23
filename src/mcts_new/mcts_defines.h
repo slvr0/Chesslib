@@ -39,9 +39,9 @@ class OptionsDict {
 public:
     static constexpr uint16_t kMaxSimulationPly = 150; 
     static constexpr int      kRandSelectionUpperbound = 35;
-    static constexpr int      kSimulationEntries = 10000;
+    static constexpr int      kSimulationEntries = 1000;
     static constexpr double   kSimulationTimeout = 15.f;
-
+    static constexpr int      kTreeStatisticPlyDepth = 10;
 };
 
 #endif
