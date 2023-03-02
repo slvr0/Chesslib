@@ -1,32 +1,38 @@
 #!/usr/bin/env python3
 
+from collections import defaultdict, deque
+
 from coresystem.worker import Worker
-from db_importer import DBImporter
+from coresystem.state_representation import *
+
+from environment.db_importer import *
 
 class SupervisedEnvironment :
     def __init__(self, sv_conf):
         self.sv_conf = sv_conf
         self.learn_root = ""
         self.visited_paths = [] #subdirs under learning root path
+        self.import_db = DBImporter(import_callback = self.generate_job)
+
+        self.game_queue = collections.deque(maxlen=1000) #connect workers by hooking to this
+        self.worker_pool = []
+
+        #in future connect this to que
+        self.worker = Worker()
 
 
     #purpose is to maybe split up training data into multiple paths, will be excessive amount
-    def chunk_training_data(self):
-        pass
+    def process_chunks(self):
+        self.import_db.import_from("modern2")
 
-    def generate_job(self, db_importer : DBImporter) -> Worker:
+    def generate_job(self, job : JobContext) :
+        #self.game_queue.append(job)
 
-
-        game_hist = db_importer.import_from(self.learn_root + "g1")
-        return Worker(
-            batch = game_hist
-
-        )
+        self.worker(job)
 
 
 
-
-    #not sure if this is a thing
+    #not sure if this is needed
     def __hash__(self):
         raise NotImplemented()
 

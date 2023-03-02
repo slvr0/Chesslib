@@ -4,6 +4,28 @@ from dataclasses import dataclass
 
 from coresystem.state_representation import *
 
+#0 - 10 , r : 0 , 11 - 20 r : 1,2 , 21 - 30 : r 1,2,3,4 : 31 - 40 : r 1,2,3,4,5,6 : 41-50 FULL
+
+__R0 = 0xFF
+__R1 = 0xFF << 8
+__R2 = 0xFF << 16
+__R3 = 0xFF << 24
+__R4 = 0xFF << 32
+__R5 = 0xFF << 40
+__R6 = 0xFF << 48
+__R7 = 0xFF << 56
+
+PLY_FILL_MOVE = [
+    __R0 | __R1,
+    __R0 | __R1 | __R2 | __R3,
+    __R0 | __R1 | __R2 | __R3 | __R4 | __R5 ,
+    0xFFFFFFFF
+]
+
+
+
+
+
 boardnotations = [
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
     "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
@@ -37,7 +59,6 @@ class HistoryContextObject:
     def as_nn_enumerations(self):
         raise NotImplemented()
 
-
 class IChessDataInterpreter:
     def __init__(self):
         pass
@@ -54,7 +75,7 @@ class IChessDataInterpreter:
         raise NotImplemented()
     def get_queens_uint64(self, state):
         raise NotImplemented()
-    def get_king_uint64(self, state):
+    def get_king_uint64(self,state):
         raise NotImplemented()
     def get_white(self, state):
         raise NotImplemented()
@@ -85,13 +106,13 @@ class LibChessDataInterpreter(IChessDataInterpreter) :
     def get_queens_uint64(self, state):
         return state.queens
     def get_king_uint64(self, state):
-        return state.king
+        return state.kings
     def get_white(self, state):
         return state.occupied_co[1]
     def get_black(self, state):
-        raise state.occupied_co[0]
+        return state.occupied_co[0]
     def get_enp_sq(self, state):
-        raise state.ep_square
+        return state.ep_square
     def get_castling(self, state):
         c64 = extract_bits(state.castling_rights)
         woo = True if c64.__contains__(7)   else False
@@ -112,6 +133,10 @@ class InputPlane :
     "represents the plane index"
     mask : int
     "represents the values set in a uint64t"
+
+#makes a neural input structure from a chain of input planes
+class NeuralInput :
+    planes : [InputPlane]
 
 class DataPreprocessor :
     def __init__(self):
@@ -175,22 +200,75 @@ class DataPreprocessor :
             return  InputPlane(18, 1 << enp_square) if white_acts else \
                     InputPlane(18, 1 << 63 - enp_square)
 
-    #think about this one some more, mask some percentage of ones from 50 - x / 64
+    #0 - 10 , r : 0 , 11 - 20 r : 1,2 , 21 - 30 : r 1,2,3,4 : 31 - 40 : r 1,2,3,4,5,6 : 41-50 FULL ?? are u high
     def fill_rule_50_plane(self, state):
-        return InputPlane(19, 0x0)
+        r50 = self.processor.get_rule50(state)
+        if r50 in range(0, 12)      : return InputPlane(19, PLY_FILL_MOVE[0])
+        elif r50 in range(13, 25)   : return InputPlane(19, PLY_FILL_MOVE[1])
+        elif r50 in range(26, 38)   : return InputPlane(19, PLY_FILL_MOVE[2])
+        else   : return InputPlane(19, PLY_FILL_MOVE[3])
 
-    # think about this one some more, mask some percentage of ones from maxply_endgame - x / 64
+
+
+    # similar to above, #0 - 10 , r : 0 , 11 - 20 r : 1,2 , 21 - 30 : r 1,2,3,4 : 31 - 40 : r 1,2,3,4,5,6 : 41-50 FULL
     def fill_plymoves(self, state):
-        return InputPlane(20, 0x0)
+        plyn = self.processor.get_ply(state) #scale up abit
+        if plyn in range(0, 12)      : return InputPlane(20, PLY_FILL_MOVE[0])
+        elif plyn in range(13, 25)   : return InputPlane(20, PLY_FILL_MOVE[1])
+        elif plyn in range(26, 38)   : return InputPlane(20, PLY_FILL_MOVE[2])
+        else   : return InputPlane(20, PLY_FILL_MOVE[3])
 
     #fix tomorrow, e3e4 = indexes from / to , mirror for black , insert plane
+    #most recent moves in front, store backwards chain
     def fill_hist_plane(self, history, white_acts = True):
-        return
+        planes = []
+        wact = white_acts
+        for i, histinfo in enumerate(history):
 
-    def convolve_into_network_planes(self, state, history : HistoryContextObject,
+            fidx = boardnotations.index(histinfo[0:2]) if wact else boardnotations_mirror.index(histinfo[0:2])
+            tidx = boardnotations.index(histinfo[2:4]) if wact else boardnotations_mirror.index(histinfo[2:4])
+
+            planes.append(InputPlane(20+i, 1 << fidx | 1 << tidx))
+
+            #print(wact, histinfo[0:2], fidx, histinfo[2:4], tidx)
+
+            wact = not wact #swap act/obs in hist chain
+
+        return planes
+
+    def convolve_into_network_planes(self, state, history : [str],
                                      white_acts : bool = True ) -> [InputPlane]:
-        #lets go
-        pass
+
+        active_planes       = self.fill_actor(state, white_acts) # 6
+        observer_planes     = self.fill_observer(state, white_acts) # 6
+        actor_obs_planes    = self.fill_active(white_acts) # 2
+        castle_planes       = self.fill_castle_planes(state, white_acts) # 4
+        enp_plane           = self.fill_enp_plane(state, white_acts) # 1
+        r50_plane           = self.fill_rule_50_plane(state) # 1
+        ply_plane           = self.fill_plymoves(state) # 1
+        hist_planes         = self.fill_hist_plane(history, white_acts) # 11
+
+        return [
+            active_planes,
+            observer_planes,
+            actor_obs_planes,
+            castle_planes,
+            enp_plane,
+            r50_plane,
+            ply_plane,
+            hist_planes
+        ]
+
+
+
+
+
+
+
+
+
+
+
 
 
 
