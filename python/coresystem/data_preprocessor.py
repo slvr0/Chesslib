@@ -1,30 +1,9 @@
 #!/usr/bin/env python3
 import dataclasses
 from dataclasses import dataclass
+import numpy as np
 
 from coresystem.state_representation import *
-
-#0 - 10 , r : 0 , 11 - 20 r : 1,2 , 21 - 30 : r 1,2,3,4 : 31 - 40 : r 1,2,3,4,5,6 : 41-50 FULL
-
-__R0 = 0xFF
-__R1 = 0xFF << 8
-__R2 = 0xFF << 16
-__R3 = 0xFF << 24
-__R4 = 0xFF << 32
-__R5 = 0xFF << 40
-__R6 = 0xFF << 48
-__R7 = 0xFF << 56
-
-PLY_FILL_MOVE = [
-    __R0 | __R1,
-    __R0 | __R1 | __R2 | __R3,
-    __R0 | __R1 | __R2 | __R3 | __R4 | __R5 ,
-    0xFFFFFFFF
-]
-
-
-
-
 
 boardnotations = [
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
@@ -36,6 +15,7 @@ boardnotations = [
     "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
     "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"
 ]
+
 boardnotations_mirror = boardnotations.copy()
 boardnotations_mirror.reverse()
 
@@ -55,7 +35,6 @@ class HistoryContextObject:
     move_history : [(str, bool)]
     "Previous moves in chain, bool represents white acting. otherwise enumeration index must be mirror"
 
-    #Should these be mirrored?
     def as_nn_enumerations(self):
         raise NotImplemented()
 
@@ -121,7 +100,7 @@ class LibChessDataInterpreter(IChessDataInterpreter) :
         booo = True if c64.__contains__(56) else False
         return woo, wooo, boo, booo
     def get_ply(self, state):
-        return state.ply
+        return state.ply()
     def get_fullmove(self, state):
         return state.fullmove
     def get_rule50(self, state):
@@ -134,131 +113,103 @@ class InputPlane :
     mask : int
     "represents the values set in a uint64t"
 
+    def as_numpy(self):
+        if self.mask == 0xFFFFFFFF : return np.ones(shape=(8,8), dtype=int)
+        else :
+            npz = np.zeros(shape=(64), dtype=int)
+            npz[extract_bits(self.mask)] = 1
+            npz = npz.reshape((8,8))
+        return npz
+
 #makes a neural input structure from a chain of input planes
 class NeuralInput :
     planes : [InputPlane]
 
 class DataPreprocessor :
     def __init__(self):
-
         self.processor = LibChessDataInterpreter()
 
-    def fill_actor(self, state, white_acts = True):
+    def fill_actor(self, netin : np.array, state, white_acts = True):
         actormask = self.processor.get_white(state) if white_acts else \
                     self.processor.get_black(state)
-        return (
-            InputPlane(0, self.processor.get_pawns_uint64(state) & actormask),
-            InputPlane(1, self.processor.get_knights_uint64(state) & actormask),
-            InputPlane(2, self.processor.get_bishops_uint64(state) & actormask),
-            InputPlane(3, self.processor.get_rooks_uint64(state) & actormask),
-            InputPlane(4, self.processor.get_queens_uint64(state) & actormask),
-            InputPlane(5, self.processor.get_king_uint64(state) & actormask)
-        )
 
-    def fill_observer(self, state, white_acts = True):
+        netin[0, extract_bits(self.processor.get_pawns_uint64(state) & actormask)] = 1
+        netin[1, extract_bits(self.processor.get_knights_uint64(state) & actormask)] = 1
+        netin[2, extract_bits(self.processor.get_bishops_uint64(state) & actormask)] = 1
+        netin[3, extract_bits(self.processor.get_rooks_uint64(state) & actormask)] = 1
+        netin[4, extract_bits(self.processor.get_queens_uint64(state) & actormask)] = 1
+        netin[5, extract_bits(self.processor.get_king_uint64(state) & actormask)] = 1
+
+
+    def fill_observer(self, netin, state, white_acts = True):
         actormask = self.processor.get_black(state) if white_acts else \
                     self.processor.get_white(state)
-        return (
-            InputPlane(6, self.processor.get_pawns_uint64(state) & actormask),
-            InputPlane(7, self.processor.get_knights_uint64(state) & actormask),
-            InputPlane(8, self.processor.get_bishops_uint64(state) & actormask),
-            InputPlane(9, self.processor.get_rooks_uint64(state) & actormask),
-            InputPlane(10, self.processor.get_queens_uint64(state) & actormask),
-            InputPlane(11, self.processor.get_king_uint64(state) & actormask)
-        )
+        netin[6, extract_bits(self.processor.get_pawns_uint64(state) & actormask)] = 1
+        netin[7, extract_bits(self.processor.get_knights_uint64(state) & actormask)] = 1
+        netin[8, extract_bits(self.processor.get_bishops_uint64(state) & actormask)] = 1
+        netin[9, extract_bits(self.processor.get_rooks_uint64(state) & actormask)] = 1
+        netin[10, extract_bits(self.processor.get_queens_uint64(state) & actormask)] = 1
+        netin[11, extract_bits(self.processor.get_king_uint64(state) & actormask)] = 1
 
-    def fill_active(self, white_acts = True):
-        return (
-            InputPlane(12, 0xFFFFFFFF),
-            InputPlane(13, 0x0),
-        ) if white_acts else \
-        (
-            InputPlane(12, 0x0),
-            InputPlane(13, 0xFFFFFFFF),
-        )
+    def fill_active(self, netin, white_acts = True):
+        if white_acts : netin[12, :] = 1
+        else : netin[13, :] = 1
 
-    #remember the same logic, actors castling right should have the same input slot
-    def fill_castle_planes(self, state, white_acts = True):
+    def fill_castle_planes(self, netin, state, white_acts = True):
         woo, wooo, boo, booo = self.processor.get_castling(state)
-        return (
-            InputPlane(14, 0xFFFFFFFF if woo else 0x0),
-            InputPlane(15, 0xFFFFFFFF if wooo else 0x0),
-            InputPlane(16, 0xFFFFFFFF if boo else 0x0),
-            InputPlane(17, 0xFFFFFFFF if booo else 0x0),
-        ) if white_acts else \
-        (
-            InputPlane(14, 0xFFFFFFFF if boo else 0x0),
-            InputPlane(15, 0xFFFFFFFF if booo else 0x0),
-            InputPlane(16, 0xFFFFFFFF if woo else 0x0),
-            InputPlane(17, 0xFFFFFFFF if wooo else 0x0),
-        )
-
-    def fill_enp_plane(self, state, white_acts = True):
-        enp_square = self.processor.get_enp_sq(state)
-        if enp_square == None : return InputPlane(18, 0x0)
+        if white_acts :
+            if woo : netin[14, :] = 1
+            if wooo : netin[15, :] = 1
+            if boo: netin[16, :] = 1
+            if booo: netin[17, :] = 1
         else :
-            return  InputPlane(18, 1 << enp_square) if white_acts else \
-                    InputPlane(18, 1 << 63 - enp_square)
+            if boo : netin[14, :] = 1
+            if booo : netin[15, :] = 1
+            if woo: netin[16, :] = 1
+            if wooo: netin[17, :] = 1
 
-    #0 - 10 , r : 0 , 11 - 20 r : 1,2 , 21 - 30 : r 1,2,3,4 : 31 - 40 : r 1,2,3,4,5,6 : 41-50 FULL ?? are u high
-    def fill_rule_50_plane(self, state):
+    def fill_enp_plane(self, netin, state, white_acts = True):
+        enp_square = self.processor.get_enp_sq(state)
+
+        if enp_square :
+            if white_acts : netin[18, enp_square] = 1
+            else : netin[18, 63 - enp_square] = 1
+
+    def fill_rule_50_plane(self, netin, state):
         r50 = self.processor.get_rule50(state)
-        if r50 in range(0, 12)      : return InputPlane(19, PLY_FILL_MOVE[0])
-        elif r50 in range(13, 25)   : return InputPlane(19, PLY_FILL_MOVE[1])
-        elif r50 in range(26, 38)   : return InputPlane(19, PLY_FILL_MOVE[2])
-        else   : return InputPlane(19, PLY_FILL_MOVE[3])
+        netin[19, 0: int((r50 / 64) * 64)] = 1
 
+    def fill_plymoves(self, netin, state):
+        plyn = self.processor.get_ply(state)
+        netin[20, 0: int((plyn / 64) * 64)] = 1
 
-
-    # similar to above, #0 - 10 , r : 0 , 11 - 20 r : 1,2 , 21 - 30 : r 1,2,3,4 : 31 - 40 : r 1,2,3,4,5,6 : 41-50 FULL
-    def fill_plymoves(self, state):
-        plyn = self.processor.get_ply(state) #scale up abit
-        if plyn in range(0, 12)      : return InputPlane(20, PLY_FILL_MOVE[0])
-        elif plyn in range(13, 25)   : return InputPlane(20, PLY_FILL_MOVE[1])
-        elif plyn in range(26, 38)   : return InputPlane(20, PLY_FILL_MOVE[2])
-        else   : return InputPlane(20, PLY_FILL_MOVE[3])
-
-    #fix tomorrow, e3e4 = indexes from / to , mirror for black , insert plane
-    #most recent moves in front, store backwards chain
-    def fill_hist_plane(self, history, white_acts = True):
+    def fill_hist_plane(self, netin, history, white_acts = True):
         planes = []
         wact = white_acts
         for i, histinfo in enumerate(history):
-
             fidx = boardnotations.index(histinfo[0:2]) if wact else boardnotations_mirror.index(histinfo[0:2])
             tidx = boardnotations.index(histinfo[2:4]) if wact else boardnotations_mirror.index(histinfo[2:4])
 
-            planes.append(InputPlane(20+i, 1 << fidx | 1 << tidx))
-
-            #print(wact, histinfo[0:2], fidx, histinfo[2:4], tidx)
+            netin[20+i, fidx] = 1
+            netin[20+i, tidx] = 1
 
             wact = not wact #swap act/obs in hist chain
 
-        return planes
-
     def convolve_into_network_planes(self, state, history : [str],
-                                     white_acts : bool = True ) -> [InputPlane]:
+                                     white_acts : bool = True ) -> np.array:
 
-        active_planes       = self.fill_actor(state, white_acts) # 6
-        observer_planes     = self.fill_observer(state, white_acts) # 6
-        actor_obs_planes    = self.fill_active(white_acts) # 2
-        castle_planes       = self.fill_castle_planes(state, white_acts) # 4
-        enp_plane           = self.fill_enp_plane(state, white_acts) # 1
-        r50_plane           = self.fill_rule_50_plane(state) # 1
-        ply_plane           = self.fill_plymoves(state) # 1
-        hist_planes         = self.fill_hist_plane(history, white_acts) # 11
+        netin = np.zeros(shape=(32,64), dtype=int)
 
-        return [
-            active_planes,
-            observer_planes,
-            actor_obs_planes,
-            castle_planes,
-            enp_plane,
-            r50_plane,
-            ply_plane,
-            hist_planes
-        ]
+        self.fill_actor(netin, state, white_acts) # 6
+        self.fill_observer(netin, state, white_acts) # 6
+        self.fill_active(netin, white_acts) # 2
+        self.fill_castle_planes(netin, state, white_acts) # 4
+        self.fill_enp_plane(netin, state, white_acts) # 1
+        self.fill_rule_50_plane(netin, state) # 1
+        self.fill_plymoves(netin, state) # 1
+        self.fill_hist_plane(netin, history, white_acts) # 11
 
+        return netin.reshape((32, 8, 8))
 
 
 

@@ -2,5 +2,6 @@
 
 def create_general_conf() :
     return {
-        'a' : 1
+        'gpu' : 'all'
     }
+

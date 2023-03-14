@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
+import threading
 
 from environment.supervised_env import SupervisedEnvironment
 from configs.sv_hyperparams import create_sv_conf
+from coresystem.training_nexus import *
 
 class CoreSystem:
-    def __init__(self, optionsdict):
+    def __init__(self):
         self.connected = False
-        self.sv_conf = create_sv_conf()
 
-    def init_supervised_training(self, sv_conf):
-        supervised_env = SupervisedEnvironment(sv_conf)
-        supervised_env.process_chunks()
+        self.nexus_factory = TrainingNexusFactory(None, None)
+
 
     def set_c_interface(self, interface):
         self.interface = interface
@@ -27,5 +27,14 @@ class CoreSystem:
     def __str__(self):
         return "Core System , is currently {:} connected to C".format("" if self.connected else "not")
 
-def create_coresystem(optionsdict) :
-    return CoreSystem(optionsdict) #??
+    def initiate_training_environment(self, env, gconf, netconf):
+        env_execution_thread = threading.Thread(target=env.process_chunks)
+        env_execution_thread.start()
+
+        self.nexus_factory.on_env_create(env, gconf, netconf)
+        self.nexus_factory.execute_nexuses()
+
+        env_execution_thread.join()
+
+
+

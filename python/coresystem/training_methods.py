@@ -11,6 +11,8 @@ class AgentTrainingMethods :
         pass
 
     @staticmethod
-    def huber_loss(logpredicts : tf.Tensor, expected : tf.Tensor):
-        pass
+    def huber_loss(target : tf.Tensor, outcome : tf.Tensor):
+        return tf.keras.losses.Huber(target, outcome)
+
+
 

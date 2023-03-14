@@ -5,9 +5,15 @@ import os
 import chess
 import dataclasses
 import collections
+import threading
+import stockfish
+import time
+
+
+import multiprocessing as mp
 
 from coresystem.state_representation import *
-
+from environment.pgn_import_parse import V1ChunkParser, PGNTools, PGNReader
 
 @dataclasses.dataclass
 class JobContext :
@@ -15,63 +21,53 @@ class JobContext :
     movehist : [str]
     result : GameResult
     id : int
+    origin : str
 
     def __eq__(self, other):
         if isinstance(other, JobContext):
             return self.id == other.id
         else : return NotImplemented()
 
-class DBImporter :
-    def __init__(self, import_callback):
-        self.import_callback = import_callback
-        self.root_dir = "training/"
+#manages a pool of threaded pgn readers
+@dataclasses.dataclass
+class DirectoryPool :
+    path : str
+    writer_threads : int = 1
+    rootdir: str = "training"
 
-    def create_jobcontext(self, statechain: [chess.Board], movehist: [str], result: GameResult, id : int) -> JobContext:
-        return JobContext(statechain, movehist, result, id)
+    def existing_replica(self):
+        return os.path.isdir(os.path.join(self.rootdir + "_processed", self.path))
 
-    def import_from(self, pathdir):
-        map_result = {
-            '1-0': GameResult.WHITE_WIN,
-            '0-1': GameResult.BLACK_WIN,
-            '1/2-1/2': GameResult.DRAW
-        }
+    def existing_file(self, file):
+        return os.path.isfile(os.path.join(self.rootdir + "_processed", self.path + "/" + file))
 
-        mockboard = chess.Board()
-        fullpath = os.path.join(self.root_dir, pathdir)
-        processed_games = 0
-        if os.path.isdir(fullpath):
-            for file in os.listdir(fullpath):
-                with open(os.path.join(fullpath, file), "r") as file:
+    def process_one_file(self, readfile_name):
+        read_path = os.path.join(self.rootdir, self.path)
+        parsing_path = os.path.join(self.rootdir + "_processed", self.path)
+        read_file = os.path.join(read_path, readfile_name)
 
-                    while (not file.closed):
+        if not os.path.exists(parsing_path) :
+            os.makedirs(parsing_path)
 
-                        for i in range(11):
-                            _ = file.readline()
+        #check if file has been previously parsed
 
-                        mockboard.reset()
-                        states = []
-                        storedmovetransitions = []
-                        while (True):
-                            linecontent = file.readline()
-                            if (linecontent == "\n" or linecontent == ''):
-                                break
+        num_files_fptr = lambda dir_path : sum([1 for element in os.listdir(dir_path)
+                                                if os.path.isfile(os.path.join(dir_path, element))])
+        files = num_files_fptr(parsing_path)
+        print(files)
 
-                            moves = linecontent.strip('\n').split(' ')
-                            store_res = moves[-1]
-                            moves = [m.lstrip('1234567890.') for m in moves]
-                            for m in moves:
-                                if m == '': break
-                                states.append(mockboard.copy())
-                                storedmovetransitions.append(mockboard.push_san(m).uci())
+        entries = PGNTools.peek_entries(read_file)
+        reader = PGNReader()
+        reader.read_pgn_to_v1_chunks(read_file, files)
+        writers = []
 
-                        gameresult = map_result[store_res]
-                        processed_games += 1
+        for i in range(self.writer_threads):
+            writer = V1ChunkParser(reader.condvar,reader.jobque, parsing_path, i)
+            th = mp.Process(target=writer.process_v1_jobs_onthread, args=[readfile_name,])
+            #th.daemon = True // kills the process after main process exits
+            th.start()
+            writers.append(th)
 
-
-                        self.import_callback(self.create_jobcontext(states, storedmovetransitions, gameresult, processed_games))
-
-
-
-
-                        if processed_games == 1000: exit(1)
-
+        for th in writers:
+            th.join()
+        return True
