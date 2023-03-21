@@ -78,11 +78,21 @@ static const std::string notations[] =
 
 static int notation_idx(std::string notation)
 {
-    std::transform(notation.begin(), notation.end(),notation.begin(), toupper);
+   
 
     auto element = std::find(std::begin(notations), std::end(notations), notation);
 
     if (element != std::end(notations))  return std::distance(notations, element);
+    else return -1;
+}
+
+static int notation_reversed_idx(std::string notation)
+{
+    
+
+    auto element = std::find(std::begin(notations), std::end(notations), notation);
+
+    if (element != std::end(notations))  return 63 - std::distance(notations, element);
     else return -1;
 }
 
@@ -156,3 +166,32 @@ inline std::vector<std::string> __SplitString(const std::string& str,
 
     return strings;
 }
+
+template <typename T>
+class BitIterator {
+ public:
+  using iterator_category = std::input_iterator_tag;
+  using difference_type = T;
+  using value_type = T;
+  using pointer = T*;
+  using reference = T&;
+
+  BitIterator(std::uint64_t value) : value_(value){};
+  bool operator!=(const BitIterator& other) { return value_ != other.value_; }
+
+  void operator++() { value_ &= (value_ - 1); }
+  T operator*() const { return LSquare(value_); }
+
+ private:
+  std::uint64_t value_;
+};
+
+class IterateBits {
+ public:
+  IterateBits(std::uint64_t value) : value_(value) {}
+  BitIterator<int> begin() { return value_; }
+  BitIterator<int> end() { return 0; }
+
+ private:
+  std::uint64_t value_;
+};

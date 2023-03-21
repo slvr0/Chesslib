@@ -28,7 +28,7 @@ MCTSModelEvaluation::MCTSModelEvaluation() {
 
 }
 
-SimulationResult MCTSModelEvaluation::  SimulateGameplay(const Board& board, const OptionsDict& params) {
+SimulationResult MCTSModelEvaluation::SimulateGameplay(const Board& board, const OptionsDict& params) {
 
     Board current_state = board;
     

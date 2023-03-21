@@ -27,6 +27,8 @@ class CoreSystem:
     def __str__(self):
         return "Core System , is currently {:} connected to C".format("" if self.connected else "not")
 
+
+
     def initiate_training_environment(self, env, gconf, netconf):
         env_execution_thread = threading.Thread(target=env.process_chunks)
         env_execution_thread.start()

@@ -1,7 +1,7 @@
 add_subdirectory(blowfish)
 add_subdirectory(chess_interface)
 add_subdirectory(mcts_new)
-
+add_subdirectory(network)
 
 
 

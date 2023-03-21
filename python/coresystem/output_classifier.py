@@ -9,7 +9,6 @@ class NetworkOutputClassifier :
     def __init__(self):
         self.mask_legal_moves = True
 
-
     def parse(net_out, mirror = False):
         pass
 
@@ -27,16 +26,18 @@ class NetworkOutputClassifier :
         target = tf.nn.relu(target)
         return target, output
 
-
-    def correct_policy_ch_comp(self, target_legal_list : [], output):
+    #target = list[1858]
+    @staticmethod
+    def correct_policy_ch_comp(target, output):
         output = tf.cast(output, tf.float32)
         # Calculate loss on policy head1
 
         # extract mask for legal moves from target policy
-        move_is_legal = tf.greater(target_legal_list, 0)
+        move_is_legal = tf.greater(target, 0)
 
         # replace logits of illegal moves with large negative value (so that it doesn't affect policy of legal moves) without gradient
-        illegal_filler = tf.zeros_like(output) - 1.0e10
+
+        illegal_filler = tf.zeros_like(output)
         output = tf.where(move_is_legal, output, illegal_filler)
 
         return output

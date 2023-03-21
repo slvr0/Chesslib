@@ -63,6 +63,10 @@ class TrainingNexus :
                 neural_input = self.worker(job)
                 print(parse_to)
 
+    def train_on_batch(self, batch):
+        agent = NetworkAgent(self.model, 0.005, 1, self.gconf, "training_model_v0")
+
+        agent.inner_train_process(batch)
 
 
     def init_threaded(self):

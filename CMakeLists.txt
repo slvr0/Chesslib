@@ -39,11 +39,30 @@ target_include_directories(main PUBLIC)
 #these run currently
 #-O3 -mpopcnt -march=native -mtune=generic -DPEXT -funsafe-math-optimizations 
 
-target_link_libraries(main PUBLIC -lgtest blowfish_engine chess_interface mcts_new -O3 -mpopcnt -march=native -mtune=generic -DPEXT -funsafe-math-optimizations -std=c++2a  -g -pthread)
+target_link_libraries(main PUBLIC blowfish_engine chess_interface mcts_new neuralnet -lgtest -ltensorflow -O3 -mpopcnt -march=native -mtune=generic -DPEXT -funsafe-math-optimizations -std=c++2a  -g -pthread)
 
+target_include_directories(neuralnet PUBLIC cppflow)
 target_include_directories(blowfish_engine PUBLIC src/blowfish)
 target_include_directories(chess_interface PUBLIC src/chess_interface)
 target_include_directories(mcts_new PUBLIC src/tree_simple)
+
+
+include_directories(/usr/local/include)
+target_include_directories(main PUBLIC ${LIBRARY_PATH})
+target_include_directories(main PUBLIC ${LD_LIBRARY_PATH})
+
+find_package(cppflow REQUIRED)
+
+target_include_directories(
+main PUBLIC
+cppflow::cppflow
+)
+
+target_link_libraries(
+main PUBLIC
+cppflow::cppflow
+)
+
 
 include(CTest)
 
