@@ -6,15 +6,15 @@ MCTSNodeTree::MCTSNodeTree(const Board &rootposition) :
     node_inserter_(std::make_shared<MCTSNodeInserter> (tree_stats_))    
 {
     
-    root_ = std::unique_ptr<MCTSNodeModel>(node_inserter_->CreateNodeModel(0, rootposition, nullptr));
+    root_ = std::unique_ptr<NodeGraph>(node_inserter_->CreateNodeModel(0, rootposition, nullptr));
     SetNodeInserter(node_inserter_.get());
 
 }
 
-MCTSNodeTree::MCTSNodeTree(MCTSNodeModel *node) :  
+MCTSNodeTree::MCTSNodeTree(NodeGraph *node) :  
     node_inserter_(std::make_shared<MCTSNodeInserter> (tree_stats_))  
 {   
-    root_ = std::unique_ptr<MCTSNodeModel>(node);
+    root_ = std::unique_ptr<NodeGraph>(node);
     SetNodeInserter(node_inserter_.get());
 }
 
@@ -31,7 +31,7 @@ void MCTSNodeTree::SetNodeInserter(MCTSNodeInserter* inserter) {
 }
 
 // dont need to pass depth just check parent depth + 1
-MCTSNodeModel *MCTSNodeTree::InsertNode(const int &depth, const Board &board, MCTSNodeModel *parent)
+NodeGraph *MCTSNodeTree::InsertNode(const int &depth, const Board &board, NodeGraph *parent)
 {
     return node_inserter_->CreateNodeModel(depth, board, parent);
 }
@@ -41,7 +41,7 @@ std::string MCTSNodeTree::GetNodeTreeStatistics() const
     return tree_stats_.CurrentTree();
 }
 
-MCTSNodeModel *MCTSNodeTree::Reset() const
+NodeGraph *MCTSNodeTree::Reset() const
 {
     return root_.get();
 }
@@ -56,7 +56,7 @@ int MCTSNodeTree::GetTreeSize() const
     return tree_stats_.GetEntries();
 }
 
-void MCTSNodeTree::ExpandNode(MCTSNodeModel* from, bool verbose) {
+void MCTSNodeTree::ExpandNode(NodeGraph* from, bool verbose) {
     node_exp_header_.ExpandNodeFull(from, verbose);
 }
 
@@ -83,7 +83,7 @@ void MCTSNodeTree::DebugMetrics() const
 }
 
 // we're not sure this node is in current tree? just assuming now, should have a compare function zobrist hash ?
-MCTSNodeModel* MCTSNodeTree::Slice(MCTSNodeModel *at)
+NodeGraph* MCTSNodeTree::Slice(NodeGraph *at)
 {
     m_assert(at->GetParent(), "trying to slice a node that is not connected");
 
@@ -92,7 +92,7 @@ MCTSNodeModel* MCTSNodeTree::Slice(MCTSNodeModel *at)
     return at;
 }
 
-MCTSNodeModel* MCTSNodeTree::ReleaseHead() {
+NodeGraph* MCTSNodeTree::ReleaseHead() {
     return root_.release();
 }
 std::vector<MCTSNodeTree*> MCTSNodeTree::DisjointAllBranchesL1() {
@@ -116,7 +116,7 @@ void MCTSNodeTree::AttachSubTrees(std::vector<MCTSNodeTree*> nodetrees, const bo
     }
 }
 
-void MCTSNodeTree::DeleteNodeModelChain(MCTSNodeModel* node) {
+void MCTSNodeTree::DeleteNodeModelChain(NodeGraph* node) {
     if(!node) return;
     
     for(auto & branch : node->GetEdges()) {

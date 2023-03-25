@@ -11,7 +11,7 @@ void MCTSSimulationEnvironment::Search(MCTSNodeTree*   simulation_tree, const Op
     simulation_tree_ = simulation_tree;
     params_ = opt;
 
-    MCTSNodeModel *nodeptr;
+    NodeGraph *nodeptr;
 
     MCTS_SIM::MCTSModelEvaluation model_eval;
 

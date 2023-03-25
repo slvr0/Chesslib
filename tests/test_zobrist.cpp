@@ -6,7 +6,7 @@
 
 #include "../src/blowfish/defs.h"
 
-#include "../src/mcts_new/mcts_nodemodel.h"
+#include "../src/mcts_new/mcts_nodegraph.h"
 #include "../src/mcts_new/mcts_node_expander.h"
 
 
@@ -27,7 +27,7 @@ TEST(ZobristFullScope, ZobristStartPositionFindAll) {
 
 
     //easiest tool to use is the mcts nodemodel creation
-    MCTSNodeModel* n1 = new MCTSNodeModel(startpos, NodeInfo(0,0));
+    NodeGraph* n1 = new NodeGraph(startpos, NodeInfo(0,0));
     MCTSNodeInserter* ninsert = new MCTSNodeInserter();
     MCTSNodeExpansionHeader expander (ninsert);
 
@@ -97,7 +97,7 @@ TEST(ZobristFullScope, ZobristComplexFullTest) {
     auto k6 = CREATE(k6_kn_capt);
 
     auto kiwinew = CREATE(kiwipep_fen_wenp_b);
-    MCTSNodeModel* n2 = new MCTSNodeModel(kiwinew, NodeInfo(0,0));
+    NodeGraph* n2 = new NodeGraph(kiwinew, NodeInfo(0,0));
     expander.ExpandNodeFull(n2);
 
     std::vector<unsigned long long int> zkeys2;
@@ -160,7 +160,7 @@ TEST(ZobristFullScope, ZobristPromotionTest) {
 
 
     auto position = CREATE(promotion_fen);
-    MCTSNodeModel* n3 = new MCTSNodeModel(position, NodeInfo(0,0));
+    NodeGraph* n3 = new NodeGraph(position, NodeInfo(0,0));
     expander.ExpandNodeFull(n3);
 
     std::vector<unsigned long long int> zkeys2;

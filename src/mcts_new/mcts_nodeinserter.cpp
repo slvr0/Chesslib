@@ -10,9 +10,9 @@
 
     }
 
-    MCTSNodeModel* MCTSNodeInserter::CreateNodeModel(const int& depth, const Board& board, MCTSNodeModel* parent) {
+    NodeGraph* MCTSNodeInserter::CreateNodeModel(const int& depth, const Board& board, NodeGraph* parent) {
         NodeInfo ninfo(depth, allocated_ids_++);
-        MCTSNodeModel* node = new MCTSNodeModel(board, ninfo, parent);
+        NodeGraph* node = new NodeGraph(board, ninfo, parent);
 
         if(parent) parent->InsertNode(node);  //connect it
         if(tree_stats_) tree_stats_->UpdateWithInsertion(depth); //update tree statistics  
@@ -20,9 +20,9 @@
         return node;
     }
 
-    MCTSNodeModel* MCTSNodeInserter::CreateNodeModel(const int& depth, const Board& board, std::string verbose, MCTSNodeModel* parent) {
+    NodeGraph* MCTSNodeInserter::CreateNodeModel(const int& depth, const Board& board, std::string verbose, NodeGraph* parent) {
         NodeInfo ninfo(depth, allocated_ids_++, verbose);
-        MCTSNodeModel* node = new MCTSNodeModel(board, ninfo, parent);
+        NodeGraph* node = new NodeGraph(board, ninfo, parent);
 
         if(parent) parent->InsertNode(node);  //connect it
         if(tree_stats_) tree_stats_->UpdateWithInsertion(depth); //update tree statistics  
@@ -30,7 +30,7 @@
         return node;
     }
 
-    void MCTSNodeInserter::InsertExistingNode(MCTSNodeModel* node, MCTSNodeModel* parent) {
+    void MCTSNodeInserter::InsertExistingNode(NodeGraph* node, NodeGraph* parent) {
         m_assert(parent, "Trying to insert a Node in Tree without parent");
 
         parent->InsertNode(node);

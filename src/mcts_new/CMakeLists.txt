@@ -2,8 +2,8 @@
 add_library(mcts_new
     mcts_defines.h
     mcts_defines.cpp
-    mcts_nodemodel.h
-    mcts_nodemodel.cpp
+    mcts_nodegraph.h
+    mcts_nodegraph.cpp
     mcts_nodetree.h
     mcts_nodetree.cpp
     mcts_nodeinserter.h

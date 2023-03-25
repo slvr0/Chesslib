@@ -21,7 +21,7 @@ class SupervisedEnvironment :
         self.buffer_job_lim = 2000
 
         self.job_queue = collections.deque(maxlen=10000) #connect workers by hooking to this
-            self.parse_chunk_queue = collections.deque(maxlen=10000) #connect workers by hooking to this
+        self.parse_chunk_queue = collections.deque(maxlen=10000) #connect workers by hooking to this
 
         self.thread_cond = threading.Condition()
         #if self.existing_file(parsing_file) : return False

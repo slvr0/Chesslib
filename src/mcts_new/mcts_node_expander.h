@@ -4,7 +4,7 @@
 #include "../blowfish/move_generator.h"
 #include "../blowfish/defs.h"
 
-#include "mcts_nodemodel.h"
+#include "mcts_nodegraph.h"
 #include "mcts_nodeinserter.h"
 
 
@@ -14,7 +14,7 @@ public:
 
     MCTSNodeExpansion() = default;
 
-    void Expand(MCTSNodeModel* from);
+    void Expand(NodeGraph* from);
     void OnInsert(const Board& board, const int& depth);
 
 private:
@@ -23,7 +23,7 @@ private:
     }
 private : 
     MCTSNodeInserter*   node_inserter_  = nullptr;
-    MCTSNodeModel*      expansion_node_ = nullptr;
+    NodeGraph*      expansion_node_ = nullptr;
 };
 
 class MCTSVerboseNodeExpansion : public MoveGeneratorHeader {
@@ -31,7 +31,7 @@ class MCTSVerboseNodeExpansion : public MoveGeneratorHeader {
 public: 
     MCTSVerboseNodeExpansion() = default;
 
-    void Expand(MCTSNodeModel* from);
+    void Expand(NodeGraph* from);
     void OnInsertDebug(const Board& b1, const Board& b2, const std::string & info) override;
 
 private:
@@ -41,7 +41,7 @@ private:
 
 private : 
     MCTSNodeInserter*   node_inserter_  = nullptr;
-    MCTSNodeModel*      expansion_node_ = nullptr;
+    NodeGraph*      expansion_node_ = nullptr;
 };
 
 class MCTSNodeExpansionHeader {
@@ -50,7 +50,7 @@ public:
         SetInserter(node_inserter);
     }
 
-    void ExpandNodeFull(MCTSNodeModel* from, bool verbose = false);
+    void ExpandNodeFull(NodeGraph* from, bool verbose = true);
 
     void SetInserter(MCTSNodeInserter* node_inserter) {
         if(node_inserter) {

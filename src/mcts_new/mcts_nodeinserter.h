@@ -3,16 +3,16 @@
 
 #include "../blowfish/chessboard.h"
 
-#include "mcts_nodemodel.h"
+#include "mcts_nodegraph.h"
 
 class MCTSNodeInserter {
 public:
     MCTSNodeInserter(MCTSNodeTreeStatistics& tree_stats);   
     MCTSNodeInserter(); 
 
-    MCTSNodeModel* CreateNodeModel(const int& depth, const Board& board, MCTSNodeModel* parent = nullptr);   
-    MCTSNodeModel* CreateNodeModel(const int& depth, const Board& board, std::string verbose, MCTSNodeModel* parent = nullptr);  
-    void InsertExistingNode(MCTSNodeModel* node, MCTSNodeModel* parent);  
+    NodeGraph* CreateNodeModel(const int& depth, const Board& board, NodeGraph* parent = nullptr);   
+    NodeGraph* CreateNodeModel(const int& depth, const Board& board, std::string verbose, NodeGraph* parent = nullptr);  
+    void InsertExistingNode(NodeGraph* node, NodeGraph* parent);  
 
 private:
     MCTSNodeTreeStatistics* tree_stats_ = nullptr;
